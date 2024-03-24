@@ -1,0 +1,111 @@
+import enum
+import logging
+import secrets
+from pathlib import Path
+
+from pydantic import (
+    AnyHttpUrl,
+    EmailStr,
+    PostgresDsn,
+    RedisDsn,
+    field_validator,
+)
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+import app
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s|%(levelname)s|%(name)s|%(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S%z",
+)
+logging.getLogger("httpx").propagate = False
+logging.getLogger("cache.client").propagate = False
+ACCESS_LOG_FORMAT = "%(h)s|%(H)s|%(m)s|%(U)s|%(s)s|%(M)s|%(a)s"
+
+BASE_DIR = Path(app.__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+
+class AuthMethod(str, enum.Enum):
+    BASIC = "basic"
+    JWT = "jwt"
+
+
+class SettingsBase(BaseSettings):
+    PROJECT_NAME: str
+    API_V1_STR: str = "/api/v1"
+    SUB_PATH: str | None = None
+    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER_PASSWORD: str
+    DEBUG: bool = False
+    CORE_ID: int
+    TZ: str = "Asia/Tehran"
+    PGTZ: str = "Asia/Tehran"
+
+    SECRET_KEY: str = secrets.token_urlsafe(32)
+    # 60 minutes * 24 hours * 1 day = 1 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 1
+    ALLOWED_AUTH_METHODS: list[AuthMethod] | str = [AuthMethod.JWT]
+
+    @field_validator("SUB_PATH", mode="before")
+    @classmethod
+    def strip_subpath(cls, v: str | None) -> str:
+        if v is not None:
+            return v.strip("/")
+
+    @field_validator("ALLOWED_AUTH_METHODS", mode="before")
+    @classmethod
+    def assemble_allowed_auth_methods(
+        cls, v: str | list[str]
+    ) -> list[str] | str:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
+
+    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] | str = []
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
+        if isinstance(v, str):
+            return [i.strip() for i in v.strip("[]").split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
+
+    @property
+    def allow_origins(self) -> list[str]:
+        return [str(origin).strip("/") for origin in self.BACKEND_CORS_ORIGINS]
+
+    @property
+    def store_prefix(self) -> str:
+        return self.PROJECT_NAME.lower().replace(" ", "-") + "-"
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+class StorageSettings(SettingsBase):
+    REDIS_TIMEOUT: int | None = 5
+    REDIS_URI: RedisDsn | None = None
+
+    SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
+    SQLALCHEMY_POOL_SIZE: int = 15
+    SQLALCHEMY_POOL_TIMEOUT: int = 30
+    SQLALCHEMY_POOL_RECYCLE: int = 3600
+    SQLALCHEMY_MAX_OVERFLOW: int = 5
+
+    @property
+    def async_database_url(self) -> str | None:
+        return (
+            str(self.SQLALCHEMY_DATABASE_URI).replace(
+                "postgresql://", "postgresql+asyncpg://"
+            )
+            if self.SQLALCHEMY_DATABASE_URI
+            else self.SQLALCHEMY_DATABASE_URI
+        )
+
+
+settings = StorageSettings()

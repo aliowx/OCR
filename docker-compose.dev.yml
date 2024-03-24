@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  db:
+    image: dr2.parswitch.com/devops/postgres:14
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    ports:
+      - 5435:5432
+    environment:
+      - PGDATA=/var/lib/postgresql/data
+
+  redis:
+    image: dr2.parswitch.com/devops/redis:7
+    restart: always
+    ports:
+      - 6382:6379

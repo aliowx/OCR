@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  backend: &base
+    image: dr-switch.parswitch.com/acquirer-backend:${TAG-latest}
+    environment:
+      - BUILD_TYPE=backend
+    build:
+      context: .
+      dockerfile: backend.dockerfile
+    restart: always
+    env_file:
+      - .env
+    
+  queue:
+    image: dr-switch.parswitch.com/rabbitmq:3
+
+  celery-worker:
+    <<: *base
+    restart: always
+    environment:
+      - BUILD_TYPE=celery
+    depends_on:
+      - backend
+      - queue
+    env_file:
+      - .env
+

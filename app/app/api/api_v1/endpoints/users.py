@@ -1,10 +1,8 @@
 from datetime import timedelta
-
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-
 from app import crud
 from app import exceptions as exc
 from app import models, schemas, utils
@@ -14,9 +12,11 @@ from app.core.config import settings
 from app.utils import APIResponse, APIResponseType
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
+import logging
 
 router = APIRouter()
 namespace = "user"
+logger = logging.getLogger(__name__)
 
 
 @router.post("/login/access-token")

@@ -1,0 +1,33 @@
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
+
+if TYPE_CHECKING:
+    from .user import User  # noqa: F401
+    from .camera import Camera  # noqa: F401
+
+
+class Plate(Base):
+    id = Column(Integer, primary_key=True, index=True)
+
+    ocr = Column(String, index=True)
+
+    lpr_id = Column(
+        Integer,
+        ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+    )
+    lpr = relationship("Image", foreign_keys=lpr_id)
+
+    big_image_id = Column(
+        Integer,
+        ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+    )
+    big_image = relationship("Image", foreign_keys=big_image_id)
+
+    record_id = Column(Integer, ForeignKey("record.id"), index=True)
+    record = relationship("Record", back_populates="plates")

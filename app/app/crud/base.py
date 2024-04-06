@@ -207,3 +207,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return self.update(
             db=db, db_obj=obj, obj_in={"is_deleted": True}, commit=commit
         )
+
+    async def _remove_async(
+        self, db: AsyncSession, *, id: int, commit: bool = True
+    ) -> ModelType:
+        obj = await self.get(db, id=id)
+        return await self.update(
+            db=db, db_obj=obj, obj_in={"is_deleted": True}, commit=commit
+        )
+

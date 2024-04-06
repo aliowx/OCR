@@ -1,4 +1,3 @@
-import logging
 from typing import Awaitable
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +5,7 @@ from sqlalchemy.future import select
 from app.crud.base import CRUDBase
 from app.models.camera import Camera
 from app.schemas.camera import CameraCreate, CameraUpdate
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,22 @@ class CRUDCamera(CRUDBase[Camera, CameraCreate, CameraUpdate]):
         return await self._all(
             db.scalars(query.filter(*filters).offset(skip).limit(limit))
         )
+
+    async def one_camera(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_camera_code: str = None,
+    ) -> Camera | Awaitable[Camera]:
+
+        query = select(Camera)
+
+        filters = [Camera.is_deleted == False]
+
+        if input_camera_code is not None:
+            filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
+
+        return await self._first(db.scalars(query.filter(*filters)))
 
 
 camera = CRUDCamera(Camera)

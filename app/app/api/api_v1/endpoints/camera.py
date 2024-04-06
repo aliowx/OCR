@@ -49,7 +49,7 @@ async def create_camera(
     return APIResponse(await crud.camera.create(db, obj_in=camera_in))
 
 
-@router.get("search_cameras")
+@router.get("/search")
 async def search_cameras(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -139,3 +139,22 @@ async def delete_camera(
             msg_code=utils.MessageCodes.not_found,
         )
     return APIResponse(await crud.camera._remove_async(db, id=id))
+
+
+@router.post("/upload_photo")
+async def upload_photo(
+    camera_code: str,
+    image_id: int,
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+):
+
+    camera = await crud.camera.one_camera(db, input_camera_code=camera_code)
+
+    if not camera:
+        raise exc.ServiceFailure(
+            detail="camera not exist",
+            msg_code=utils.MessageCodes.operation_failed,
+        )
+    camera.image_id = image_id
+    return APIResponse(await crud.camera.update(db, db_obj=camera))

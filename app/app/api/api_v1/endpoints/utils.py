@@ -1,20 +1,20 @@
 from typing import Any
-
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from fastapi.responses import HTMLResponse
 from redis import asyncio as redis
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
 from app import models, schemas
 from app.api import deps
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.utils import APIResponse, APIResponseType
 from cache import Cache
+import logging
 
 router = APIRouter()
-
+namespace = "utils"
+logger = logging.getLogger(__name__)
 
 @router.post("/test-celery/", status_code=201)
 def test_celery(

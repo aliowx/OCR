@@ -8,6 +8,7 @@ class CameraBase(BaseModel):
     camera_ip: Optional[str] = None
     camera_code: Optional[str] = None
     location: Optional[str] = None
+    image_id: Optional[int] = None
 
 
 class CameraCreate(CameraBase):

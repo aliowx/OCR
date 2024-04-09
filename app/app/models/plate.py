@@ -33,5 +33,15 @@ class Plate(Base):
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
+    number_line = Column(Integer)
+
+    floor_number = Column(Integer)
+    floor_name = Column(String)
+
+    name_parking = Column(String)
+
+    camera_id = Column(Integer, ForeignKey("camera.id"), index=True)
+    camera_plate = relationship("Camera", back_populates="parking_plate")
+
     record_id = Column(Integer, ForeignKey("record.id"), index=True)
     record = relationship("Record", back_populates="plates")

@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.10"
 uvicorn = {extras = ["standard"], version = "^0.20.0"}
 gunicorn = "^21.2.0"
-pydantic = {version = "^2.6.4", extras = ["email"]}
+pydantic = {extras = ["email"], version = "^2.6.4"}
 psycopg2-binary = "^2.9.9"
 alembic = "^1.13.1"
 SQLAlchemy = "^2.0.29"
@@ -30,6 +30,7 @@ pandas = "^2.2.1"
 xlsxwriter = "^3.2.0"
 openpyxl = "^3.1.2"
 asgi-logger = "^0.1.0"
+python-rapidjson = "^1.16"
 
 [tool.poetry.dev-dependencies]
 pytest="*"

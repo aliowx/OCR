@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
-
-from sqlalchemy import Column, ForeignKey, Integer, String
+from datetime import datetime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -28,6 +28,10 @@ class Plate(Base):
         index=True,
     )
     big_image = relationship("Image", foreign_keys=big_image_id)
+
+    record_time = Column(
+        DateTime(timezone=True), default=datetime.now, index=True
+    )
 
     record_id = Column(Integer, ForeignKey("record.id"), index=True)
     record = relationship("Record", back_populates="plates")

@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict
+
 # from graphene import relay
 # from graphene_sqlalchemy.types import SQLAlchemyObjectType
 # from graphene_sqlalchemy_filter.filters import FilterSet
@@ -21,13 +22,22 @@ class PlateBase(BaseModel):
     record_id: Optional[int] = None
 
     camera_id: Optional[int] = Field(None, ge=1)
-    line_id: int = Field(None, ge=1)
+    number_line: int = Field(None, ge=1)
+
+    floor_number: Optional[int] = Field(None)
+    floor_name: Optional[str] = Field(None)
+
+    name_parking: Optional[str] = Field(None)
 
 
 class PlateCreate(PlateBase):
     ocr: str
     record_time: datetime
-    camera_id: int = Field(None, ge=1)
+    name_parking: str
+    floor_number: int
+    floor_name: str
+    number_line: int
+    camera_id: int
 
 
 # plate with lpr

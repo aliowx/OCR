@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
-from graphene import relay
-from graphene_sqlalchemy.types import SQLAlchemyObjectType
-from graphene_sqlalchemy_filter.filters import FilterSet
+# from graphene import relay
+# from graphene_sqlalchemy.types import SQLAlchemyObjectType
+# from graphene_sqlalchemy_filter.filters import FilterSet
 
 from pydantic import BaseModel, Field, validator, ConfigDict
 from datetime import datetime
@@ -102,22 +102,22 @@ class GetPlates(BaseModel):
     all_items_count: int
 
 
-class PlateSchema(SQLAlchemyObjectType):
-    class Meta:
-        model = models.Plate
-        interfaces = (relay.Node,)
+# class PlateSchema(SQLAlchemyObjectType):
+#     class Meta:
+#         model = models.Plate
+#         interfaces = (relay.Node,)
 
 
-class PlateFilter(FilterSet):
-    class Meta:
-        model = models.Plate
-        fields = {
-            "id": [...],
-            "ocr": [...],
-            "record_time": [...],
-            "lpr_id": [...],
-            "big_image_id": [...],
-            "record_id": [...],
-            "created": [...],
-            "modified": [...],
-        }
+# class PlateFilter(FilterSet):
+#     class Meta:
+#         model = models.Plate
+#         fields = {
+#             "id": [...],
+#             "ocr": [...],
+#             "record_time": [...],
+#             "lpr_id": [...],
+#             "big_image_id": [...],
+#             "record_id": [...],
+#             "created": [...],
+#             "modified": [...],
+#         }

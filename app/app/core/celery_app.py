@@ -4,7 +4,9 @@ from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 from app.core.config import settings
 
-celery_app = Celery("worker", backend="rpc://", broker=str(settings.REDIS_URI))
+celery_app = Celery(
+    "worker", backend="rpc://", broker=str(settings.REDIS_URI), include=["celery.worker"]
+)
 
 
 ScopedSession = None
@@ -39,7 +41,4 @@ class DatabaseTask(Task):
         return self._session
 
 
-celery_app.conf.task_routes = {"app.celery.worker.test_celery": "main-queue"}
-celery_app.conf.task_routes = {"app.celery.worker.add_plates": "main-queue"}
-celery_app.conf.task_routes = {"app.celery.worker.update_record": "main-queue"}
-celery_app.conf.update(task_track_started=True)
+celery_app.conf.update(task_track_started=True, broker_connection_retry_on_startup=True)

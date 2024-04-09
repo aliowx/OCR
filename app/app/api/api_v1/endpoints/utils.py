@@ -6,11 +6,12 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
-from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.utils import APIResponse, APIResponseType
 from cache import Cache
+from app.jobs.celery.worker import test_celery as test_celery_task
 import logging
+
 
 router = APIRouter()
 namespace = "utils"
@@ -19,12 +20,12 @@ logger = logging.getLogger(__name__)
 @router.post("/test-celery/", status_code=201)
 def test_celery(
     msg: schemas.Msg,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    # current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Msg]:
     """
     Test Celery worker.
     """
-    task = celery_app.send_task("app.worker.test_celery", args=[msg.msg])
+    task = test_celery_task.delay(msg.msg)
     return APIResponse(
         {
             "msg": f"{msg.msg} - {task.id}",

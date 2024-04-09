@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 
-@celery_app.task(name="app.celery.worker.test_cele")
-def test_cele():
-    return "mamad"
+@celery_app.task
+def test():
+    return "this is celery test"
 
 
-@celery_app.task(name="app.celery.worker.test_celery")
+@celery_app.task
 def test_celery(word: str) -> str:
     return f"test task return {word}"
 

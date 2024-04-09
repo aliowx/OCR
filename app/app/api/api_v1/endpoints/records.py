@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, List
 
-import requests
+# import requests
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session

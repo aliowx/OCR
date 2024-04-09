@@ -1,10 +1,12 @@
 """redis.py"""
+
 import os
 from typing import Tuple
 
 from redis import asyncio as aioredis
-
+import redis
 from cache.enums import RedisStatus
+from app.core.config import settings
 
 
 async def redis_connect(
@@ -30,6 +32,24 @@ async def _connect(
         return (RedisStatus.AUTH_ERROR, None)
     except aioredis.ConnectionError:
         return (RedisStatus.CONN_ERROR, None)
+
+
+def redis_connect_sync() -> redis.client.Redis:
+    # client = redis.Redis(
+    #     host=settings.REDIS_SERVER,
+    #     port=settings.REDIS_PORT,
+    #     password=settings.REDIS_PASSWORD,
+    #     db=settings.REDIS_DB,
+    #     socket_timeout=settings.REDIS_TIMEOUT,
+    #     decode_responses=True,
+    # )
+    client = redis.from_url(str(settings.REDIS_URI))
+    # ping = client.ping()
+    # if ping is True:
+    return client
+
+
+redis_client = redis_connect_sync()
 
 
 def _connect_fake() -> Tuple[RedisStatus, aioredis.client.Redis]:

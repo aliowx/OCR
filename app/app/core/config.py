@@ -91,6 +91,8 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
+    FREE_TIME_BETWEEN_RECORDS: int | None
+
     SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     SQLALCHEMY_POOL_SIZE: int = 15
     SQLALCHEMY_POOL_TIMEOUT: int = 30

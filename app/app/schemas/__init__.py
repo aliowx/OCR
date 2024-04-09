@@ -25,3 +25,5 @@ from .image import (
     ImageDetails,
     ImageBase64InDB,
 )
+from .plate import GetPlates, PlateCreate, PlateUpdate,Plate
+from .record import RecordCreate, RecordUpdate, GetRecords, Record

@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, models, schemas, utils
 from app.api import deps
+from app.core.celery_app import celery_app
 from datetime import datetime
 import logging
 
@@ -54,7 +55,7 @@ async def create_lines_parking(
     coordinates_rectangles = []
     for coordinate in parking_in.coordinates_rectangles:
         # This schemas change map field to save to db
-        new_obj = schemas.ParkingInDBCreate(
+        new_obj = schemas.ParkingCreateLineInDB(
             camera_id=parking_in.camera_id,
             percent_rotation_rectangle_small=coordinate[
                 "percent_rotation_rectangle_small"
@@ -108,38 +109,23 @@ async def update_status(
     camera = await crud.camera.one_camera(
         db, input_camera_code=parking_in.camera_code
     )
-    # if parking_in.status == "full":
-    # if parking_in.ocr_img:
-    #     image_ocr = await crud.image.create_base64(
-    #         db=db,
-    #         obj_in=schemas.ImageCreateBase64(image=parking_in.ocr_img),
-    #     )
-    # if parking_in.lpr_img:
-    #     image_lpr = await crud.image.create_base64(
-    #         db=db,
-    #         obj_in=schemas.ImageCreateBase64(image=parking_in.lpr_img),
-    #     )
+    if parking_in.status == "full":
+        plate_in = schemas.PlateCreate(
+            ocr=parking_in.ocr,
+            record_time=datetime.now().isoformat(),
+            lpr_id=parking_in.ocr_img_id if parking_in.ocr_img_id else None,
+            big_image_id=(
+                parking_in.lpr_img_id if parking_in.lpr_img_id else None
+            ),
+            camera_id=camera.id,
+        )
 
-    # plate_in = schemas.PlateCreate(
-    #     ocr=parking_in.ocr,
-    #     # ocr_checked=None,
-    #     record_time=datetime.now().isoformat(),
-    #     class_name="parking",
-    #     direction="parking",
-    #     lpr_id=parking_in.ocr_img_id if parking_in.ocr_img_id else None,
-    #     big_image_id=parking_in.lpr_img_id if parking_in.lpr_img_id else None,
-    #     # record_id=0,
-    #     # record_number=0,
-    #     camera_id=camera.id,
-    #     line_id=1,
-    # )
-
-    # current_user_dict = jsonable_encoder(current_user)
-    # logger.info(f"create plate current_user: {current_user_dict}")
-    # result = celery_app.send_task(
-    #     "app.worker.add_plate",
-    #     args=[jsonable_encoder(plate_in), current_user_dict],
-    # )
+        current_user_dict = jsonable_encoder(current_user)
+        logger.info(f"create plate current_user: {current_user_dict}")
+        result = celery_app.send_task(
+            "app.worker.add_plate",
+            args=[jsonable_encoder(plate_in), current_user_dict],
+        )
 
     check = await crud.parking.one_parking(
         db,

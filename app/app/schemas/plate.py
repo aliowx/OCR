@@ -1,14 +1,6 @@
-from typing import Optional, List, Dict
-
-# from graphene import relay
-# from graphene_sqlalchemy.types import SQLAlchemyObjectType
-# from graphene_sqlalchemy_filter.filters import FilterSet
-
-from pydantic import BaseModel, Field, validator, ConfigDict
+from typing import Optional, List
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-
-from app import models
-from .image import ImageCreateBase64
 
 
 # Shared properties
@@ -22,7 +14,7 @@ class PlateBase(BaseModel):
     record_id: Optional[int] = None
 
     camera_id: Optional[int] = Field(None, ge=1)
-    number_line: int = Field(None, ge=1)
+    number_line: Optional[int] = Field(None, ge=1)
 
     floor_number: Optional[int] = Field(None)
     floor_name: Optional[str] = Field(None)
@@ -38,49 +30,8 @@ class PlateCreate(PlateBase):
     floor_name: str
     number_line: int
     camera_id: int
-
-
-# plate with lpr
-class PlateWithLPR(PlateCreate):
-    lpr: Optional[ImageCreateBase64] = None
-
-    @validator("lpr", always=True)
-    def ensure_only_lpr_or_lpr_id(
-        cls, lpr: Optional[ImageCreateBase64], values: Dict
-    ):
-        lpr_id = values.get("lpr_id")
-
-        if lpr_id is not None and lpr is not None:
-            raise ValueError('only one of "lpr_id" or "lpr" can be set')
-        if lpr_id is None and lpr is None:
-            raise ValueError('one of "lpr_id" or "lpr" needs to be set')
-        return lpr
-
-
-# Properties to receive on item creation all together
-class PlatesToghetherCreate(BaseModel):
-    plates: List[PlateWithLPR]
-    big_image: Optional[ImageCreateBase64] = None
-
-    @validator("big_image", always=True)
-    def ensure_only_big_image_or_big_image_id(
-        cls, big_image: Optional[ImageCreateBase64], values: Dict
-    ):
-
-        big_image_id = None
-        for plates in values.get("plates"):
-            if plates.big_image_id != None:
-                big_image_id = plates.big_image_id
-
-        if big_image_id is not None and big_image is not None:
-            raise ValueError(
-                'only one of "big_image_id" or "big_image" can be set'
-            )
-        if big_image_id is None and big_image is None:
-            raise ValueError(
-                'one of "big_image_id" or "big_image" needs to be set'
-            )
-        return big_image
+    lpr_id: int
+    big_image_id: int
 
 
 # Properties to receive on item update
@@ -110,24 +61,3 @@ class PlateInDB(PlateInDBBase):
 class GetPlates(BaseModel):
     items: List[Plate]
     all_items_count: int
-
-
-# class PlateSchema(SQLAlchemyObjectType):
-#     class Meta:
-#         model = models.Plate
-#         interfaces = (relay.Node,)
-
-
-# class PlateFilter(FilterSet):
-#     class Meta:
-#         model = models.Plate
-#         fields = {
-#             "id": [...],
-#             "ocr": [...],
-#             "record_time": [...],
-#             "lpr_id": [...],
-#             "big_image_id": [...],
-#             "record_id": [...],
-#             "created": [...],
-#             "modified": [...],
-#         }

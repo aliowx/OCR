@@ -137,9 +137,11 @@ async def update_status(
             name_parking=check.name_parking,
         )
 
-        current_user_dict = jsonable_encoder(current_user)
-        logger.info(f"create plate current_user: {current_user_dict}")
-        add_plates(plate_in)
+        celery_app.send_task(
+            "add_plates",
+            args=[jsonable_encoder(plate_in)],
+        )
+
     check.ocr = parking_in.ocr
     check.status = parking_in.status
     check.lpr_img_id = parking_in.lpr_img_id

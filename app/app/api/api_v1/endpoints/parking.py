@@ -1,3 +1,4 @@
+import logging
 from app.utils import APIResponse, APIResponseType
 from typing import Any
 from fastapi import APIRouter, Depends
@@ -8,8 +9,6 @@ from app import crud, models, schemas, utils
 from app.api import deps
 from app.core.celery_app import celery_app
 from datetime import datetime
-import logging
-from app.jobs.celery.worker import add_plates
 
 router = APIRouter()
 namespace = "parking"

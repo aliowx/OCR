@@ -5,7 +5,10 @@ from sqlalchemy.orm.session import sessionmaker
 from app.core.config import settings
 
 celery_app = Celery(
-    "worker", backend="rpc://", broker=str(settings.REDIS_URI), include=["celery.worker"]
+    "worker",
+    backend="rpc://",
+    broker=str(settings.REDIS_URI),
+    include=["celery.worker"],
 )
 
 
@@ -18,7 +21,7 @@ from celery.signals import worker_init
 def bootstrap(*args, **kwargs):
     global ScopedSession
     engine = create_engine(
-        settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True
+        str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True
     )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     ScopedSession = scoped_session(SessionLocal)
@@ -41,4 +44,6 @@ class DatabaseTask(Task):
         return self._session
 
 
-celery_app.conf.update(task_track_started=True, broker_connection_retry_on_startup=True)
+celery_app.conf.update(
+    task_track_started=True, broker_connection_retry_on_startup=True
+)

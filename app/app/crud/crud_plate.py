@@ -90,9 +90,13 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
                 db.scalars(query.filter(*filters).offset(skip))
             )
 
-        return await self._all(
+        all_items_count = await self.count_by_filter(db, filters=filters)
+
+        items = await self._all(
             db.scalars(query.filter(*filters).offset(skip).limit(limit))
         )
+
+        return [items, all_items_count]
 
 
 plate = CRUDPlate(Plate)

@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
-from graphene import relay
-from graphene_sqlalchemy.types import SQLAlchemyObjectType
-from graphene_sqlalchemy_filter.filters import FilterSet
+# from graphene import relay
+# from graphene_sqlalchemy.types import SQLAlchemyObjectType
+# from graphene_sqlalchemy_filter.filters import FilterSet
 
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
@@ -64,23 +64,23 @@ class GetRecords(BaseModel):
     all_items_count: int
 
 
-class RecordSchema(SQLAlchemyObjectType):
-    class Meta:
-        model = models.Record
-        interfaces = (relay.Node,)
+# class RecordSchema(SQLAlchemyObjectType):
+#     class Meta:
+#         model = models.Record
+#         interfaces = (relay.Node,)
 
 
-class RecordFilter(FilterSet):
-    class Meta:
-        model = models.Record
-        fields = {
-            "id": [...],
-            "ocr": [...],
-            "start_time": [...],
-            "end_time": [...],
-            "best_lpr_id": [...],
-            "best_big_image_id": [...],
-            "score": [...],
-            "created": [...],
-            "modified": [...],
-        }
+# class RecordFilter(FilterSet):
+#     class Meta:
+#         model = models.Record
+#         fields = {
+#             "id": [...],
+#             "ocr": [...],
+#             "start_time": [...],
+#             "end_time": [...],
+#             "best_lpr_id": [...],
+#             "best_big_image_id": [...],
+#             "score": [...],
+#             "created": [...],
+#             "modified": [...],
+#         }

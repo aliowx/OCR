@@ -5,6 +5,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .parking import Parking
+    from .plate import Plate
 
 
 class Camera(Base):
@@ -22,3 +23,5 @@ class Camera(Base):
     image_parking = relationship("Image", back_populates="image_parking")
 
     parking = relationship("Parking", back_populates="camera_rpi")
+
+    parking_plate = relationship("Plate", back_populates="camera_plate")

@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     Float,
 )
+from datetime import datetime
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -21,8 +22,12 @@ class Record(Base):
 
     ocr = Column(String, index=True)
 
-    start_time = Column(DateTime, index=True)
-    end_time = Column(DateTime, index=True)
+    start_time = Column(
+        DateTime(timezone=True), default=datetime.now, index=True
+    )
+    end_time = Column(
+        DateTime(timezone=True), default=datetime.now, index=True
+    )
 
     score = Column(Float, nullable=True, default=None, index=True)
 

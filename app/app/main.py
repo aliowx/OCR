@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from asgi_logger import AccessLoggerMiddleware
+# from asgi_logger import AccessLoggerMiddleware
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,8 +42,8 @@ app = FastAPI(
 )
 
 logging.getLogger("uvicorn.access").handlers = []
-AccessLoggerMiddleware.DEFAULT_FORMAT = ACCESS_LOG_FORMAT
-app.add_middleware(AccessLoggerMiddleware)
+# AccessLoggerMiddleware.DEFAULT_FORMAT = ACCESS_LOG_FORMAT
+# app.add_middleware(AccessLoggerMiddleware)
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

@@ -1,3 +1,4 @@
+import logging
 from app.utils import APIResponse, APIResponseType
 from typing import Any
 from fastapi import APIRouter, Depends
@@ -8,7 +9,6 @@ from app import crud, models, schemas, utils
 from app.api import deps
 from app.core.celery_app import celery_app
 from datetime import datetime
-import logging
 
 router = APIRouter()
 namespace = "parking"
@@ -109,23 +109,6 @@ async def update_status(
     camera = await crud.camera.one_camera(
         db, input_camera_code=parking_in.camera_code
     )
-    if parking_in.status == "full":
-        plate_in = schemas.PlateCreate(
-            ocr=parking_in.ocr,
-            record_time=datetime.now().isoformat(),
-            lpr_id=parking_in.ocr_img_id if parking_in.ocr_img_id else None,
-            big_image_id=(
-                parking_in.lpr_img_id if parking_in.lpr_img_id else None
-            ),
-            camera_id=camera.id,
-        )
-
-        current_user_dict = jsonable_encoder(current_user)
-        logger.info(f"create plate current_user: {current_user_dict}")
-        result = celery_app.send_task(
-            "app.worker.add_plate",
-            args=[jsonable_encoder(plate_in), current_user_dict],
-        )
 
     check = await crud.parking.one_parking(
         db,
@@ -137,6 +120,27 @@ async def update_status(
             detail="line's camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
+
+    if parking_in.status == "full":
+        plate_in = schemas.PlateCreate(
+            ocr=parking_in.ocr,
+            record_time=datetime.now().isoformat(),
+            lpr_id=parking_in.ocr_img_id if parking_in.ocr_img_id else None,
+            big_image_id=(
+                parking_in.lpr_img_id if parking_in.lpr_img_id else None
+            ),
+            camera_id=camera.id,
+            number_line=parking_in.number_line,
+            floor_number=check.floor_number,
+            floor_name=check.floor_name,
+            name_parking=check.name_parking,
+        )
+
+        celery_app.send_task(
+            "add_plates",
+            args=[jsonable_encoder(plate_in)],
+        )
+
     check.ocr = parking_in.ocr
     check.status = parking_in.status
     check.lpr_img_id = parking_in.lpr_img_id

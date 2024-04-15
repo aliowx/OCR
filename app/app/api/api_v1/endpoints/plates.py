@@ -23,7 +23,7 @@ async def read_plates(
     limit: int = 100,
 ) -> APIResponseType[schemas.GetPlates]:
     """
-    Ret plates.
+    All plates.
     """
     plates = await crud.plate.get_multi(db, skip=skip, limit=limit)
     for i in range(len(plates)):
@@ -89,7 +89,7 @@ async def read_plate(
     if not plate:
         raise exc.ServiceFailure(
             detail="not exist.",
-            msg_code=utils.MessageCodes.operation_failed,
+            msg_code=utils.MessageCodes.not_found,
         )
     plate.fancy = f"{plate.big_image_id}/{plate.lpr_id}"
     return APIResponse(plate)
@@ -124,9 +124,11 @@ async def findplates(
         skip=skip,
         limit=limit,
     )
-    for i in range(len(plates)):
-        plates[i].fancy = f"{plates[i].big_image_id}/{plates[i].lpr_id}"
+    for i in range(plates[1]):
+        plates[0][
+            i
+        ].fancy = f"{plates[0][i].big_image_id}/{plates[0][i].lpr_id}"
 
     return APIResponse(
-        schemas.GetPlates(items=plates, all_items_count=len(plates))
+        schemas.GetPlates(items=plates[0], all_items_count=plates[1])
     )

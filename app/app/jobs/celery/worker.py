@@ -103,7 +103,6 @@ def update_record(self, plate_id) -> str:
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
             )
-            # end of else for update record
 
         update_plate = PlateUpdate(record_id=record.id)
         # this refresh for update plate with out this not working ==> solution 1

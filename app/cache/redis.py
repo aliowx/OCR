@@ -1,10 +1,9 @@
 """redis.py"""
 
 import os
-from typing import Tuple
-
-from redis import asyncio as aioredis
 import redis
+from typing import Tuple
+from redis import asyncio as aioredis
 from cache.enums import RedisStatus
 from app.core.config import settings
 

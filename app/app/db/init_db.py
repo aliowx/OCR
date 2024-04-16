@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.core import config
 from app.core.security import get_password_hash
-from app.db import base  # noqa: F401
 from app.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)

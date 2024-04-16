@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
 
 if TYPE_CHECKING:

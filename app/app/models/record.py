@@ -9,7 +9,6 @@ from sqlalchemy import (
 )
 from datetime import datetime
 from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
 
 if TYPE_CHECKING:

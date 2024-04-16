@@ -1,12 +1,6 @@
 from typing import Optional, List, Dict
-# from graphene import relay
-# from graphene_sqlalchemy.types import SQLAlchemyObjectType
-# from graphene_sqlalchemy_filter.filters import FilterSet
-
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-
-from app import models
 
 
 # Shared properties
@@ -44,9 +38,7 @@ class RecordInDBBase(RecordBase):
     created: Optional[datetime]
     modified: Optional[datetime]
 
-
     model_config = ConfigDict(from_attributes=True)
-
 
 
 # Properties to return to client
@@ -62,25 +54,3 @@ class RecordInDB(RecordInDBBase):
 class GetRecords(BaseModel):
     items: List[Record]
     all_items_count: int
-
-
-# class RecordSchema(SQLAlchemyObjectType):
-#     class Meta:
-#         model = models.Record
-#         interfaces = (relay.Node,)
-
-
-# class RecordFilter(FilterSet):
-#     class Meta:
-#         model = models.Record
-#         fields = {
-#             "id": [...],
-#             "ocr": [...],
-#             "start_time": [...],
-#             "end_time": [...],
-#             "best_lpr_id": [...],
-#             "best_big_image_id": [...],
-#             "score": [...],
-#             "created": [...],
-#             "modified": [...],
-#         }

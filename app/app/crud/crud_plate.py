@@ -1,18 +1,16 @@
 import rapidjson
 from datetime import datetime
-from typing import Any, Awaitable
+from typing import Awaitable
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.sql.expression import func
 from app.crud.base import CRUDBase
 from app.models.plate import Plate
 from app.schemas.plate import (
     PlateCreate,
     PlateUpdate,
 )
-from app.core.config import settings
 from cache.redis import redis_client
 
 

@@ -17,10 +17,10 @@ router = APIRouter()
 namespace = "utils"
 logger = logging.getLogger(__name__)
 
+
 @router.post("/test-celery/", status_code=201)
 def test_celery(
     msg: schemas.Msg,
-    # current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Msg]:
     """
     Test Celery worker.

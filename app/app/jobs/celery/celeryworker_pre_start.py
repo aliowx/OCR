@@ -1,7 +1,6 @@
-from app.core.config import settings
 import logging
-
 import redis
+from app.core.config import settings
 from tenacity import (
     after_log,
     before_log,

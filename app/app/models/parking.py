@@ -10,7 +10,6 @@ from sqlalchemy import (
     DateTime,
 )
 from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
 
 if TYPE_CHECKING:

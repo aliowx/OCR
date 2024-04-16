@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from app.crud.base import CRUDBase
 from app.models.image import Image
 from app.schemas.image import (
-    ImageBase64,
     ImageBase64InDB,
     ImageCreateBinary,
     ImageCreateBase64,

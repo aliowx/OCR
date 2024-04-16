@@ -8,7 +8,6 @@ from sqlalchemy.future import select
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
-from app.crud import plate
 from app.models.record import Record
 from app.schemas.record import (
     RecordCreate,
@@ -32,7 +31,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             "records:1", rapidjson.dumps(jsonable_encoder(db_obj))
         )
         return self._commit_refresh(db=db, db_obj=db_obj)
-
 
     def get_by_plate(
         self,

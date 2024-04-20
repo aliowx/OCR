@@ -30,7 +30,6 @@ class CRUDImage(
         if isinstance(obj_in, dict):
             obj_in_data = obj_in
             db_obj = Image(**obj_in_data)  # type: ignore
-            print(db_obj)
         else:
             db_obj = obj_in
         db.add(db_obj)
@@ -109,8 +108,6 @@ class CRUDImage(
         obj_in = jsonable_encoder(obj_in)
         if "image" in obj_in:
             obj_in["image"] = base64.b64decode(obj_in["image"].encode())
-            print('obj_in["image"]:', type(obj_in["image"]))
-
         db_obj = await self.create(db=db, obj_in=obj_in)
         db_obj = ImageBase64InDB(
             image=(
@@ -120,7 +117,6 @@ class CRUDImage(
             ),
             created=db_obj.created,
             modified=db_obj.modified,
-            image_metadata=db_obj.image_metadata,
             id=db_obj.id,
         )
 

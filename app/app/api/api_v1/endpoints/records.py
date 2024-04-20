@@ -80,7 +80,6 @@ async def findrecords(
     input_end_time_min: datetime = None,
     input_end_time_max: datetime = None,
     input_score: float = None,
-    input_gateway_name: int = None,
     skip: int = 0,
     limit: int = 100,
 ) -> APIResponseType[schemas.GetRecords]:

@@ -154,7 +154,7 @@ async def upload_photo(
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
-            msg_code=utils.MessageCodes.operation_failed,
+            msg_code=utils.MessageCodes.not_found,
         )
     camera.image_id = image_id
     return APIResponse(await crud.camera.update(db, db_obj=camera))

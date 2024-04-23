@@ -7,6 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
+from app.core.middleware.get_accept_language_middleware import (
+    GetAcceptLanguageMiddleware,
+)
+
 
 from app.api.api_v1.api import api_router
 from app.api.docs import set_docs_routes
@@ -65,3 +69,4 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 set_docs_routes(app, static_route)
+app.add_middleware(GetAcceptLanguageMiddleware)

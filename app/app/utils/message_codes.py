@@ -1,7 +1,35 @@
 """ Message codes for api responses """
 
+from app.core.middleware.get_accept_language_middleware import (
+    get_accept_language,
+)
+
+
+def parseAcceptLanguage(acceptLanguage: str):
+    language_codes = []
+    for language in acceptLanguage.split(","):
+        language = language.split(";", 1)[0]
+        language = language.split("-", 1)[0]
+        language = language.strip()
+        language_codes.append(language)
+    print(language_codes)
+    return language_codes
+
 
 class MessageCodes:
+    @classmethod
+    def get_message(cls, message_code: int) -> str:
+        parsed_accept_languages = parseAcceptLanguage(get_accept_language())
+
+        for accept_language in parsed_accept_languages:
+            match accept_language:
+                case "fa":
+                    return cls.persian_message_names[message_code]
+                case "en":
+                    return cls.english_messages_names[message_code]
+
+        return cls.persian_message_names[message_code]
+
     # main codes start from 0
     successful_operation = 0
     internal_error = 1
@@ -11,7 +39,7 @@ class MessageCodes:
     operation_failed = 5
     forbidden = 6
 
-    messages_names = {
+    english_messages_names = {
         0: "Successful Operation",
         1: "Internal Error",
         2: "Not Found",

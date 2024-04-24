@@ -65,7 +65,6 @@ async def get_db_async() -> AsyncGenerator:
     """
     async with AsyncSessionLocal() as db:
         yield db
-        await db.commit()
 
 
 def get_user_id_from_bearer_token(token: str) -> int:

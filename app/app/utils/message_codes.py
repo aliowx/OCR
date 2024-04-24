@@ -12,7 +12,6 @@ def parseAcceptLanguage(acceptLanguage: str):
         language = language.split("-", 1)[0]
         language = language.strip()
         language_codes.append(language)
-    print(language_codes)
     return language_codes
 
 

@@ -30,9 +30,9 @@ wait_seconds = 1
 def init() -> None:
     try:
         # Try to create session to check if DB is awake
-        sess = SessionLocal()
-        sess.execute("SELECT 1")
-        sess.close()
+        # sess = SessionLocal()
+        # sess.execute("SELECT 1")
+        # sess.close()
 
         # Try to create session to check if redis is awake
         # client = redis.Redis(

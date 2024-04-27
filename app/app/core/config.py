@@ -11,7 +11,7 @@ from pydantic import (
     field_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from typing import Optional
 import app
 
 logging.basicConfig(
@@ -92,6 +92,16 @@ class StorageSettings(SettingsBase):
     REDIS_URI: RedisDsn | None = None
 
     FREE_TIME_BETWEEN_RECORDS: int | None
+
+    CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
+    CLEANUP_PERIOD: Optional[int] = 30  # every 30 seconds
+    CLEANUP_AGE: Optional[float] = 2.5  # which are older than 2.5 days
+    CLEANUP_PLATES_AGE: Optional[float] = (
+        30.5  # which are older than 30.5 days
+    )
+    CLEANUP_RECORDS_AGE: Optional[float] = (
+        90.5  # which are older than 30.5 days
+    )
 
     SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     SQLALCHEMY_POOL_SIZE: int = 15

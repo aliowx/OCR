@@ -168,7 +168,6 @@ def setup_periodic_tasks(sender, **kwargs):
 )
 def cleanup(self, table_name: str = "image"):
     """cleans db up and wait at least CLEANUP_PERIOD seconds between each operation"""
-    # lock = RedisLock("cleanup_task_lock")
     lock_name = f"cleanup_{table_name}_task_lock"
     if redis_client.get(lock_name):
         return f"Cleanup {table_name} canceled for performance"
@@ -177,9 +176,27 @@ def cleanup(self, table_name: str = "image"):
     )
     try:
         if table_name == "image":
-            limit = datetime.now() - timedelta(days=settings.CLEANUP_AGE)
-            filter = models.Image.modified
-            model = models.Image
+            model_img = models.Image
+            img_ids = crud.camera.get_multi(self.session)
+            for img_id in img_ids:
+                subquery = (
+                    self.session.query(model_img.id)
+                    .filter(
+                        model_img.modified
+                        < (
+                            datetime.now()
+                            - timedelta(days=settings.CLEANUP_AGE)
+                        ),
+                        model_img.id != img_id.image_id,
+                    )
+                    .limit(settings.CLEANUP_COUNT)
+                    .subquery()
+                )
+                result = (
+                    self.session.query(model_img)
+                    .filter(model_img.id.in_(subquery))
+                    .delete(synchronize_session="fetch")
+                )
         elif table_name == "plate":
             limit = datetime.now() - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
@@ -197,17 +214,18 @@ def cleanup(self, table_name: str = "image"):
         logger.info(
             f"running cleanup {table_name} ({settings.CLEANUP_COUNT}, {settings.CLEANUP_AGE})"
         )
-        subquery = (
-            self.session.query(model.id)
-            .filter(filter < limit)
-            .limit(settings.CLEANUP_COUNT)
-            .subquery()
-        )
-        result = (
-            self.session.query(model)
-            .filter(model.id.in_(subquery))
-            .delete(synchronize_session="fetch")
-        )
+        if table_name != "image":
+            subquery = (
+                self.session.query(model.id)
+                .filter(filter < limit)
+                .limit(settings.CLEANUP_COUNT)
+                .subquery()
+            )
+            result = (
+                self.session.query(model)
+                .filter(model.id.in_(subquery))
+                .delete(synchronize_session="fetch")
+            )
         self.session.commit()
         redis_client.setex(
             lock_name, timedelta(seconds=settings.CLEANUP_PERIOD), 1

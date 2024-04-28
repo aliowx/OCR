@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-# from asgi_logger import AccessLoggerMiddleware
+from asgi_logger import AccessLoggerMiddleware
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +38,7 @@ if settings.SUB_PATH:
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    openapi_url=openapi_url,
     redoc_url=None,
     docs_url=None,
     lifespan=lifespan,
@@ -46,18 +46,8 @@ app = FastAPI(
 )
 
 logging.getLogger("uvicorn.access").handlers = []
-# AccessLoggerMiddleware.DEFAULT_FORMAT = ACCESS_LOG_FORMAT
-# app.add_middleware(AccessLoggerMiddleware)
-
-# Set all CORS enabled origins
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.allow_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+AccessLoggerMiddleware.DEFAULT_FORMAT = ACCESS_LOG_FORMAT
+app.add_middleware(AccessLoggerMiddleware)
 
 static_route = "/static"
 if settings.SUB_PATH is not None:
@@ -66,6 +56,15 @@ if settings.SUB_PATH is not None:
     app.servers.append({"url": f"/{settings.SUB_PATH}"})
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+if settings.BACKEND_CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 set_docs_routes(app, static_route)

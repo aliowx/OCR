@@ -1,119 +1,41 @@
 stages:
-  - build-test
-  - deploy-test
-  - build-stage
-  - deploy-stage
-  - build-production
-  - deploy-production
+  - test
+  - build
+  - deploy
 
-build-project-image-test-server:
-  stage: build-test
-  before_script:
-    - "docker login --username $SWITCH_REGISTERY_USER --password $SWITCH_REGISTERY_PASSWORD $SWITCH_REGISTERY_URL"
-    - "docker login --username $DR2_REGISTERY_USER --password $DR2_REGISTERY_PASSWORD $DR2_REGISTERY_URL"
-    - touch .env
-    - cd ./app
-    - touch .env
-    - cd ..
-  script:
-    - sh publishProject.sh
-  after_script:
-    - "echo build is done"
-  tags:
-    - shell_executer
+workflow:
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
+
+test-project-test:
+  stage: test
+  before_script:
+    - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
+  script:
+    - "echo test"
+
+build-project-image-test:
+  stage: build
+  before_script:
+    - "cd parking"
+    - "touch .env"
+    - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
+  script:
+    - "export TAG=latest-cicd"
+    - "echo build image with TAG latest-cicd"
+    - "echo deploy to registery"
+    - "sh publishProject.sh"
+  after_script:
+    - "echo build is done"
 
 deploy-project-test-server:
-  stage: deploy-test
+  stage: deploy
   script:
     - "echo deploy to test server"
-    - ssh -o StrictHostKeyChecking=no $SWITCH_TEST_SERVER_USER@$SWITCH_TEST_SERVER_IP "cd /home/ubuntu/projects/acquirer && export TAG=latest-cicd && docker compose pull && docker compose down && docker compose up -d && exit"
+    - scp -o StrictHostKeyChecking=no $ENV_PROJECT_FILE_PARKING $PARKING_TEST_USER@$PARKING_TEST_SERVER_IP:/home/ubuntu/projects/parking-backend/.env
+    - ssh -o StrictHostKeyChecking=no $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP "cd /home/ubuntu/projects/parking-backend && sudo TAG=latest-cicd docker compose pull && sudo TAG=latest-cicd docker compose down && sudo TAG=latest-cicd docker compose up -d && exit"
   tags:
     - shell_executer
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
 
-build-project-image-stage-server:
-  stage: build-stage
-  before_script:
-    - "docker login --username $SWITCH_REGISTERY_USER --password $SWITCH_REGISTERY_PASSWORD $SWITCH_REGISTERY_URL"
-    - "docker login --username $DR2_REGISTERY_USER --password $DR2_REGISTERY_PASSWORD $DR2_REGISTERY_URL"
-    - touch .env
-    - cd ./app
-    - touch .env
-    - cd ..
-  script:
-    - sh publishProject.sh
-  after_script:
-    - "echo build is done"
-  tags:
-    - shell_executer
-  only:
-    - /^v\d+\.\d+\.\d+-rc\d+$/
-
-deploy-project-stage-server:
-  stage: deploy-stage
-  script:
-    - "echo deploy to stage server"
-    - ssh -o StrictHostKeyChecking=no $SWITCH_STAGE_SERVER_USER@$SWITCH_STAGE_SERVER_IP "cd /home/ubuntu/projects/acquirer && export TAG=$TAG_VER && docker compose pull && docker compose down && docker compose up -d && exit"
-  tags:
-    - shell_executer
-  only:
-    - /^v\d+\.\d+\.\d+-rc\d+$/
-  variables:
-    TAG_VER: $CI_COMMIT_TAG
-
-build-project-image-production-server:
-  stage: build-production
-  before_script:
-    - "docker login --username $SWITCH_REGISTERY_USER --password $SWITCH_REGISTERY_PASSWORD $SWITCH_REGISTERY_URL"
-    - "docker login --username $DR2_REGISTERY_USER --password $DR2_REGISTERY_PASSWORD $DR2_REGISTERY_URL"
-    - touch .env
-    - cd ./app
-    - touch .env
-    - cd ..
-  script:
-    - sh publishProject.sh
-  after_script:
-    - "echo build is done"
-  tags:
-    - shell_executer
-  only:
-    - /^v\d+\.\d+\.\d+$/
-
-deploy-project-production-server:
-  stage: deploy-production
-  before_script:
-    - sh deployProject.sh
-  script:
-    - "echo deploy to production server"
-    - |
-      case "$PROJECT_TYPE" in
-        bnpl)
-          echo "Updating bnpl to version $CI_COMMIT_TAG"
-          export SWITCH_PRODUCTION_SERVER_IP=$BNPL_PRODUCTION_IP
-          export SWITCH_PRODUCTION_USER=$BNPL_PRODUCTION_USER
-          scp -o StrictHostKeyChecking=no $ENV_PROJECT_FILE_BNPL $SWITCH_PRODUCTION_USER@$SWITCH_PRODUCTION_SERVER_IP:/home/ubuntu/projects/acquirer/.env
-          ;;
-        rayan)
-          echo "Updating rayan to version $CI_COMMIT_TAG"
-          export SWITCH_PRODUCTION_SERVER_IP=$RAYAN_PRODUCTION_IP
-          export SWITCH_PRODUCTION_USER=$RAYAN_PRODUCTION_USER
-          scp -o StrictHostKeyChecking=no $ENV_PROJECT_FILE_RAYAN $SWITCH_PRODUCTION_USER@$SWITCH_PRODUCTION_SERVER_IP:/home/ubuntu/projects/acquirer/.env
-          ;;
-        *)
-          echo "Unknown project type"
-          exit 1
-          ;;
-      esac
-    - "echo SWITCH_PRODUCTION_SERVER_IP: $SWITCH_PRODUCTION_SERVER_IP"
-    - "echo SWITCH_PRODUCTION_USER: $SWITCH_PRODUCTION_USER"
-    - ssh -o StrictHostKeyChecking=no $SWITCH_PRODUCTION_USER@$SWITCH_PRODUCTION_SERVER_IP "cd /home/ubuntu/projects/acquirer && export TAG=$TAG_VER && docker compose pull && docker compose down && docker compose up -d && exit"
-  tags:
-    - shell_executer
-  only:
-    - /^v\d+\.\d+\.\d+$/
-  when: manual
-  variables:
-    TAG_VER: $CI_COMMIT_TAG 

@@ -1,8 +1,8 @@
-"""model_user
+"""sqlaclchemy2 model user
 
-Revision ID: 3794f0a04522
+Revision ID: 4b10b6fd12dc
 Revises: 
-Create Date: 2024-04-16 11:27:05.959210
+Create Date: 2024-04-30 12:25:31.605919
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '3794f0a04522'
+revision = '4b10b6fd12dc'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,8 +23,8 @@ def upgrade() -> None:
     sa.Column('full_name', sa.String(length=50), nullable=True),
     sa.Column('email', sa.String(length=50), nullable=False),
     sa.Column('hashed_password', sa.String(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('is_superuser', sa.Boolean(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('is_superuser', sa.Boolean(), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), server_default='false', nullable=False),
     sa.Column('created', sa.DateTime(timezone=True), nullable=True),
     sa.Column('modified', sa.DateTime(timezone=True), nullable=True),

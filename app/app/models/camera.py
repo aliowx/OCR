@@ -1,25 +1,22 @@
-from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.db.base_class import Base
-
-if TYPE_CHECKING:
-    from .parking import Parking
-    from .plate import Plate
 
 
 class Camera(Base):
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    is_active = Column(Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    camera_code = Column(String)
+    camera_code: Mapped[str] = mapped_column(String)
 
-    camera_ip = Column(String, nullable=True, default=None)
+    camera_ip: Mapped[str] = mapped_column(String, nullable=True)
 
-    location = Column(String)
+    location: Mapped[str] = mapped_column(String, nullable=True)
 
-    image_id = Column(Integer, ForeignKey("image.id"), index=True)
+    image_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("image.id"), index=True, nullable=True
+    )
     image_parking = relationship("Image", back_populates="image_parking")
 
     parking = relationship("Parking", back_populates="camera_rpi")

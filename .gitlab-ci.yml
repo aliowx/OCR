@@ -37,7 +37,7 @@ deploy-project-test-server:
   script:
     - "echo deploy to test server parking"
     - sudo scp -i /home/ubuntu/.ssh/id_rsa -o StrictHostKeyChecking=no $ENV_PROJECT_FILE_PARKING $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP:/home/ubuntu/projects/parking-backend/.env
-    - ssh -o StrictHostKeyChecking=no $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP "cd /home/ubuntu/projects/parking-backend && sudo TAG=latest-cicd docker compose pull && sudo TAG=latest-cicd docker compose down && sudo TAG=latest-cicd docker compose up -d && exit"
+    - sudo ssh -o StrictHostKeyChecking=no $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP "cd /home/ubuntu/projects/parking-backend && sudo TAG=latest-cicd docker compose pull && sudo TAG=latest-cicd docker compose down && sudo TAG=latest-cicd docker compose up -d && exit"
   tags:
     - shell_executer
   rules:

@@ -17,8 +17,10 @@ test-project-test:
 build-project-image-test:
   stage: build
   before_script:
-    - "cd parking"
-    - "touch .env"
+    - touch .env
+    - cd ./app
+    - touch .env
+    - cd ..
     - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
   script:
     - "export TAG=latest-cicd"

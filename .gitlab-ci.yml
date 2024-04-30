@@ -27,6 +27,8 @@ build-project-image-test:
     - "echo build image with TAG latest-cicd"
     - "echo deploy to registery"
     - "sh publishProject.sh"
+  tags:
+    - shell_executer
   after_script:
     - "echo build is done"
 

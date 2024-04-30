@@ -1,7 +1,5 @@
-from typing import TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import (
-    Column,
     ForeignKey,
     Integer,
     String,
@@ -9,55 +7,59 @@ from sqlalchemy import (
     Float,
     DateTime,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.db.base_class import Base
-
-if TYPE_CHECKING:
-    from .camera import Camera  # noqa: F401
-    from .image import Image
 
 
 class Parking(Base):
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    floor_number = Column(Integer)
-    floor_name = Column(String)
+    floor_number: Mapped[int] = mapped_column(Integer)
+    floor_name: Mapped[str] = mapped_column(String)
 
-    name_parking = Column(String)
+    name_parking: Mapped[str] = mapped_column(String)
 
-    percent_rotation_rectangle_small = Column(Integer)
-    percent_rotation_rectangle_big = Column(Integer)
-
-    coordinates_rectangle_big = Column(
-        ARRAY(Float), nullable=False, index=True
+    percent_rotation_rectangle_small: Mapped[int] = mapped_column(
+        Integer, nullable=True
     )
-    coordinates_rectangle_small = Column(
-        ARRAY(Float), nullable=False, index=True
+    percent_rotation_rectangle_big: Mapped[int] = mapped_column(
+        Integer, nullable=True
     )
 
-    number_line = Column(Integer)
+    coordinates_rectangle_big: Mapped[list] = mapped_column(
+        ARRAY(Float), nullable=False, index=True
+    )
+    coordinates_rectangle_small: Mapped[list] = mapped_column(
+        ARRAY(Float), nullable=False, index=True
+    )
 
-    status = Column(String)
+    number_line: Mapped[int] = mapped_column(Integer)
 
-    ocr = Column(String)
+    status: Mapped[str] = mapped_column(String, nullable=True)
 
-    latest_time_modified = Column(
+    ocr: Mapped[str] = mapped_column(String, nullable=True)
+
+    latest_time_modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
-    camera_id = Column(Integer, ForeignKey("camera.id"), index=True)
+    camera_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("camera.id"), index=True
+    )
     camera_rpi = relationship("Camera", back_populates="parking")
 
-    ocr_img_id = Column(
+    ocr_img_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     ocr_img = relationship("Image", foreign_keys=ocr_img_id)
 
-    lpr_img_id = Column(
+    lpr_img_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     lpr_img = relationship("Image", foreign_keys=lpr_img_id)

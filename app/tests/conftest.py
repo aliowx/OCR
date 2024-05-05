@@ -13,11 +13,10 @@ from app.api.deps import get_db_async
 from app.main import app
 from app.db import Base
 from sqlalchemy.exc import SQLAlchemyError
-from app.db.init_db import init_db
 
 # ASYNC_SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 ASYNC_SQLALCHEMY_DATABASE_URL = str(
-    "postgresql+asyncpg://server_name:password@localhost:5432/name_db_test"
+    "postgresql+asyncpg://username:password@localhost:5432/db_name"
 )
 
 engine = create_async_engine(ASYNC_SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
@@ -53,7 +52,6 @@ async def db() -> AsyncSession:
     async_session = async_session_local
 
     async with async_session() as session:
-        print("db in test-->", session, id(session))
         async with async_engine.begin() as connection:
             await connection.run_sync(Base.metadata.drop_all)
             await connection.run_sync(Base.metadata.create_all)
@@ -64,7 +62,9 @@ async def db() -> AsyncSession:
 
 @pytest_asyncio.fixture(scope="module")
 async def client() -> AsyncClient:
-    async with asyncpg.create_pool(dsn=ASYNC_SQLALCHEMY_DATABASE_URL) as pool:
+    async with asyncpg.create_pool(
+        dsn="postgresql://username:password@localhost:5432/db_name"
+    ) as pool:
         async with AsyncClient(app=app, base_url="http://test") as client:
             client.db = pool
             try:

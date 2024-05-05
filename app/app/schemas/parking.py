@@ -17,7 +17,7 @@ class ParkingBase(BaseModel):
     name_parking: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
-        example='[{"percent_rotation_rectangle_small" : 90, \
+        examples='[{"percent_rotation_rectangle_small" : 90, \
             "percent_rotation_rectangle_big" : 90,\
             "number_line" : 1,\
             "coordinates_rectangle_big" : [[0.25,0],[1,1]],\
@@ -37,7 +37,7 @@ class ParkingCreate(BaseModel):
     name_parking: str = Field(...)
     coordinates_rectangles: List[Dict] = Field(
         ...,
-        example='[{"percent_rotation_rectangle_small" : 90, \
+        examples='[{"percent_rotation_rectangle_small" : 90, \
             "percent_rotation_rectangle_big" : 90,\
             "number_line" : 1,\
             "coordinates_rectangle_big" : [[0.25,0],[1,1]],\
@@ -53,7 +53,7 @@ class ParkingShowDetailByCamera(BaseModel):
     name_parking: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
-        example='[{"percent_rotation_rectangle_small" : 90, \
+        examples='[{"percent_rotation_rectangle_small" : 90, \
             "percent_rotation_rectangle_big" : 90,\
             "number_line" : 1,\
             "coordinates_rectangle_big" : [[0.25,0],[1,1]],\
@@ -69,11 +69,11 @@ class ParkingCreateLineInDB(BaseModel):
     name_parking: str = Field(...)
     percent_rotation_rectangle_big: int = Field(..., le=360, ge=0)
     coordinates_rectangle_big: List[List[float]] = Field(
-        None, example="[[0.25,0],[1,1]]"
+        None, examples="[[0.25,0],[1,1]]"
     )
     percent_rotation_rectangle_small: int = Field(..., le=360, ge=0)
     coordinates_rectangle_small: List[List[float]] = Field(
-        None, example="[[0.25,0],[1,1]]"
+        None, examples="[[0.25,0],[1,1]]"
     )
 
 

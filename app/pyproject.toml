@@ -38,6 +38,11 @@ black="*"
 ruff="*"
 isort="*"
 
+[tool.poetry.group.dev.dependencies]
+pytest-asyncio = "^0.21.2"
+pytest = "^8.2.0"
+aiosqlite = "^0.20.0"
+
 [tool.black]
 line-length = 79
 exclude = '''

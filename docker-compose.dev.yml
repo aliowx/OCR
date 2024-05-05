@@ -11,6 +11,9 @@ services:
       - 5435:5432
     environment:
       - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
 
   redis:
     image: dr2.parswitch.com/devops/redis:7

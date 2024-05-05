@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   backend: &base
-    image: dr-switch.parswitch.com/acquirer-backend:${TAG-latest}
+    image: dr-switch.parswitch.com/parking-backend:${TAG-latest}
     environment:
       - BUILD_TYPE=backend
     build:
@@ -11,6 +11,9 @@ services:
     restart: always
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     
   queue:
     image: dr-switch.parswitch.com/rabbitmq:3

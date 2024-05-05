@@ -2,13 +2,12 @@ from datetime import datetime
 from typing import Any
 
 from persiantools.jdatetime import JalaliDate
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.sql.schema import Column
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql.sqltypes import Boolean, DateTime
+from sqlalchemy.orm import DeclarativeBase, mapped_column
 
 
-@as_declarative()
-class Base:
+class Base(DeclarativeBase):
     id: Any
     __name__: str
 
@@ -17,7 +16,7 @@ class Base:
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
 
-    is_deleted = Column(
+    is_deleted = mapped_column(
         Boolean,
         nullable=False,
         server_default="false",
@@ -25,8 +24,8 @@ class Base:
         index=True,
     )
 
-    created = Column(DateTime(timezone=True), default=datetime.now, index=True)
-    modified = Column(
+    created = mapped_column(DateTime(timezone=True), default=datetime.now, index=True)
+    modified = mapped_column(
         DateTime(timezone=True),
         default=datetime.now,
         index=True,

@@ -10,6 +10,7 @@ from app.api.api_v1.endpoints import (
     images,
     plates,
     records,
+    price
 )
 
 
@@ -42,3 +43,4 @@ api_router.include_router(images.router, prefix="/images", tags=["images"])
 api_router.include_router(camera.router, prefix="/camera", tags=["camera"])
 api_router.include_router(plates.router, prefix="/plates", tags=["plates"])
 api_router.include_router(records.router, prefix="/records", tags=["records"])
+api_router.include_router(price.router, prefix="/price", tags=["price"])

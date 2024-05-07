@@ -56,6 +56,7 @@ async def create_line(
             coordinates_rectangle_small=coordinate[
                 "coordinates_rectangle_small"
             ],
+            price_model_id=coordinate["price_model_id"],
         )
         items = await crud.parking.create(db, obj_in=new_obj)
         if items:
@@ -65,6 +66,7 @@ async def create_line(
                 "coordinates_rectangle_small": new_obj.coordinates_rectangle_small,
                 "percent_rotation_rectangle_small": new_obj.percent_rotation_rectangle_small,
                 "percent_rotation_rectangle_big": new_obj.percent_rotation_rectangle_big,
+                "price_model_id": new_obj.price_model_id,
             }
             coordinates_rectangles.append(reverse_coordinates_rectangles)
     return schemas.ParkingInDBBase(
@@ -145,6 +147,7 @@ async def get_status(db: AsyncSession):
                         "number_line": parking.number_line,
                         "coordinates_rectangle_big": parking.coordinates_rectangle_big,
                         "coordinates_rectangle_small": parking.coordinates_rectangle_small,
+                        "price_model_id": parking.price_model_id,
                         "status": parking.status,
                         "ocr": parking.ocr,
                         "latest_time_modified": parking.latest_time_modified,
@@ -183,6 +186,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
                 "ocr_img_id": line.ocr_img_id,
                 "coordinates_rectangle_big": line.coordinates_rectangle_big,
                 "coordinates_rectangle_small": line.coordinates_rectangle_small,
+                "price_model_id": line.price_model_id,
             }
         )
 
@@ -193,3 +197,10 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         name_parking=parking_lines[0].name_parking,
         coordinates_rectangles=coordinate_details,
     )
+
+
+async def update_price(db: AsyncSession, data: schemas.PriceUpdateInParking):
+
+    find_park = await crud.parking.get(db, id=data.id_park)
+    find_park.price_model_id = data.price_model_id
+    return await crud.parking.update(db, db_obj=find_park)

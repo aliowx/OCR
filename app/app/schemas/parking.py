@@ -132,3 +132,8 @@ class ParkingUpdateStatus(BaseModel):
     ocr: str = Field(...)
     status: Status = Status.empty
     latest_time_modified: Optional[datetime]
+
+
+class PriceUpdateInParking(BaseModel):
+    id_park: int
+    price_model_id: int

@@ -17,6 +17,7 @@ from .parking import (
     ParkingUpdateStatus,
     ParkingShowDetailByCamera,
 )
+from .price import GetPrice, PriceCreate, PriceUpdate, Price
 from .camera import CameraCreate, CameraUpdate, GetCamera, Camera
 from .image import (
     ImageCreateBase64,

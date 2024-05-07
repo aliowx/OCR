@@ -18,14 +18,16 @@ class ParkingBase(BaseModel):
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
-            {
-                "percent_rotation_rectangle_small": 90,
-                "percent_rotation_rectangle_big": 90,
-                "number_line": 1,
-                "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
-                "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                "price_model_id": 1,
-            }
+            [
+                {
+                    "percent_rotation_rectangle_small": 90,
+                    "percent_rotation_rectangle_big": 90,
+                    "number_line": 1,
+                    "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
+                    "coordinates_rectangle_small": [[1, 1], [0, 0]],
+                    "price_model_id": 1,
+                }
+            ]
         ],
     )
     status: Optional[Status] = Field(None)
@@ -42,14 +44,16 @@ class ParkingCreate(BaseModel):
     coordinates_rectangles: List[Dict] = Field(
         ...,
         examples=[
-            {
-                "percent_rotation_rectangle_small": 90,
-                "percent_rotation_rectangle_big": 90,
-                "number_line": 1,
-                "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
-                "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                "price_model_id": 1,
-            }
+            [
+                {
+                    "percent_rotation_rectangle_small": 90,
+                    "percent_rotation_rectangle_big": 90,
+                    "number_line": 1,
+                    "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
+                    "coordinates_rectangle_small": [[1, 1], [0, 0]],
+                    "price_model_id": 1,
+                }
+            ]
         ],
     )
     camera_id: int = Field(..., ge=1)
@@ -63,14 +67,16 @@ class ParkingShowDetailByCamera(BaseModel):
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
-            {
-                "percent_rotation_rectangle_small": 90,
-                "percent_rotation_rectangle_big": 90,
-                "number_line": 1,
-                "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
-                "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                "price_model_id": 1,
-            }
+            [
+                {
+                    "percent_rotation_rectangle_small": 90,
+                    "percent_rotation_rectangle_big": 90,
+                    "number_line": 1,
+                    "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
+                    "coordinates_rectangle_small": [[1, 1], [0, 0]],
+                    "price_model_id": 1,
+                }
+            ]
         ],
     )
 

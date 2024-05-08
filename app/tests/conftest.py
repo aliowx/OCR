@@ -13,13 +13,11 @@ from app.api.deps import get_db_async
 from app.main import app
 from app.db import Base
 from sqlalchemy.exc import SQLAlchemyError
+from app.core.config import settings
 
-# ASYNC_SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
-ASYNC_SQLALCHEMY_DATABASE_URL = str(
-    "postgresql+asyncpg://username:password@localhost:5432/db_name"
+engine = create_async_engine(
+    str(settings.TEST_SQLALCHEMY_DATABASE_URI), pool_pre_ping=True
 )
-
-engine = create_async_engine(ASYNC_SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
 
 async_session_local = async_sessionmaker(
     bind=engine,
@@ -63,7 +61,7 @@ async def db() -> AsyncSession:
 @pytest_asyncio.fixture(scope="module")
 async def client() -> AsyncClient:
     async with asyncpg.create_pool(
-        dsn="postgresql://username:password@localhost:5432/db_name"
+        dsn=f"postgresql://{settings.TEST_DSN_POSTGRES_NAME}:{settings.TEST_DSN_POSTGRES_PASSWORD}@{settings.TEST_DSN_POSTGRES_IP}:{settings.TEST_DSN_POSTGRES_PORT}/{settings.TEST_DSN_POSTGRES_DB_NAME}"
     ) as pool:
         async with AsyncClient(app=app, base_url="http://test") as client:
             client.db = pool

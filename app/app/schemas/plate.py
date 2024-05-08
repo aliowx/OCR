@@ -21,6 +21,7 @@ class PlateBase(BaseModel):
 
     name_parking: Optional[str] = Field(None)
 
+    price_model: Optional[dict] = Field(None)
 
 class PlateCreate(PlateBase):
     ocr: str
@@ -32,6 +33,7 @@ class PlateCreate(PlateBase):
     camera_id: int
     lpr_id: int
     big_image_id: int
+    price_model: dict
 
 
 # Properties to receive on item update

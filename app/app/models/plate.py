@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.db.base_class import Base
+from sqlalchemy.dialects.postgresql.json import JSON
 
 
 class Plate(Base):
@@ -26,7 +27,7 @@ class Plate(Base):
     camera_plate = relationship("Camera", back_populates="parking_plate")
 
     record_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("record.id"), index=True
+        Integer, ForeignKey("record.id"), index=True, nullable=True
     )
     record = relationship("Record", back_populates="plates")
 
@@ -43,3 +44,5 @@ class Plate(Base):
         index=True,
     )
     big_image = relationship("Image", foreign_keys=big_image_id)
+
+    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)

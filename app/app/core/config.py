@@ -108,6 +108,15 @@ class StorageSettings(SettingsBase):
     SQLALCHEMY_POOL_TIMEOUT: int = 30
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
+    
+    # database test
+    TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
+    # dsn database test
+    TEST_DSN_POSTGRES_NAME: str = None
+    TEST_DSN_POSTGRES_PASSWORD: str = None
+    TEST_DSN_POSTGRES_IP: str = None
+    TEST_DSN_POSTGRES_PORT: str = None
+    TEST_DSN_POSTGRES_DB_NAME: str = None
 
     @property
     def async_database_url(self) -> str | None:

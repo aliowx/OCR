@@ -8,6 +8,7 @@ from sqlalchemy import (
 from datetime import datetime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.db.base_class import Base
+from sqlalchemy.dialects.postgresql import JSON
 
 
 class Record(Base):
@@ -41,3 +42,5 @@ class Record(Base):
     best_big_image = relationship("Image", foreign_keys=best_big_image_id)
 
     plates = relationship("Plate", back_populates="record")
+
+    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)

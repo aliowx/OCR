@@ -99,7 +99,7 @@ async def update_status(
             detail="line's camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
-
+    price_model = await crud.price.get(db, id=check.price_model_id)
     if parking_in.status == "full":
         plate_in = schemas.PlateCreate(
             ocr=parking_in.ocr,
@@ -113,6 +113,8 @@ async def update_status(
             floor_number=check.floor_number,
             floor_name=check.floor_name,
             name_parking=check.name_parking,
+            price_model=price_model.price_model
+
         )
 
         celery_app.send_task(

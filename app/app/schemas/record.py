@@ -10,7 +10,7 @@ class RecordBase(BaseModel):
     end_time: Optional[datetime] = None
     best_lpr_id: Optional[int] = None
     best_big_image_id: Optional[int] = None
-
+    price_model: Optional[dict]
     score: Optional[float] = None
 
 
@@ -19,12 +19,7 @@ class RecordCreate(RecordBase):
     ocr: str
     start_time: datetime
     end_time: datetime
-
-
-# Properties to receive on check operatory update
-class RecordUpdateCheckOperatory(BaseModel):
-    ocr_checked: str
-    additional_data: Dict
+    price_model: dict
 
 
 # Properties to receive on item update
@@ -43,8 +38,9 @@ class RecordInDBBase(RecordBase):
 
 # Properties to return to client
 class Record(RecordInDBBase):
-    fancy: Optional[str]
-
+    parking_time: Optional[str] = None
+    parking_price: Optional[float] = None
+    # pass
 
 # Properties properties stored in DB
 class RecordInDB(RecordInDBBase):

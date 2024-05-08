@@ -72,16 +72,15 @@ def update_record(self, plate_id) -> str:
         record = crud.record.get_by_plate(
             db=self.session, plate=plate, for_update=True
         )
-
         if record is None:
             record = schemas.RecordCreate(
                 ocr=plate.ocr,
-                record_number=0,
                 start_time=plate.record_time,
                 end_time=plate.record_time,
                 score=0.01,
                 best_lpr_id=plate.lpr_id,
                 best_big_image_id=plate.big_image_id,
+                price_model=plate.price_model,
             )
             record = crud.record.create(db=self.session, obj_in=record)
 

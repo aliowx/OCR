@@ -71,3 +71,4 @@ class Parking(Base):
         nullable=True,
     )
     price_model = relationship("Price", foreign_keys=price_model_id)
+    

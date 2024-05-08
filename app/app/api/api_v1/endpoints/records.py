@@ -6,6 +6,7 @@ from app import crud, models, schemas, utils
 from app.api import deps
 from app.utils import APIResponse, APIResponseType
 from app import exceptions as exc
+from app.api.api_v1.services import records_services
 
 logger = logging.getLogger(__name__)
 namespace = "records"
@@ -24,18 +25,11 @@ async def read_records(
     All record
     """
 
-    records = await crud.record.find_records(
-        db, input_score=score, skip=skip, limit=limit, asc=asc
+    records = await records_services.calculator_price(
+        db, score=score, skip=skip, limit=limit, asc=asc
     )
-    for i in range(len(records[0])):
-        records[0][
-            i
-        ].fancy = (
-            f"{records[0][i].best_big_image_id}/{records[0][i].best_lpr_id}"
-        )
-    return APIResponse(
-        schemas.GetRecords(items=records[0], all_items_count=records[1])
-    )
+
+    return APIResponse(records)
 
 
 @router.post("/")
@@ -49,7 +43,6 @@ async def create_record(
     Create new item.
     """
     record = await crud.record.create(db=db, obj_in=record_in)
-    record.fancy = f"{record.best_big_image_id}/{record.best_lpr_id}"
     return APIResponse(record)
 
 
@@ -67,7 +60,6 @@ async def read_record(
         exc.ServiceFailure(
             detail="Record Not Found", msg_code=utils.MessageCodes.not_found
         )
-    record.fancy = f"{record.best_big_image_id}/{record.best_lpr_id}"
     return APIResponse(record)
 
 
@@ -97,12 +89,6 @@ async def findrecords(
         skip=skip,
         limit=limit,
     )
-    for i in range(records[1]):
-        records[0][
-            i
-        ].fancy = (
-            f"{records[0][i].best_big_image_id}/{records[0][i].best_lpr_id}"
-        )
 
     return APIResponse(
         schemas.GetRecords(items=records[0], all_items_count=records[1])

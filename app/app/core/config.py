@@ -39,7 +39,6 @@ class SettingsBase(BaseSettings):
     FIRST_SUPERUSER: EmailStr
     FIRST_SUPERUSER_PASSWORD: str
     DEBUG: bool = False
-    CORE_ID: int
     TZ: str = "Asia/Tehran"
     PGTZ: str = "Asia/Tehran"
 
@@ -108,7 +107,7 @@ class StorageSettings(SettingsBase):
     SQLALCHEMY_POOL_TIMEOUT: int = 30
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
-    
+
     # database test
     TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     # dsn database test

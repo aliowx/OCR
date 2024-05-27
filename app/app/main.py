@@ -50,7 +50,7 @@ AccessLoggerMiddleware.DEFAULT_FORMAT = ACCESS_LOG_FORMAT
 app.add_middleware(AccessLoggerMiddleware)
 
 static_route = "/static"
-if settings.SUB_PATH is not None:
+if settings.SUB_PATH:
     app.mount(f"/{settings.SUB_PATH}", app)
     static_route = f"/{settings.SUB_PATH}{static_route}"
     app.servers.append({"url": f"/{settings.SUB_PATH}"})

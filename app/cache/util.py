@@ -5,8 +5,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, Set, Tuple, Union
 
-from fastapi.encoders import jsonable_encoder
 from dateutil import parser
+from fastapi.encoders import jsonable_encoder
 from pydantic.v1.json import ENCODERS_BY_TYPE
 from pydantic.version import VERSION as PYDANTIC_VERSION
 

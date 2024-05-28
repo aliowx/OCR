@@ -61,7 +61,7 @@ async def get_detail_line_by_camera(
 
 
 @router.post("/update_price")
-async def update_status(
+async def update_price(
     price_in: schemas.PriceUpdateInParking,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_superuser),

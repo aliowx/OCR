@@ -1,15 +1,15 @@
+import logging
 import math
 import random
-import logging
-from app.core.celery_app import celery_app
-from app import schemas, crud, models
-from sqlalchemy import text
-from app.core.celery_app import DatabaseTask, celery_app
-from app.schemas import RecordUpdate, PlateUpdate
-from datetime import timedelta, datetime
-from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.core.config import settings
+from datetime import datetime, timedelta
 
+from sqlalchemy import text
+
+from app import crud, models, schemas
+from app.core.celery_app import DatabaseTask, celery_app
+from app.core.config import settings
+from app.jobs.celery.celeryworker_pre_start import redis_client
+from app.schemas import PlateUpdate, RecordUpdate
 
 namespace = "parking"
 logger = logging.getLogger(__name__)

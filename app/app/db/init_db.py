@@ -1,9 +1,8 @@
-import json
 import logging
 
 from sqlalchemy.orm import Session
 
-from app import crud, models
+from app import models
 from app.core import config
 from app.core.security import get_password_hash
 from app.db.session import SessionLocal
@@ -14,13 +13,13 @@ logger = logging.getLogger(__name__)
 def create_super_admin(db: Session) -> None:
     user = (
         db.query(models.User)
-        .filter(models.User.email == config.settings.FIRST_SUPERUSER)
+        .filter(models.User.username == config.settings.FIRST_SUPERUSER)
         .first()
     )
 
     if not user:
         user = models.User(
-            email=config.settings.FIRST_SUPERUSER,
+            username=config.settings.FIRST_SUPERUSER,
             hashed_password=get_password_hash(
                 config.settings.FIRST_SUPERUSER_PASSWORD
             ),

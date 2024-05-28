@@ -92,7 +92,7 @@ async def get_current_user(
         user = await crud.user.get(db, id=user_id)
     elif credentials:
         user = await crud.user.authenticate_async(
-            db, email=credentials.username, password=credentials.password
+            db, username=credentials.username, password=credentials.password
         )
     else:
         raise exc.InternalServiceError(
@@ -146,7 +146,7 @@ async def basic_auth_superuser(
         return credentials.username
 
     user = await crud.user.authenticate_async(
-        db, email=credentials.username, password=credentials.password
+        db, username=credentials.username, password=credentials.password
     )
     if not user or not user.is_superuser:
         raise HTTPException(
@@ -154,4 +154,4 @@ async def basic_auth_superuser(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Basic"},
         )
-    return user.email
+    return user.username

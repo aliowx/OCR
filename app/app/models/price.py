@@ -1,7 +1,8 @@
+from sqlalchemy import Integer, String
 from sqlalchemy.dialects.postgresql.json import JSON
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.base_class import Base
-from sqlalchemy import Integer, String
 
 
 class Price(Base):

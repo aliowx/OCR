@@ -1,18 +1,17 @@
 from datetime import datetime, timedelta
 from typing import Awaitable, Optional
+
 import rapidjson
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import Session
+
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.models.record import Record
-from app.schemas.record import (
-    RecordCreate,
-    RecordUpdate,
-)
+from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
 
 

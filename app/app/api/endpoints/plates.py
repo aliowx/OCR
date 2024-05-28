@@ -1,15 +1,18 @@
 import logging
 from datetime import datetime
 from typing import Any
+
 from fastapi import APIRouter, Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import crud, models, schemas, utils
+
+from app import crud
+from app import exceptions as exc
+from app import models, schemas, utils
 from app.api import deps
-from cache.redis import redis_client
 from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from app import exceptions as exc
+from cache.redis import redis_client
 
 router = APIRouter()
 namespace = "plates"

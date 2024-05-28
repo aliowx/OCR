@@ -1,13 +1,8 @@
 from datetime import datetime
-from sqlalchemy import (
-    ForeignKey,
-    Integer,
-    String,
-    ARRAY,
-    Float,
-    DateTime,
-)
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+
+from sqlalchemy import ARRAY, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base_class import Base
 
 
@@ -71,4 +66,3 @@ class Parking(Base):
         nullable=True,
     )
     price_model = relationship("Price", foreign_keys=price_model_id)
-    

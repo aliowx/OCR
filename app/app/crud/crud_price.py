@@ -1,11 +1,8 @@
-from typing import Awaitable
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+import logging
+
 from app.crud.base import CRUDBase
 from app.models.price import Price
 from app.schemas.price import PriceCreate, PriceUpdate
-import logging
 
 logger = logging.getLogger(__name__)
 

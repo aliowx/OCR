@@ -1,8 +1,11 @@
+import logging
 from datetime import timedelta
+
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+
 from app import crud
 from app import exceptions as exc
 from app import models, schemas, utils
@@ -12,7 +15,6 @@ from app.core.config import settings
 from app.utils import APIResponse, APIResponseType
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
-import logging
 
 router = APIRouter()
 namespace = "user"
@@ -29,19 +31,19 @@ async def login_access_token(
     OAuth2 compatible token login, get an access token for future requests
     """
     user = await crud.user.authenticate(
-        db, email=form_data.username, password=form_data.password
+        db, username=form_data.username, password=form_data.password
     )
     if not user:
         raise exc.InternalServiceError(
             status_code=401,
-            detail="Incorrect email or password",
-            msg_code=utils.MessageCodes.incorrect_email_or_password,
+            detail="Incorrect username or password",
+            msg_code=utils.MessageCodes.incorrect_username_or_password,
         )
     elif not crud.user.is_active(user):
         raise exc.InternalServiceError(
             status_code=401,
-            detail="Incorrect email or password",
-            msg_code=utils.MessageCodes.incorrect_email_or_password,
+            detail="Incorrect username or password",
+            msg_code=utils.MessageCodes.incorrect_username_or_password,
         )
     access_token_expires = timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -93,7 +95,7 @@ async def create_user(
     """
     Create new user.
     """
-    user = await crud.user.get_by_email(db, email=user_in.email)
+    user = await crud.user.get_by_username(db, username=user_in.username)
     if user:
         raise exc.ServiceFailure(
             detail="The user with this username already exists in the system.",

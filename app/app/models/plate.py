@@ -1,8 +1,10 @@
 from datetime import datetime
-from sqlalchemy import ForeignKey, Integer, String, DateTime
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.db.base_class import Base
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql.json import JSON
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base_class import Base
 
 
 class Plate(Base):

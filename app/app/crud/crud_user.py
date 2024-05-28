@@ -12,13 +12,13 @@ from app.schemas.user import UserCreate, UserUpdate
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    def get_by_email(
-        self, db: Session | AsyncSession, *, email: str
+    def get_by_username(
+        self, db: Session | AsyncSession, *, username: str
     ) -> User | None | Awaitable[User | None]:
         return self._first(
             db.scalars(
                 select(User).filter(
-                    func.lower(User.email) == email.lower(),
+                    func.lower(User.username) == username.lower(),
                     User.is_deleted == False,
                 )
             )
@@ -26,7 +26,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         obj_in_data = jsonable_encoder(obj_in)
-        obj_in_data["email"] = obj_in_data["email"].lower()
+        obj_in_data["username"] = obj_in_data["username"].lower()
         obj_in_data["hashed_password"] = get_password_hash(obj_in.password)
         del obj_in_data["password"]
         obj_in_data = {k: v for k, v in obj_in_data.items() if v is not None}
@@ -53,9 +53,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     async def authenticate_async(
-        self, db: AsyncSession, *, email: str, password: str
+        self, db: AsyncSession, *, username: str, password: str
     ) -> User | None:
-        user = await self.get_by_email(db, email=email)
+        user = await self.get_by_username(db, username=username)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):
@@ -63,13 +63,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def authenticate(
-        self, db: Session | AsyncSession, *, email: str, password: str
+        self, db: Session | AsyncSession, *, username: str, password: str
     ) -> User | None | Awaitable[User | None]:
         if isinstance(db, AsyncSession):
             return self.authenticate_async(
-                db=db, email=email, password=password
+                db=db, username=username, password=password
             )
-        user = self.get_by_email(db, email=email)
+        user = self.get_by_username(db, username=username)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):

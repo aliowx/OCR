@@ -3,8 +3,8 @@ from typing import Any
 
 from persiantools.jdatetime import JalaliDate
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.sql.sqltypes import Boolean, DateTime
 from sqlalchemy.orm import DeclarativeBase, mapped_column
+from sqlalchemy.sql.sqltypes import Boolean, DateTime
 
 
 class Base(DeclarativeBase):
@@ -24,7 +24,9 @@ class Base(DeclarativeBase):
         index=True,
     )
 
-    created = mapped_column(DateTime(timezone=True), default=datetime.now, index=True)
+    created = mapped_column(
+        DateTime(timezone=True), default=datetime.now, index=True
+    )
     modified = mapped_column(
         DateTime(timezone=True),
         default=datetime.now,

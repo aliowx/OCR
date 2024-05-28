@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Union, Literal
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy.dialects.postgresql.json import JSON
+from typing import Literal, Optional, Union
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WeeklyDaysPriceModel(BaseModel):

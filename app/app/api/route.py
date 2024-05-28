@@ -3,14 +3,14 @@ from typing import Any, Callable
 from fastapi import APIRouter as FastAPIRouter
 
 from app.api.endpoints import (
-    parking,
-    users,
-    utils,
     camera,
     images,
+    parking,
     plates,
+    price,
     records,
-    price
+    users,
+    utils,
 )
 
 

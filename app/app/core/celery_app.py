@@ -2,6 +2,7 @@ from celery import Celery, Task
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.scoping import scoped_session
 from sqlalchemy.orm.session import sessionmaker
+
 from app.core.config import settings
 
 celery_app = Celery(

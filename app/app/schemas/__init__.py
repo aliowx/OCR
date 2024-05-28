@@ -1,4 +1,25 @@
+from .camera import Camera, CameraCreate, CameraUpdate, GetCamera
+from .image import (
+    Image,
+    ImageBase64InDB,
+    ImageCreateBase64,
+    ImageDetails,
+    ImageUpdateBase64,
+)
 from .msg import Msg
+from .parking import (
+    GetParking,
+    ParkingBase,
+    ParkingCreate,
+    ParkingCreateLineInDB,
+    ParkingInDBBase,
+    ParkingShowDetailByCamera,
+    ParkingUpdateStatus,
+    PriceUpdateInParking,
+)
+from .plate import GetPlates, Plate, PlateCreate, PlateUpdate
+from .price import GetPrice, Price, PriceCreate, PriceUpdate
+from .record import GetRecords, Record, RecordCreate, RecordUpdate
 from .token import Token, TokenPayload
 from .user import (
     User,
@@ -8,24 +29,3 @@ from .user import (
     UserInDBBase,
     UserUpdate,
 )
-from .parking import (
-    ParkingCreate,
-    ParkingCreateLineInDB,
-    GetParking,
-    ParkingInDBBase,
-    ParkingBase,
-    ParkingUpdateStatus,
-    ParkingShowDetailByCamera,
-    PriceUpdateInParking
-)
-from .price import GetPrice, PriceCreate, PriceUpdate, Price
-from .camera import CameraCreate, CameraUpdate, GetCamera, Camera
-from .image import (
-    ImageCreateBase64,
-    ImageUpdateBase64,
-    Image,
-    ImageDetails,
-    ImageBase64InDB,
-)
-from .plate import GetPlates, PlateCreate, PlateUpdate, Plate
-from .record import RecordCreate, RecordUpdate, GetRecords, Record

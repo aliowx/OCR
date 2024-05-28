@@ -1,12 +1,14 @@
+import logging
 from typing import Awaitable, List, TypeVar
-from sqlalchemy.orm import Session
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import Session
+
 from app.crud.base import CRUDBase
+from app.db.base_class import Base
 from app.models.parking import Parking
 from app.schemas.parking import ParkingCreate, ParkingUpdate
-from app.db.base_class import Base
-import logging
 
 ModelType = TypeVar("ModelType", bound=Base)
 
@@ -54,10 +56,10 @@ class CRUDparking(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
 
         filters = [Parking.is_deleted == False]
 
-        if not input_camera_id is None:
+        if input_camera_id is not None:
             filters.append(Parking.camera_id == input_camera_id)
 
-        if not input_number_line is None:
+        if input_number_line is not None:
             filters.append(Parking.number_line == input_number_line)
 
         return await self._first(db.scalars(query.filter(*filters)))

@@ -1,6 +1,7 @@
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Shared properties
@@ -22,6 +23,7 @@ class PlateBase(BaseModel):
     name_parking: Optional[str] = Field(None)
 
     price_model: Optional[dict] = Field(None)
+
 
 class PlateCreate(PlateBase):
     ocr: str

@@ -1,11 +1,13 @@
+import logging
 from typing import Awaitable
-from sqlalchemy.orm import Session
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import Session
+
 from app.crud.base import CRUDBase
 from app.models.camera import Camera
 from app.schemas.camera import CameraCreate, CameraUpdate
-import logging
 
 logger = logging.getLogger(__name__)
 

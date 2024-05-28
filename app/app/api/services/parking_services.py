@@ -1,8 +1,11 @@
-from app import crud, models, schemas, utils
-from app import exceptions as exc
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import crud
+from app import exceptions as exc
+from app import schemas, utils
 from app.core.celery_app import celery_app
 
 
@@ -113,8 +116,7 @@ async def update_status(
             floor_number=check.floor_number,
             floor_name=check.floor_name,
             name_parking=check.name_parking,
-            price_model=price_model.price_model
-
+            price_model=price_model.price_model,
         )
 
         celery_app.send_task(

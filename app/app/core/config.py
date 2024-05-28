@@ -2,16 +2,11 @@ import enum
 import logging
 import secrets
 from pathlib import Path
-
-from pydantic import (
-    AnyHttpUrl,
-    EmailStr,
-    PostgresDsn,
-    RedisDsn,
-    field_validator,
-)
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 import app
 
 logging.basicConfig(
@@ -36,7 +31,7 @@ class SettingsBase(BaseSettings):
     PROJECT_NAME: str
     API_V1_STR: str = "/api/v1"
     SUB_PATH: str | None = None
-    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
     DEBUG: bool = False
     TZ: str = "Asia/Tehran"

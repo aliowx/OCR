@@ -1,6 +1,7 @@
-from typing import Optional, List, Dict
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict
 
 
 # Shared properties
@@ -41,6 +42,7 @@ class Record(RecordInDBBase):
     parking_time: Optional[str] = None
     parking_price: Optional[float] = None
     # pass
+
 
 # Properties properties stored in DB
 class RecordInDB(RecordInDBBase):

@@ -1,7 +1,8 @@
 from sqlalchemy import Integer
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.db.base_class import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
+
+from app.db.base_class import Base
 
 
 class Image(Base):

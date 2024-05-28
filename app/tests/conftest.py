@@ -1,19 +1,21 @@
 import asyncio
+from typing import AsyncGenerator, Generator
+
+import asyncpg
 import pytest
 import pytest_asyncio
-import asyncpg
-from typing import Generator, AsyncGenerator
+from httpx import AsyncClient
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
-    create_async_engine,
     async_sessionmaker,
+    create_async_engine,
 )
-from httpx import AsyncClient
+
 from app.api.deps import get_db_async
-from app.main import app
-from app.db import Base
-from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
+from app.db import Base
+from app.main import app
 
 engine = create_async_engine(
     str(settings.TEST_SQLALCHEMY_DATABASE_URI), pool_pre_ping=True

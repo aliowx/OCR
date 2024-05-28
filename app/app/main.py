@@ -7,14 +7,13 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
+
+from app.api.docs import set_docs_routes
+from app.api.route import api_router
+from app.core.config import ACCESS_LOG_FORMAT, STATIC_DIR, settings
 from app.core.middleware.get_accept_language_middleware import (
     GetAcceptLanguageMiddleware,
 )
-
-
-from app.api.route import api_router
-from app.api.docs import set_docs_routes
-from app.core.config import ACCESS_LOG_FORMAT, STATIC_DIR, settings
 from app.exceptions import exception_handlers
 from app.models import User
 from cache import Cache

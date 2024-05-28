@@ -1,17 +1,18 @@
+import logging
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from fastapi.responses import HTMLResponse
 from redis import asyncio as redis
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from app import models, schemas
 from app.api import deps
 from app.core.config import settings
+from app.jobs.celery.worker import test_celery as test_celery_task
 from app.utils import APIResponse, APIResponseType
 from cache import Cache
-from app.jobs.celery.worker import test_celery as test_celery_task
-import logging
-
 
 router = APIRouter()
 namespace = "utils"

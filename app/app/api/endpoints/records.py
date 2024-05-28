@@ -6,7 +6,7 @@ from app import crud, models, schemas, utils
 from app.api import deps
 from app.utils import APIResponse, APIResponseType
 from app import exceptions as exc
-from app.api.api_v1.services import records_services
+from app.api.services import records_services
 
 logger = logging.getLogger(__name__)
 namespace = "records"

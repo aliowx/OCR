@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, schemas
 from app.api import deps
-from app.api.api_v1.services import parking_services
+from app.api.services import parking_services
 
 router = APIRouter()
 namespace = "parking"

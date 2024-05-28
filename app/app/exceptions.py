@@ -86,7 +86,7 @@ async def internal_exceptions_handler(request: Request, exc: Any):
 
 
 async def http_exception_handler(request: Request, exc: Any):
-    if "WWW-Authenticate" in exc.headers:
+    if "WWW-Authenticate" in (exc.headers or {}):
         return Response(status_code=exc.status_code, headers=exc.headers)
 
     _, _, traceback_full = get_traceback_info(exc)

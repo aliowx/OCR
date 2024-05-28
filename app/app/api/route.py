@@ -2,7 +2,7 @@ from typing import Any, Callable
 
 from fastapi import APIRouter as FastAPIRouter
 
-from app.api.api_v1.endpoints import (
+from app.api.endpoints import (
     parking,
     users,
     utils,

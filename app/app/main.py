@@ -12,7 +12,7 @@ from app.core.middleware.get_accept_language_middleware import (
 )
 
 
-from app.api.api_v1.api import api_router
+from app.api.route import api_router
 from app.api.docs import set_docs_routes
 from app.core.config import ACCESS_LOG_FORMAT, STATIC_DIR, settings
 from app.exceptions import exception_handlers

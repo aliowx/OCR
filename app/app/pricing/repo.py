@@ -1,8 +1,9 @@
 import logging
 
 from app.crud.base import CRUDBase
-from app.models.price import Price
-from app.schemas.price import PriceCreate, PriceUpdate
+
+from .models import Price
+from .schemas import PriceCreate, PriceUpdate
 
 logger = logging.getLogger(__name__)
 

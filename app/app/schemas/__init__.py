@@ -1,3 +1,5 @@
+from app.pricing.schemas import GetPrice, Price, PriceCreate, PriceUpdate
+
 from .camera import Camera, CameraCreate, CameraUpdate, GetCamera
 from .image import (
     Image,
@@ -18,7 +20,6 @@ from .parking import (
     PriceUpdateInParking,
 )
 from .plate import GetPlates, Plate, PlateCreate, PlateUpdate
-from .price import GetPrice, Price, PriceCreate, PriceUpdate
 from .record import GetRecords, Record, RecordCreate, RecordUpdate
 from .token import Token, TokenPayload
 from .user import (

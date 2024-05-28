@@ -7,11 +7,11 @@ from app.api.endpoints import (
     images,
     parking,
     plates,
-    price,
     records,
     users,
     utils,
 )
+from app.pricing.api import router as pricing_router
 
 
 class APIRouter(FastAPIRouter):
@@ -43,4 +43,4 @@ api_router.include_router(images.router, prefix="/images", tags=["images"])
 api_router.include_router(camera.router, prefix="/camera", tags=["camera"])
 api_router.include_router(plates.router, prefix="/plates", tags=["plates"])
 api_router.include_router(records.router, prefix="/records", tags=["records"])
-api_router.include_router(price.router, prefix="/price", tags=["price"])
+api_router.include_router(pricing_router, prefix="/price", tags=["price"])

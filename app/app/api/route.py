@@ -2,16 +2,9 @@ from typing import Any, Callable
 
 from fastapi import APIRouter as FastAPIRouter
 
-from app.api.endpoints import (
-    camera,
-    images,
-    parking,
-    plates,
-    records,
-    users,
-    utils,
-)
+from app.api.endpoints import camera, images, parking, plates, records, utils
 from app.pricing.api import router as pricing_router
+from app.users.api import router as users_router
 
 
 class APIRouter(FastAPIRouter):
@@ -36,7 +29,7 @@ class APIRouter(FastAPIRouter):
 
 
 api_router = APIRouter()
-api_router.include_router(users.router, prefix="/user", tags=["users"])
+api_router.include_router(users_router, prefix="/user", tags=["users"])
 api_router.include_router(utils.router, prefix="/util", tags=["utils"])
 api_router.include_router(parking.router, prefix="/parking", tags=["parking"])
 api_router.include_router(images.router, prefix="/images", tags=["images"])

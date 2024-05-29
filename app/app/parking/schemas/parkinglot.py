@@ -11,11 +11,11 @@ class Status(str, Enum):
     dissconnect = "dissconnect"
 
 
-class ParkingBase(BaseModel):
+class ParkingLotBase(BaseModel):
     camera_id: Optional[int] = Field(None)
     floor_number: Optional[int] = Field(None)
     floor_name: Optional[str] = Field(None)
-    name_parking: Optional[str] = Field(None)
+    name_parkinglot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
@@ -38,10 +38,10 @@ class ParkingBase(BaseModel):
     latest_time_modified: Optional[datetime] = Field(None)
 
 
-class ParkingCreate(BaseModel):
+class ParkingLotCreate(BaseModel):
     floor_number: int = Field(...)
     floor_name: str = Field(...)
-    name_parking: str = Field(...)
+    name_parkinglot: str = Field(...)
     coordinates_rectangles: List[Dict] = Field(
         ...,
         examples=[
@@ -60,11 +60,11 @@ class ParkingCreate(BaseModel):
     camera_id: int = Field(..., ge=1)
 
 
-class ParkingShowDetailByCamera(BaseModel):
+class ParkingLotShowDetailByCamera(BaseModel):
     camera_id: Optional[int] = Field(None)
     floor_number: Optional[int] = Field(None)
     floor_name: Optional[str] = Field(None)
-    name_parking: Optional[str] = Field(None)
+    name_parkinglot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
@@ -82,12 +82,12 @@ class ParkingShowDetailByCamera(BaseModel):
     )
 
 
-class ParkingCreateLineInDB(BaseModel):
+class ParkingLotCreateLineInDB(BaseModel):
     number_line: int = Field(None, ge=1)
     camera_id: int = Field(..., ge=1)
     floor_number: int = Field(...)
     floor_name: str = Field(...)
-    name_parking: str = Field(...)
+    name_parkinglot: str = Field(...)
     percent_rotation_rectangle_big: int = Field(..., le=360, ge=0)
     coordinates_rectangle_big: List[List[float]] = Field(
         None, examples=[[0.25, 0], [1, 1]]
@@ -99,11 +99,11 @@ class ParkingCreateLineInDB(BaseModel):
     price_model_id: int = Field(None)
 
 
-class ParkingUpdate(ParkingBase):
+class ParkingLotUpdate(ParkingLotBase):
     pass
 
 
-class ParkingInDBBase(ParkingBase):
+class ParkingLotInDBBase(ParkingLotBase):
     id: Optional[int] = None
     created: Optional[datetime]
     modified: Optional[datetime]
@@ -111,21 +111,21 @@ class ParkingInDBBase(ParkingBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ParkingInDB(ParkingInDBBase):
+class ParkingLotInDB(ParkingLotInDBBase):
     pass
 
 
 # Properties to return to client
-class Parking(ParkingInDBBase):
+class ParkingLot(ParkingLotInDBBase):
     pass
 
 
-class GetParking(BaseModel):
+class GetParkingLot(BaseModel):
     items: dict
     all_items_count: int
 
 
-class ParkingUpdateStatus(BaseModel):
+class ParkingLotUpdateStatus(BaseModel):
     camera_code: str = Field(...)
     number_line: int = Field(...)
     lpr_img_id: int = Field(...)
@@ -135,6 +135,6 @@ class ParkingUpdateStatus(BaseModel):
     latest_time_modified: Optional[datetime]
 
 
-class PriceUpdateInParking(BaseModel):
+class PriceUpdateInParkingLot(BaseModel):
     id_park: int
     price_model_id: int

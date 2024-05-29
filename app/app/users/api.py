@@ -21,8 +21,8 @@ namespace = "user"
 logger = logging.getLogger(__name__)
 
 
-@router.post("/login/access-token")
-async def login_access_token(
+@router.post("/login")
+async def login(
     request: Request,
     db: AsyncSession = Depends(deps.get_db_async),
     form_data: OAuth2PasswordRequestForm = Depends(),

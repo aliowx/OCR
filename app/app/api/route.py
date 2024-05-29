@@ -5,7 +5,6 @@ from app.parking.router import router as parking_router
 from app.pricing.api import router as pricing_router
 from app.users.api import router as users_router
 
-
 api_router = APIRouter()
 api_router.include_router(users_router, prefix="/user", tags=["users"])
 api_router.include_router(utils.router, prefix="/util", tags=["utils"])

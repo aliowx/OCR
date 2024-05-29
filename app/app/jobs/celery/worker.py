@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import PlateUpdate, RecordUpdate
 
-namespace = "parking"
+namespace = "parkinglot"
 logger = logging.getLogger(__name__)
 
 

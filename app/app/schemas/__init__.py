@@ -5,14 +5,14 @@ from app.parking.schemas.camera import (
     GetCamera,
 )
 from app.parking.schemas.parkinglot import (
-    GetParking,
-    ParkingBase,
-    ParkingCreate,
-    ParkingCreateLineInDB,
-    ParkingInDBBase,
-    ParkingShowDetailByCamera,
-    ParkingUpdateStatus,
-    PriceUpdateInParking,
+    GetParkingLot,
+    ParkingLotBase,
+    ParkingLotCreate,
+    ParkingLotCreateLineInDB,
+    ParkingLotInDBBase,
+    ParkingLotShowDetailByCamera,
+    ParkingLotUpdateStatus,
+    PriceUpdateInParkingLot,
 )
 from app.pricing.schemas import GetPrice, Price, PriceCreate, PriceUpdate
 from app.users.schemas import (

@@ -20,7 +20,7 @@ class PlateBase(BaseModel):
     floor_number: Optional[int] = Field(None)
     floor_name: Optional[str] = Field(None)
 
-    name_parking: Optional[str] = Field(None)
+    name_parkinglot: Optional[str] = Field(None)
 
     price_model: Optional[dict] = Field(None)
 
@@ -28,7 +28,7 @@ class PlateBase(BaseModel):
 class PlateCreate(PlateBase):
     ocr: str
     record_time: datetime
-    name_parking: str
+    name_parkinglot: str
     floor_number: int
     floor_name: str
     number_line: int

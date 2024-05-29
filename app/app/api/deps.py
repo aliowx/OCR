@@ -46,9 +46,7 @@ class APIBasicAuth(HTTPBasic):
         return await super().__call__(request)
 
 
-reusable_oauth2 = APIOAuth2(
-    tokenUrl=f"{settings.API_V1_STR}/user/login/access-token"
-)
+reusable_oauth2 = APIOAuth2(tokenUrl=f"{settings.API_V1_STR}/user/login")
 
 
 def get_db() -> Generator:

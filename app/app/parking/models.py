@@ -14,13 +14,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class Parking(Base):
+class ParkingLot(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     floor_number: Mapped[int] = mapped_column(Integer)
     floor_name: Mapped[str] = mapped_column(String)
 
-    name_parking: Mapped[str] = mapped_column(String)
+    name_parkinglot: Mapped[str] = mapped_column(String)
 
     percent_rotation_rectangle_small: Mapped[int] = mapped_column(
         Integer, nullable=True
@@ -49,7 +49,7 @@ class Parking(Base):
     camera_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("camera.id"), index=True
     )
-    camera_rpi = relationship("Camera", back_populates="parking")
+    camera_rpi = relationship("Camera", back_populates="parkinglot")
 
     ocr_img_id: Mapped[int] = mapped_column(
         Integer,
@@ -87,11 +87,12 @@ class Camera(Base):
 
     location: Mapped[str] = mapped_column(String, nullable=True)
 
+    # TODO: rename this column
     image_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("image.id"), index=True, nullable=True
     )
-    image_parking = relationship("Image", back_populates="image_parking")
+    image_parkinglot = relationship("Image", back_populates="image_parkinglot")
 
-    parking = relationship("Parking", back_populates="camera_rpi")
+    parkinglot = relationship("ParkingLot", back_populates="camera_rpi")
 
-    parking_plate = relationship("Plate", back_populates="camera_plate")
+    parkinglot_plate = relationship("Plate", back_populates="camera_plate")

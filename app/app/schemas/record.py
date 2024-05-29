@@ -39,8 +39,8 @@ class RecordInDBBase(RecordBase):
 
 # Properties to return to client
 class Record(RecordInDBBase):
-    parking_time: Optional[str] = None
-    parking_price: Optional[float] = None
+    parkinglot_time: Optional[str] = None
+    parkinglot_price: Optional[float] = None
     # pass
 
 

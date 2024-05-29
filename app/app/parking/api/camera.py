@@ -46,7 +46,14 @@ async def create_camera(
     if camera_exist:
         raise exc.ServiceFailure(
             detail="The camera with this camera_code already exists in the system.",
-            msg_code=utils.MessageCodes.operation_failed,
+            msg_code=utils.MessageCodes.bad_request,
+        )
+    camera_main_image = await crud.image.get(db, id=camera_in.image_id)
+
+    if not camera_main_image:
+        raise exc.ServiceFailure(
+            detail="Camera image not found.",
+            msg_code=utils.MessageCodes.not_found,
         )
 
     return APIResponse(await crud.camera.create(db, obj_in=camera_in))

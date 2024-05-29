@@ -1,4 +1,4 @@
-from app.parking.models import Camera, Parking
+from app.parking.models import Camera, ParkingLot
 from app.pricing.models import Price
 from app.users.models import User
 

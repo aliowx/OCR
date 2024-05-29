@@ -59,16 +59,6 @@ async def login_access_token(
     )
 
 
-@router.post("/login/test-token")
-async def test_token(
-    current_user: models.User = Depends(deps.get_current_user),
-) -> APIResponseType[schemas.User]:
-    """
-    Test access token
-    """
-    return APIResponse(current_user)
-
-
 @router.get("/")
 @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_users(

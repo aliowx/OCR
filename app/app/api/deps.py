@@ -10,9 +10,8 @@ from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
-from app import exceptions as exc
-from app import models, schemas, utils
+from app import crud, models, schemas, utils
+from app.core import exceptions as exc
 from app.core import security
 from app.core.config import AuthMethod, settings
 from app.db.session import AsyncSessionLocal, SessionLocal

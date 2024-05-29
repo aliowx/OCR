@@ -3,9 +3,8 @@ from datetime import datetime
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
-from app import exceptions as exc
-from app import schemas, utils
+from app import crud, schemas, utils
+from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 
 

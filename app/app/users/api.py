@@ -6,10 +6,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
-from app import crud
-from app import exceptions as exc
-from app import models, schemas, utils
+from app import crud, models, schemas, utils
 from app.api import deps
+from app.core import exceptions as exc
 from app.core import security
 from app.core.config import settings
 from app.utils import APIResponse, APIResponseType

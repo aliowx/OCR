@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
 
-from .models import Camera, ParkingLot
+from .models import Camera, Parking, ParkingLot
 from .schemas.camera import CameraCreate, CameraUpdate
+from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.parkinglot import ParkingLotCreate, ParkingLotUpdate
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -117,5 +118,14 @@ class CRUDCamera(CRUDBase[Camera, CameraCreate, CameraUpdate]):
         return await self._first(db.scalars(query.filter(*filters)))
 
 
+class CRUDParking(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
+    async def get_main_parking(self, db: AsyncSession) -> Parking | None:
+        parkings = await self.get_multi(db)
+        if not parkings:
+            return None
+        return parkings[0]
+
+
 parkinglot = CRUDParkingLot(ParkingLot)
 camera = CRUDCamera(Camera)
+parking = CRUDParking(Parking)

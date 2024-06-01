@@ -2,7 +2,7 @@ from sqlalchemy import JSON, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base_class import Base
-from app.models.base import UserType
+from app.models.base import ParkingPaymentType, UserType
 
 
 class Parking(Base):
@@ -28,4 +28,7 @@ class Parking(Base):
     owner_sheba_number: Mapped[str] = mapped_column(String(50), nullable=True)
     owner_address: Mapped[str] = mapped_column(String, nullable=True)
     owner_type: Mapped[UserType] = mapped_column(Integer, nullable=True)
+    payment_type: Mapped[ParkingPaymentType] = mapped_column(
+        Integer, nullable=True
+    )
     beneficiary_data: Mapped[dict] = mapped_column(JSON, default=dict)

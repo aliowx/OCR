@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.base import UserType
+from app.models.base import ParkingPaymentType, UserType
 
 
 class Beneficiary(BaseModel):
@@ -16,6 +16,7 @@ class Beneficiary(BaseModel):
     company_sheba_number: str | None = None
     company_address: str | None = None
     beneficiary_type: UserType | None = None
+    beneficiary_type: ParkingPaymentType | None = None
 
 
 class ParkingBase(BaseModel):

@@ -36,6 +36,7 @@ class ParkingLotBase(BaseModel):
     lpr_img_id: Optional[int] = Field(None)
     ocr_img_id: Optional[int] = Field(None)
     latest_time_modified: Optional[datetime] = Field(None)
+    zone_id: int | None = None
 
 
 class ParkingLotCreate(BaseModel):
@@ -58,6 +59,7 @@ class ParkingLotCreate(BaseModel):
         ],
     )
     camera_id: int = Field(..., ge=1)
+    zone_id: int | None = None
 
 
 class ParkingLotShowDetailByCamera(BaseModel):

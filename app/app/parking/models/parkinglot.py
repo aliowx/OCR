@@ -66,3 +66,10 @@ class ParkingLot(Base):
         nullable=True,
     )
     price_model = relationship("Price", foreign_keys=price_model_id)
+
+    zone_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parkingzone.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    zone = relationship("ParkingZone")

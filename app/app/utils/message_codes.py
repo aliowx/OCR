@@ -38,6 +38,7 @@ class MessageCodes:
     operation_failed = 5
     forbidden = 6
     incorrect_username_or_password = 7
+    duplicate_zone_name = 8
 
     english_messages_names = {
         0: "Successful Operation",
@@ -48,6 +49,7 @@ class MessageCodes:
         5: "Operation Failed",
         6: "Forbidden",
         7: "Incorrect username or password",
+        8: "Duplicate zone name",
     }
 
     persian_message_names = {
@@ -59,4 +61,5 @@ class MessageCodes:
         5: "عملیات ناموفق",
         6: "دسترسی غیرمجاز",
         7: "نام کاربری یا کلمه عبور اشتباه است",
+        8: "نام منطقه تکراری است",
     }

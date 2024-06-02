@@ -14,6 +14,7 @@ from app.parking.schemas.parkinglot import (
     ParkingLotUpdateStatus,
     PriceUpdateInParkingLot,
 )
+from app.parking.schemas.parkingzone import *
 from app.pricing.schemas import GetPrice, Price, PriceCreate, PriceUpdate
 from app.users.schemas import (
     User,

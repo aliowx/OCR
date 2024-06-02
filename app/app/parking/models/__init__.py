@@ -1,3 +1,3 @@
 from .camera import Camera
-from .parking import Parking
+from .parking import Parking, ParkingZone
 from .parkinglot import ParkingLot

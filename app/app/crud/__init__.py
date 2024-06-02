@@ -1,4 +1,4 @@
-from app.parking.repo import camera, parkinglot
+from app.parking.repo import camera, parking, parkinglot, parkingzone
 from app.pricing.repo import price
 from app.users.repo import user
 

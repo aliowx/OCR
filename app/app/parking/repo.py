@@ -1,6 +1,7 @@
 import logging
 from typing import Awaitable, List, TypeVar
 
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
@@ -8,17 +9,20 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
 
-from .models import Camera, Parking, ParkingLot
+from .models import Camera, Parking, ParkingLot, ParkingZone
 from .schemas.camera import CameraCreate, CameraUpdate
 from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.parkinglot import ParkingLotCreate, ParkingLotUpdate
+from .schemas.parkingzone import ParkingZoneCreate, ParkingZoneUpdate
 
 ModelType = TypeVar("ModelType", bound=Base)
 
 logger = logging.getLogger(__name__)
 
 
-class CRUDParkingLot(CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]):
+class ParkingLotRepository(
+    CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]
+):
 
     async def find_lines_camera(
         self,
@@ -68,7 +72,7 @@ class CRUDParkingLot(CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]):
         return await self._first(db.scalars(query.filter(*filters)))
 
 
-class CRUDCamera(CRUDBase[Camera, CameraCreate, CameraUpdate]):
+class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
 
     async def find_cameras(
         self,
@@ -118,7 +122,7 @@ class CRUDCamera(CRUDBase[Camera, CameraCreate, CameraUpdate]):
         return await self._first(db.scalars(query.filter(*filters)))
 
 
-class CRUDParking(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
+class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
     async def get_main_parking(self, db: AsyncSession) -> Parking | None:
         parkings = await self.get_multi(db)
         if not parkings:
@@ -126,6 +130,24 @@ class CRUDParking(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
         return parkings[0]
 
 
-parkinglot = CRUDParkingLot(ParkingLot)
-camera = CRUDCamera(Camera)
-parking = CRUDParking(Parking)
+class ParkingZoneRepository(
+    CRUDBase[ParkingZone, ParkingZoneCreate, ParkingZoneUpdate]
+):
+    async def get_by_name(
+        self, db: AsyncSession, name: str
+    ) -> ParkingZone | None:
+        zone = await self._first(
+            db.scalars(
+                select(self.model).filter(
+                    func.lower(self.model.name) == name.lower(),
+                    self.model.is_deleted == False,
+                )
+            )
+        )
+        return zone
+
+
+parkinglot = ParkingLotRepository(ParkingLot)
+camera = CameraRepository(Camera)
+parking = ParkingRepository(Parking)
+parkingzone = ParkingZoneRepository(ParkingZone)

@@ -1,5 +1,6 @@
-from sqlalchemy import JSON, Float, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.schema import ForeignKeyConstraint
 
 from app.db.base_class import Base
 from app.models.base import ParkingPaymentType, UserType
@@ -32,3 +33,31 @@ class Parking(Base):
         Integer, nullable=True
     )
     beneficiary_data: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class ParkingZone(Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=True)
+    tag: Mapped[str] = mapped_column(String(50), nullable=True)
+    parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
+    parent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("parkingzone.id"), nullable=True
+    )
+    parent = relationship(
+        "ParkingZone",
+        remote_side=[id],
+        lazy="selectin",
+        back_populates="children",
+    )
+    children = relationship(
+        "ParkingZone", back_populates="parent", lazy="immediate"
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["parent_id"],
+            ["parkingzone.id"],
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+    )

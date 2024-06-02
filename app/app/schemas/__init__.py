@@ -16,7 +16,8 @@ from app.parking.schemas.parkinglot import (
 )
 from app.parking.schemas.parkingzone import *
 from app.pricing.schemas import GetPrice, Price, PriceCreate, PriceUpdate
-from app.users.schemas import (
+from app.users.schemas.token import Token, TokenPayload
+from app.users.schemas.user import (
     User,
     UserBase,
     UserCreate,
@@ -35,4 +36,3 @@ from .image import (
 from .msg import Msg
 from .plate import GetPlates, Plate, PlateCreate, PlateUpdate
 from .record import GetRecords, Record, RecordCreate, RecordUpdate
-from .token import Token, TokenPayload

@@ -17,7 +17,7 @@ class EquipmentBase(BaseModel):
 
 class EquipmentCreate(EquipmentBase):
     equipment_type: EquipmentType
-    parking_id: int
+    parking_id: int | None = None
     zone_id: int
     tag: str | None = Field(None, max_length=30)
     serial_number: str | None = Field(None, max_length=50)

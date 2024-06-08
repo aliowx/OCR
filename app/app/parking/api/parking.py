@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import models
 from app.api import deps
 from app.core import exceptions as exc
-from app.parking.repo import parking as parking_repo
+from app.parking.repo import parking_repo
 from app.parking.schemas import parking as schemas
 from app.utils import APIResponse, APIResponseType, MessageCodes
 

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas, utils
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
-from app.parking.repo import parkinglot as parkinglot_repo
+from app.parking.repo import parkinglot_repo
 
 
 async def create_line(

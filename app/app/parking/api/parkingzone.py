@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import models
 from app.api import deps
 from app.core.exceptions import ServiceFailure
-from app.parking import repo
+from app.parking.repo import parkingzone_repo
 from app.parking.schemas import parkingzone as schemas
 from app.parking.services import parkingzone as parkingzone_services
 from app.utils import APIResponse, APIResponseType, MessageCodes
@@ -27,7 +27,7 @@ async def read_parkingzones(
     """
     Read parking zones.
     """
-    parkingzones = await repo.parkingzone.get_multi(db, limit=limit, skip=skip)
+    parkingzones = await parkingzone_repo.get_multi(db, limit=limit, skip=skip)
     return APIResponse(parkingzones)
 
 
@@ -44,7 +44,7 @@ async def read_parkingzone_by_id(
     """
     Read parking zones.
     """
-    parkingzone = await repo.parkingzone.get(db, id=zone_id)
+    parkingzone = await parkingzone_repo.get(db, id=zone_id)
     if not parkingzone:
         raise ServiceFailure(
             detail="ParkingZone Not Found",

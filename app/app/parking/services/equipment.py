@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
-from app.parking.repo import equipment_repo, parking_repo
+from app.parking.repo import equipment_repo, parking_repo, parkingzone_repo
 from app.parking.schemas import equipment as schemas
 from app.utils import MessageCodes, PaginatedContent
 
@@ -30,6 +30,12 @@ async def create_equipment(
     if not parking:
         raise ServiceFailure(
             detail="Parking Not Found",
+            msg_code=MessageCodes.not_found,
+        )
+    parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
+    if not parkingzone:
+        raise ServiceFailure(
+            detail="ParkingZone  Not Found",
             msg_code=MessageCodes.not_found,
         )
     params = schemas.ReadEquipmentsParams(
@@ -90,6 +96,13 @@ async def update_equipment(
         if not parking:
             raise ServiceFailure(
                 detail="Parking Not Found",
+                msg_code=MessageCodes.not_found,
+            )
+    if equipment_data.zone_id is not None:
+        parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
+        if not parkingzone:
+            raise ServiceFailure(
+                detail="ParkingZone Not Found",
                 msg_code=MessageCodes.not_found,
             )
 

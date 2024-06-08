@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class ParkingLotRepository(
     CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]
 ):
-
     async def find_lines_camera(
         self,
         db: Session | AsyncSession,
@@ -159,6 +158,8 @@ class EquipmentRepository(
         orm_filters = []
         if filters.parking_id__eq:
             orm_filters.append(self.model.parking_id == filters.parking_id__eq)
+        if filters.zone_id__eq:
+            orm_filters.append(self.model.zone_id == filters.zone_id__eq)
         if filters.equipment_type__eq:
             orm_filters.append(
                 self.model.equipment_type == filters.equipment_type__eq

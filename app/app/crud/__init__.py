@@ -4,6 +4,7 @@ from app.parking.repo import (
     parking_repo,
     parkinglot_repo,
     parkingzone_repo,
+    parkingzoneprice_repo,
 )
 from app.pricing.repo import price
 from app.users.repo import user

@@ -9,7 +9,14 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
 
-from .models import Camera, Equipment, Parking, ParkingLot, ParkingZone
+from .models import (
+    Camera,
+    Equipment,
+    Parking,
+    ParkingLot,
+    ParkingZone,
+    ParkingZonePrice,
+)
 from .schemas.camera import CameraCreate, CameraUpdate
 from .schemas.equipment import (
     EquipmentCreate,
@@ -18,7 +25,12 @@ from .schemas.equipment import (
 )
 from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.parkinglot import ParkingLotCreate, ParkingLotUpdate
-from .schemas.parkingzone import ParkingZoneCreate, ParkingZoneUpdate
+from .schemas.parkingzone import (
+    ParkingZoneCreate,
+    ParkingZonePriceCreate,
+    ParkingZonePriceUpdate,
+    ParkingZoneUpdate,
+)
 
 ModelType = TypeVar("ModelType", bound=Base)
 
@@ -204,8 +216,14 @@ class EquipmentRepository(
         )
 
 
+class ParkingZonePriceRepository(
+    CRUDBase[ParkingZonePrice, ParkingZonePriceCreate, ParkingZonePriceUpdate]
+): ...
+
+
 parkinglot_repo = ParkingLotRepository(ParkingLot)
 camera_repo = CameraRepository(Camera)
 parking_repo = ParkingRepository(Parking)
 parkingzone_repo = ParkingZoneRepository(ParkingZone)
 equipment_repo = EquipmentRepository(Equipment)
+parkingzoneprice_repo = ParkingZonePriceRepository(ParkingZonePrice)

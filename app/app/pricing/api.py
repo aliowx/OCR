@@ -24,7 +24,7 @@ async def read_price(
     """
     Get All price.
     """
-    price = await crud.price.get_multi(db, skip=skip, limit=limit)
+    price = await crud.price_repo.get_multi(db, skip=skip, limit=limit)
     return APIResponse(
         schemas.GetPrice(items=price, all_items_count=len(price))
     )
@@ -48,7 +48,7 @@ async def create_price(
             detail="Parking not found",
             msg_code=utils.MessageCodes.not_found,
         )
-    price = await crud.price.create(db, obj_in=price_in, commit=False)
+    price = await crud.price_repo.create(db, obj_in=price_in, commit=False)
     return APIResponse(price)
 
 
@@ -62,7 +62,7 @@ async def get_price_by_id(
     Get One Price.
     """
 
-    price = await crud.price.get(db, id=id)
+    price = await crud.price_repo.get(db, id=id)
 
     if not price:
         raise exc.ServiceFailure(
@@ -83,7 +83,7 @@ async def update_price(
     """
     Update Price.
     """
-    price = await crud.price.get(db, id=id)
+    price = await crud.price_repo.get(db, id=id)
     if not price:
         raise exc.ServiceFailure(
             detail="The price not exist in the system.",
@@ -104,10 +104,10 @@ async def delete_price(
     """
     Delete Price
     """
-    price = await crud.price.get(db, id=id)
+    price = await crud.price_repo.get(db, id=id)
     if not price:
         raise exc.ServiceFailure(
             detail="The price not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
-    return APIResponse(await crud.price._remove_async(db, id=id))
+    return APIResponse(await crud.price_repo._remove_async(db, id=id))

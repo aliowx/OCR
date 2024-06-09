@@ -12,4 +12,4 @@ class CRUDPrice(CRUDBase[Price, PriceCreate, PriceUpdate]):
     pass
 
 
-price = CRUDPrice(Price)
+price_repo = CRUDPrice(Price)

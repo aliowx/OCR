@@ -110,7 +110,7 @@ async def update_status(
             detail="line's camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
-    price_model = await crud.price.get(db, id=check.price_model_id)
+    price_model = await crud.price_repo.get(db, id=check.price_model_id)
     if parkinglot_in.status == "full":
         plate_in = schemas.PlateCreate(
             ocr=parkinglot_in.ocr,

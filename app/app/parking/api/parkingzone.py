@@ -69,3 +69,23 @@ async def create_parkingzone(
         parkingzone_input=parkingzone_input,
     )
     return APIResponse(parkingzone)
+
+
+@router.post("/{zone_id}/price")
+@invalidate(namespace=namespace)
+async def set_price_on_parking_zone(
+    *,
+    zone_id: int,
+    zoneprice_data: schemas.SetZonePriceInput,
+    db: AsyncSession = Depends(deps.get_db_async),
+    _: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[schemas.ParkingZonePrice]:
+    """
+    Set price on a parking zone.
+    """
+    parkingzone = await parkingzone_services.set_price(
+        db,
+        parkingzone_id=zone_id,
+        zoneprice_data=zoneprice_data,
+    )
+    return APIResponse(parkingzone)

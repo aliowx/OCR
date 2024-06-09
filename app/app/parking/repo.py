@@ -218,7 +218,19 @@ class EquipmentRepository(
 
 class ParkingZonePriceRepository(
     CRUDBase[ParkingZonePrice, ParkingZonePriceCreate, ParkingZonePriceUpdate]
-): ...
+):
+    async def get_by_price_priority(
+        self, db: AsyncSession, price_id: int, priority: int
+    ) -> ParkingZonePrice | None:
+        return await self._first(
+            db.scalars(
+                select(self.model).filter(
+                    self.model.price_id == price_id,
+                    self.model.priority == priority,
+                    self.model.is_deleted == false(),
+                )
+            )
+        )
 
 
 parkinglot_repo = ParkingLotRepository(ParkingLot)

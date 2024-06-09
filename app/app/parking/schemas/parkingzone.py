@@ -64,3 +64,8 @@ class ParkingZonePrice(ParkingZonePriceInDBBase): ...
 
 
 class ParkingZonePriceInDB(ParkingZonePriceInDBBase): ...
+
+
+class SetZonePriceInput(BaseModel):
+    price_id: int
+    priority: int = Field(ge=1, le=100)

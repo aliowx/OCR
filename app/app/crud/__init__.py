@@ -6,7 +6,7 @@ from app.parking.repo import (
     parkingzone_repo,
     parkingzoneprice_repo,
 )
-from app.pricing.repo import price
+from app.pricing.repo import price_repo
 from app.users.repo import user
 
 from .crud_image import image

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Optional, Union
+from typing import Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,9 +23,10 @@ class ZonePriceModel(BaseModel):
 
 
 class PriceBase(BaseModel):
-    price_model: Optional[Union[WeeklyDaysPriceModel, ZonePriceModel]]
-    name: Optional[str]
-    name_fa: Optional[str]
+    price_model: Union[WeeklyDaysPriceModel, ZonePriceModel] | None
+    name: str | None
+    name_fa: str | None
+    parking_id: int | None = None
 
 
 class PriceCreate(PriceBase):

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
-from app.parking.repo import parking_repo
+from app.pricing import services as pricing_services
 from app.utils import APIResponse, APIResponseType
 
 router = APIRouter()
@@ -39,16 +39,7 @@ async def create_price(
     """
     Create New price.
     """
-    if price_in.parking_id:
-        parking = await parking_repo.get(db, id=price_in.parking_id)
-    else:
-        parking = await parking_repo.get_main_parking(db)
-    if not parking:
-        raise exc.ServiceFailure(
-            detail="Parking not found",
-            msg_code=utils.MessageCodes.not_found,
-        )
-    price = await crud.price_repo.create(db, obj_in=price_in, commit=False)
+    price = await pricing_services.create_price(db, price_data=price_in)
     return APIResponse(price)
 
 

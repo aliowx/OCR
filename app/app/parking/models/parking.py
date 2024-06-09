@@ -74,4 +74,4 @@ class ParkingZonePrice(Base):
         ForeignKey("price.id"),
         nullable=True,
     )
-    price = relationship("Price")
+    price = relationship("Price", back_populates="pricings")

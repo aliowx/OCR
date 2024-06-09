@@ -1,7 +1,7 @@
 import logging
 from typing import Awaitable, List, TypeVar
 
-from sqlalchemy import false, func
+from sqlalchemy import exists, false, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
@@ -219,18 +219,20 @@ class EquipmentRepository(
 class ParkingZonePriceRepository(
     CRUDBase[ParkingZonePrice, ParkingZonePriceCreate, ParkingZonePriceUpdate]
 ):
-    async def get_by_price_priority(
-        self, db: AsyncSession, price_id: int, priority: int
-    ) -> ParkingZonePrice | None:
-        return await self._first(
-            db.scalars(
-                select(self.model).filter(
+    async def pricing_exists(
+        self, db: AsyncSession, zone_id: int, price_id: int, priority: int
+    ) -> bool:
+        result = await db.execute(
+            select(
+                exists().where(
+                    self.model.zone_id == zone_id,
                     self.model.price_id == price_id,
                     self.model.priority == priority,
                     self.model.is_deleted == false(),
                 )
             )
         )
+        return result.scalar()
 
 
 parkinglot_repo = ParkingLotRepository(ParkingLot)

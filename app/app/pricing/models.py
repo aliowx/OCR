@@ -17,3 +17,6 @@ class Price(Base):
         Integer, ForeignKey("parking.id"), nullable=True
     )
     parking = relationship("Parking")
+    pricings = relationship(
+        "ParkingZonePrice", back_populates="price", lazy="immediate"
+    )

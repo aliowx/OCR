@@ -53,6 +53,7 @@ async def set_price(
     db: AsyncSession,
     parkingzone_id: int,
     zoneprice_data: parking_schemas.SetZonePriceInput,
+    commit: bool = True,
 ) -> parking_schemas.ParkingZonePrice:
     zone = await repo.parkingzone_repo.get(db, id=parkingzone_id)
     if not zone:
@@ -66,8 +67,11 @@ async def set_price(
             detail="Price Not Found",
             msg_code=utils.MessageCodes.not_found,
         )
-    is_duplicate = await repo.parkingzoneprice_repo.get_by_price_priority(
-        db, price_id=price.id, priority=zoneprice_data.priority
+    is_duplicate = await repo.parkingzoneprice_repo.pricing_exists(
+        db,
+        zone_id=zone.id,
+        price_id=price.id,
+        priority=zoneprice_data.priority,
     )
     if is_duplicate:
         raise exc.ServiceFailure(
@@ -79,6 +83,6 @@ async def set_price(
         zone_id=zone.id, price_id=price.id, priority=zoneprice_data.priority
     )
     parkingzone_price = await repo.parkingzoneprice_repo.create(
-        db, obj_in=zoneprice_create
+        db, obj_in=zoneprice_create, commit=commit
     )
     return parkingzone_price

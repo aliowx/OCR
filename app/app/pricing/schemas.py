@@ -3,6 +3,8 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.parking.schemas import ParkingZonePrice
+
 
 class WeeklyDaysPriceModel(BaseModel):
     price_type: Literal["weekly"]
@@ -29,19 +31,25 @@ class PriceBase(BaseModel):
     parking_id: int | None = None
 
 
+class PriceBaseComplete(PriceBase):
+    pricings: list[ParkingZonePrice] = Field(default_factory=list)
+
+
 class PriceCreate(PriceBase):
     price_model: Union[WeeklyDaysPriceModel, ZonePriceModel] = Field(
         ..., discriminator="price_type"
     )
     name: str
     name_fa: str
+    zone_ids: list[int] = Field(default_factory=list)
+    priority: int = Field(1, ge=1, le=100)
 
 
 class PriceUpdate(PriceBase):
     pass
 
 
-class PriceInDBBase(PriceBase):
+class PriceInDBBase(PriceBaseComplete):
     id: int
     created: datetime
     modified: datetime

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
+from pydantic_extra_types.coordinate import Latitude, Longitude
 
 from app.models.base import ParkingPaymentType, UserType
 
@@ -40,10 +41,14 @@ class ParkingBase(BaseModel):
     beneficiary_data: Beneficiary | None = None
 
 
-class ParkingCreate(ParkingBase): ...
+class ParkingCreate(ParkingBase):
+    location_lat: Latitude | None = None
+    location_lon: Longitude | None = None
 
 
-class ParkingUpdate(ParkingBase): ...
+class ParkingUpdate(ParkingBase):
+    location_lat: Latitude | None = None
+    location_lon: Longitude | None = None
 
 
 class ParkingInDBBase(ParkingBase):

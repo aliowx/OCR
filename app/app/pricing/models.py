@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import ForeignKey, Integer, String, BigInteger, DateTime
+
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql.json import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,9 +18,7 @@ class Price(Base):
     hourly_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     daily_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     penalty_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
-    expiration_datetime = mapped_column(
-        DateTime, default=datetime.utcnow
-    )
+    expiration_datetime = mapped_column(DateTime, default=datetime.utcnow)
 
     parking_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("parking.id"), nullable=True

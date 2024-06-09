@@ -6,7 +6,7 @@ from app.parking.schemas import SetZonePriceInput
 from app.parking.services import parkingzone as parkingzone_services
 from app.pricing import schemas as price_schemas
 from app.pricing.repo import price_repo
-from app.utils import MessageCodes
+from app.utils import MessageCodes, PaginatedContent
 
 
 async def create_price(
@@ -41,3 +41,17 @@ async def create_price(
         )
     await db.commit()
     return price
+
+
+async def read_prices(
+    db: AsyncSession, params: price_schemas.ReadPricesParams
+) -> PaginatedContent[list[price_schemas.Price]]:
+    prices, total_count = await price_repo.get_multi_with_filters(
+        db, filters=params.db_filters
+    )
+    return PaginatedContent(
+        data=prices,
+        total_count=total_count,
+        size=params.size,
+        page=params.page,
+    )

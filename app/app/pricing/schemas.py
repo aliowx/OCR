@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt, FutureDatetime
+from pydantic import BaseModel, ConfigDict, Field, FutureDatetime, PositiveInt
 
 from app.parking.schemas import ParkingZonePrice
 
@@ -84,3 +84,62 @@ class CameraInDB(PriceInDBBase):
 class GetPrice(BaseModel):
     items: list[Price]
     all_items_count: int
+
+
+class ReadPricesFilter(BaseModel):
+    name__contains: str | None = None
+    name_fa__contains: str | None = None
+    parking_id__eq: int | None = None
+    zone_id__eq: int | None = None
+    expiration_datetime__gte: str | None = None
+    expiration_datetime__lte: str | None = None
+    created__gte: str | None = None
+    created__lte: str | None = None
+    limit: int | None = 100
+    skip: int = 0
+
+    @property
+    def join_pricezone(self) -> bool:
+        return self.zone_id__eq is not None
+
+
+class ReadPricesParams(BaseModel):
+    name: str | None = None
+    name_fa: str | None = None
+    parking_id: int | None = None
+    zone_id: int | None = None
+    expiration_datetime_start: datetime | None = None
+    expiration_datetime_end: datetime | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    size: int | None = 100
+    page: int = 1
+    asc: bool = True
+
+    @property
+    def skip(self) -> int:
+        skip = 0
+        if self.size is not None:
+            skip = (self.page * self.size) - self.size
+        return skip
+
+    @property
+    def db_filters(self) -> ReadPricesFilter:
+        filters = ReadPricesFilter(limit=self.size, skip=self.skip)
+        if self.name:
+            filters.name__contains = self.name
+        if self.name_fa:
+            filters.name_fa__contains = self.name_fa
+        if self.parking_id:
+            filters.parking_id__eq = self.parking_id
+        if self.zone_id:
+            filters.zone_id__eq = self.zone_id
+        if self.expiration_datetime_start:
+            filters.expiration_datetime__gte = self.expiration_datetime_start
+        if self.expiration_datetime_end:
+            filters.expiration_datetime__lte = self.expiration_datetime_end
+        if self.start_date:
+            filters.created__gte = self.start_date
+        if self.end_date:
+            filters.created__lte = self.end_date
+        return filters

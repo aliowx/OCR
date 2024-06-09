@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
+from app.pricing import schemas as price_schemas
 from app.pricing import services as pricing_services
-from app.utils import APIResponse, APIResponseType
+from app.utils import APIResponse, APIResponseType, PaginatedContent
 
 router = APIRouter()
 namespace = "price"
@@ -17,17 +18,14 @@ logger = logging.getLogger(__name__)
 @router.get("/")
 async def read_price(
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 1000,
+    params: price_schemas.ReadPricesParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[schemas.GetPrice]:
+) -> APIResponseType[PaginatedContent[list[price_schemas.Price]]]:
     """
     Get All price.
     """
-    price = await crud.price_repo.get_multi(db, skip=skip, limit=limit)
-    return APIResponse(
-        schemas.GetPrice(items=price, all_items_count=len(price))
-    )
+    prices = await pricing_services.read_prices(db, params=params)
+    return APIResponse(prices)
 
 
 @router.post("/")

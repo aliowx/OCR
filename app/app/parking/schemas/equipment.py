@@ -86,4 +86,8 @@ class ReadEquipmentsParams(BaseModel):
             filters.serial_number__eq = self.serial_number
         if self.equipment_type:
             filters.equipment_type__eq = self.equipment_type.value
+        if self.start_date:
+            filters.created__gte = self.start_date
+        if self.end_date:
+            filters.created__lte = self.end_date
         return filters

@@ -81,11 +81,6 @@ class CameraInDB(PriceInDBBase):
     pass
 
 
-class GetPrice(BaseModel):
-    items: list[Price]
-    all_items_count: int
-
-
 class ReadPricesFilter(BaseModel):
     name__contains: str | None = None
     name_fa__contains: str | None = None

@@ -176,6 +176,10 @@ class EquipmentRepository(
             orm_filters.append(
                 self.model.equipment_type == filters.equipment_type__eq
             )
+        if filters.equipment_status__eq:
+            orm_filters.append(
+                self.model.equipment_status == filters.equipment_status__eq
+            )
         if filters.ip_address__eq:
             orm_filters.append(self.model.ip_address == filters.ip_address__eq)
         if filters.serial_number__eq:

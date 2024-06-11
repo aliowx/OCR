@@ -2,11 +2,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.base import EquipmentType
+from app.models.base import EquipmentStatus, EquipmentType, QueryParam
 
 
 class EquipmentBase(BaseModel):
     equipment_type: EquipmentType | None = None
+    equipment_status: EquipmentStatus | None = None
     tag: str | None = None
     serial_number: str | None = None
     ip_address: str | None = None
@@ -50,6 +51,7 @@ class ReadEquipmentsFilter(BaseModel):
     parking_id__eq: int | None = None
     zone_id__eq: int | None = None
     equipment_type__eq: int | None = None
+    equipment_status__eq: int | None = None
     created__gte: str | None = None
     created__lte: str | None = None
     limit: int | None = 100
@@ -61,7 +63,12 @@ class ReadEquipmentsParams(BaseModel):
     serial_number: str | None = None
     parking_id: int | None = None
     zone_id: int | None = None
-    equipment_type: EquipmentType | None = None
+    equipment_type: EquipmentType | None = Field(
+        QueryParam(None, description=str(list(EquipmentType)))
+    )
+    equipment_status: EquipmentStatus | None = Field(
+        QueryParam(None, description=str(list(EquipmentStatus)))
+    )
     start_date: datetime | None = None
     end_date: datetime | None = None
     size: int | None = 100
@@ -86,6 +93,8 @@ class ReadEquipmentsParams(BaseModel):
             filters.serial_number__eq = self.serial_number
         if self.equipment_type:
             filters.equipment_type__eq = self.equipment_type.value
+        if self.equipment_status:
+            filters.equipment_status__eq = self.equipment_status.value
         if self.start_date:
             filters.created__gte = self.start_date
         if self.end_date:

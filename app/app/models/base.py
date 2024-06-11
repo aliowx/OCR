@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from fastapi.params import Query
+
 
 class UserType(IntEnum):
     REAL = 0
@@ -17,3 +19,12 @@ class EquipmentType(IntEnum):
     ROADBLOCK = 2
     DISPLAY = 3
     ERS = 4
+
+
+class EquipmentStatus(IntEnum):
+    HEALTHY = 1
+    BROKEN = 2
+    DISCONNECTED = 3
+
+
+class QueryParam(Query): ...

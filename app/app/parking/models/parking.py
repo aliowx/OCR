@@ -51,6 +51,7 @@ class ParkingZone(Base):
     pricings = relationship(
         "ParkingZonePrice", back_populates="zone", lazy="immediate"
     )
+    rules = relationship("ZoneRule", back_populates="zone", lazy="immediate")
 
     __table_args__ = (
         ForeignKeyConstraint(

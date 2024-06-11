@@ -3,6 +3,9 @@ from enum import IntEnum
 from fastapi.params import Query
 
 
+class QueryParam(Query): ...
+
+
 class UserType(IntEnum):
     REAL = 0
     LEGAL = 1
@@ -27,4 +30,6 @@ class EquipmentStatus(IntEnum):
     DISCONNECTED = 3
 
 
-class QueryParam(Query): ...
+class RuleType(IntEnum):
+    BLACK_LIST = 1
+    WHITE_LIST = 2

@@ -42,6 +42,7 @@ class MessageCodes:
     duplicate_ip_address = 9
     duplicate_serial_number = 10
     duplicate_zone_pricing = 11
+    duplicate_name = 12
 
     english_messages_names = {
         0: "Successful Operation",
@@ -56,6 +57,7 @@ class MessageCodes:
         9: "Duplicate ip address",
         10: "Duplicate serial number",
         11: "Duplicate zone pricing",
+        12: "Duplicate name",
     }
 
     persian_message_names = {
@@ -71,4 +73,5 @@ class MessageCodes:
         9: "آی‌پی تکراری است",
         10: "شماره سریال تکراری است",
         11: "قیمت‌گذاری وارد شده برای این منطقه تکراری است",
+        12: "نام تکرایر است",
     }

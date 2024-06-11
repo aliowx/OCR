@@ -16,6 +16,9 @@ from .models import (
     ParkingLot,
     ParkingZone,
     ParkingZonePrice,
+    PlateRule,
+    Rule,
+    ZoneRule,
 )
 from .schemas.camera import CameraCreate, CameraUpdate
 from .schemas.equipment import (
@@ -30,6 +33,12 @@ from .schemas.parkingzone import (
     ParkingZonePriceCreate,
     ParkingZonePriceUpdate,
     ParkingZoneUpdate,
+)
+from .schemas.rule import (
+    PlateRuleCreate,
+    ReadRulesFilter,
+    RuleCreate,
+    ZoneRuleCreate,
 )
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -52,7 +61,7 @@ class ParkingLotRepository(
 
         query = select(ParkingLot)
 
-        filters = [ParkingLot.is_deleted == False]
+        filters = [ParkingLot.is_deleted == false()]
 
         if input_camera_id:
             filters.append(ParkingLot.camera_id == input_camera_id)
@@ -77,7 +86,7 @@ class ParkingLotRepository(
 
         query = select(ParkingLot)
 
-        filters = [ParkingLot.is_deleted == False]
+        filters = [ParkingLot.is_deleted == false()]
 
         if input_camera_id is not None:
             filters.append(ParkingLot.camera_id == input_camera_id)
@@ -103,7 +112,7 @@ class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
 
         query = select(Camera)
 
-        filters = [Camera.is_deleted == False]
+        filters = [Camera.is_deleted == false()]
 
         if input_camera_code is not None:
             filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
@@ -130,7 +139,7 @@ class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
 
         query = select(Camera)
 
-        filters = [Camera.is_deleted == False]
+        filters = [Camera.is_deleted == false()]
 
         if input_camera_code is not None:
             filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
@@ -156,7 +165,7 @@ class ParkingZoneRepository(
             db.scalars(
                 select(self.model).filter(
                     func.lower(self.model.name) == name.lower(),
-                    self.model.is_deleted == False,
+                    self.model.is_deleted == false(),
                 )
             )
         )
@@ -239,9 +248,125 @@ class ParkingZonePriceRepository(
         return result.scalar()
 
 
+class RuleRepository(CRUDBase[Rule, RuleCreate, None]):
+    def update(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
+    def _build_filters(self, filters: ReadRulesFilter) -> list:
+        orm_filters = []
+        if filters.name_fa__eq:
+            orm_filters.append(self.model.name_fa == filters.name_fa__eq)
+        if filters.name_fa__contains:
+            orm_filters.append(
+                self.model.name_fa.contains(filters.name_fa__contains)
+            )
+        if filters.rule_type__eq:
+            orm_filters.append(self.model.rule_type == filters.rule_type__eq)
+        if filters.start_datetime__gte:
+            orm_filters.append(
+                self.model.start_datetime >= filters.start_datetime__gte
+            )
+        if filters.start_datetime__lte:
+            orm_filters.append(
+                self.model.start_datetime <= filters.start_datetime__lte
+            )
+        if filters.end_datetime__gte:
+            orm_filters.append(
+                self.model.end_datetime >= filters.end_datetime__gte
+            )
+        if filters.end_datetime__lte:
+            orm_filters.append(
+                self.model.end_datetime <= filters.end_datetime__lte
+            )
+        if filters.registeration_date__gte:
+            orm_filters.append(
+                self.model.registeration_date
+                >= filters.registeration_date__gte
+            )
+        if filters.registeration_date__lte:
+            orm_filters.append(
+                self.model.registeration_date
+                <= filters.registeration_date__lte
+            )
+
+        return orm_filters
+
+    async def get_multi_with_filters(
+        self,
+        db: AsyncSession,
+        *,
+        filters: ReadRulesFilter,
+        asc: bool = False,
+    ) -> tuple[list[Rule], int]:
+        orm_filters = self._build_filters(filters)
+        query = select(Rule).filter(
+            self.model.is_deleted == false(),
+            *orm_filters,
+        )
+
+        q = query.with_only_columns(func.count())
+        total_count = db.scalar(q)
+
+        order_by = self.model.id.asc() if asc else self.model.id.desc()
+        query = query.order_by(order_by)
+
+        if filters.limit is None:
+            return (
+                await self._all(db.scalars(query.offset(filters.skip))),
+                await total_count,
+            )
+        return (
+            await self._all(
+                db.scalars(query.offset(filters.skip).limit(filters.limit))
+            ),
+            await total_count,
+        )
+
+
+class ZoneRuleRepository(CRUDBase[ZoneRule, ZoneRuleCreate, None]):
+    def updates(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
+    async def find(
+        self, db: AsyncSession, rule_id: int, zone_id: int
+    ) -> Rule | None:
+        rule = await self._first(
+            db.scalars(
+                select(self.model).filter(
+                    self.model.rule_id == rule_id,
+                    self.model.zone_id == zone_id,
+                    self.model.is_deleted == false(),
+                )
+            )
+        )
+        return rule
+
+
+class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
+    def update(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
+    async def find(
+        self, db: AsyncSession, rule_id: int, plate: str
+    ) -> PlateRule | None:
+        rule = await self._first(
+            db.scalars(
+                select(self.model).filter(
+                    self.model.rule_id == rule_id,
+                    self.model.plate == plate,
+                    self.model.is_deleted == false(),
+                )
+            )
+        )
+        return rule
+
+
 parkinglot_repo = ParkingLotRepository(ParkingLot)
 camera_repo = CameraRepository(Camera)
 parking_repo = ParkingRepository(Parking)
 parkingzone_repo = ParkingZoneRepository(ParkingZone)
 equipment_repo = EquipmentRepository(Equipment)
 parkingzoneprice_repo = ParkingZonePriceRepository(ParkingZonePrice)
+rule_repo = RuleRepository(Rule)
+zonerule_repo = ZoneRuleRepository(ZoneRule)
+platerule_repo = PlateRuleRepository(PlateRule)

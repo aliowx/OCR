@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.base import QueryParam, RuleType
+from app.models.base import QueryParam, RuleType, Weekday
 from app.parking.schemas.parkingzone import ParkingZoneRule
 from app.schemas.types import UTCDatetime
 
@@ -10,6 +10,7 @@ from app.schemas.types import UTCDatetime
 class RuleBase(BaseModel):
     name_fa: str | None = None
     rule_type: RuleType | None = None
+    weekdays: list[Weekday] | None = Field(default_factory=list)
     start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     registeration_date: date | None = None
@@ -49,6 +50,7 @@ class ReadRulesFilter(BaseModel):
     name_fa__eq: str | None = None
     name_fa__contains: str | None = None
     rule_type__eq: int | None = None
+    weekday__in: list[Weekday] | None = None
     start_datetime__gte: str | None = None
     start_datetime__lte: str | None = None
     end_datetime__gte: str | None = None
@@ -65,6 +67,9 @@ class ReadRulesParams(BaseModel):
     name_fa: str | None = None
     rule_type: RuleType | None = Field(
         QueryParam(None, description=str(list(RuleType)))
+    )
+    weekdays: list[Weekday] = Field(
+        QueryParam(default_factory=list, description=str(list(Weekday)))
     )
     start_datetime_from: datetime | None = None
     start_datetime_to: datetime | None = None
@@ -90,6 +95,8 @@ class ReadRulesParams(BaseModel):
             filters.name_fa__contains = self.name_fa
         if self.rule_type:
             filters.rule_type__eq = self.rule_type.value
+        if self.weekdays:
+            filters.weekday__in = self.weekdays
         if self.start_datetime_from:
             filters.start_datetime__gte = self.start_datetime_from
         if self.start_datetime_to:

@@ -262,6 +262,10 @@ class RuleRepository(CRUDBase[Rule, RuleCreate, None]):
             )
         if filters.rule_type__eq:
             orm_filters.append(self.model.rule_type == filters.rule_type__eq)
+        if filters.weekday__in:
+            orm_filters.append(
+                self.model.plan_days.contains(filters.weekday__in)
+            )
         if filters.start_datetime__gte:
             orm_filters.append(
                 self.model.start_datetime >= filters.start_datetime__gte

@@ -10,7 +10,9 @@ from app.schemas.types import UTCDatetime
 class RuleBase(BaseModel):
     name_fa: str | None = None
     rule_type: RuleType | None = None
-    weekdays: list[Weekday] | None = Field(default_factory=list)
+    weekdays: list[Weekday] | None = Field(
+        default_factory=list, description=Weekday.str
+    )
     start_datetime: datetime | None = None
     end_datetime: datetime | None = None
     registeration_date: date | None = None
@@ -69,7 +71,7 @@ class ReadRulesParams(BaseModel):
         QueryParam(None, description=str(list(RuleType)))
     )
     weekdays: list[Weekday] = Field(
-        QueryParam(default_factory=list, description=str(list(Weekday)))
+        QueryParam(default_factory=list, description=Weekday.str)
     )
     start_datetime_from: datetime | None = None
     start_datetime_to: datetime | None = None

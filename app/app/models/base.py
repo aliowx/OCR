@@ -43,3 +43,8 @@ class Weekday(IntEnum):
     FRI = 4
     SAT = 5
     SUN = 6
+
+    @classmethod
+    @property
+    def str(cls) -> str:
+        return str(list(cls))

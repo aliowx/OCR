@@ -15,9 +15,9 @@ async def create_zone(
     db: AsyncSession,
     parkingzone_input: parking_schemas.ParkingZoneCreate,
 ) -> parking_schemas.ParkingZone:
-    parking = await repo.parking.get(db, id=parkingzone_input.parking_id)
+    parking = await repo.parking_repo.get(db, id=parkingzone_input.parking_id)
     if not parking:
-        main_parking = await repo.parking.get_main_parking(db)
+        main_parking = await repo.parking_repo.get_main_parking(db)
         if not main_parking:
             raise exc.ServiceFailure(
                 detail="Parking Not Found",
@@ -25,7 +25,7 @@ async def create_zone(
             )
         parkingzone_input.parking_id = main_parking.id
 
-    parkingzone = await repo.parkingzone.get_by_name(
+    parkingzone = await repo.parkingzone_repo.get_by_name(
         db, name=parkingzone_input.name
     )
     if parkingzone:
@@ -36,7 +36,7 @@ async def create_zone(
 
     parent_zone = None
     if parkingzone_input.parent_id is not None:
-        parent_zone = await repo.parkingzone.get(
+        parent_zone = await repo.parkingzone_repo.get(
             db, id=parkingzone_input.parent_id
         )
         if not parent_zone:
@@ -45,7 +45,7 @@ async def create_zone(
                 msg_code=utils.MessageCodes.not_found,
             )
 
-    parkingzone = await repo.parkingzone.create(db, obj_in=parkingzone_input)
+    parkingzone = await repo.parkingzone_repo.create(db, obj_in=parkingzone_input)
     return parkingzone
 
 

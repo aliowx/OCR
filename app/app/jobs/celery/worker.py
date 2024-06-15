@@ -173,10 +173,11 @@ def cleanup(self, table_name: str = "image"):
     redis_client.setex(
         lock_name, timedelta(seconds=60 * settings.CLEANUP_PERIOD), 1
     )
+    result = None
     try:
         if table_name == "image":
             model_img = models.Image
-            img_ids = crud.camera.get_multi(self.session)
+            img_ids = crud.camera_repo.get_multi(self.session)
             for img_id in img_ids:
                 subquery = (
                     self.session.query(model_img.id)

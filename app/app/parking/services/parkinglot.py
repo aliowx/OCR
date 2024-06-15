@@ -32,7 +32,7 @@ async def create_line(
         check_line_number.add(i["number_line"])
 
     # check camera exist
-    camera = await crud.camera.get(db, id=parkinglot_in.camera_id)
+    camera = await crud.camera_repo.get(db, id=parkinglot_in.camera_id)
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
@@ -40,12 +40,12 @@ async def create_line(
         )
 
     # update line's camera
-    find_parkinglot = await crud.parkinglot.find_lines_camera(
+    find_parkinglot = await crud.parkinglot_repo.find_lines_camera(
         db, input_camera_id=parkinglot_in.camera_id
     )
     if find_parkinglot:
         for p in find_parkinglot:
-            await crud.parkinglot._remove_async(db, id=p.id)
+            await crud.parkinglot_repo._remove_async(db, id=p.id)
 
     # create new line's
     coordinates_rectangles = []
@@ -69,7 +69,7 @@ async def create_line(
             ],
             price_model_id=coordinate["price_model_id"],
         )
-        items = await crud.parkinglot.create(db, obj_in=new_obj)
+        items = await crud.parkinglot_repo.create(db, obj_in=new_obj)
         if items:
             reverse_coordinates_rectangles = {
                 "number_line": new_obj.number_line,
@@ -96,11 +96,11 @@ async def create_line(
 async def update_status(
     db: AsyncSession, parkinglot_in: schemas.ParkingLotUpdateStatus
 ) -> schemas.ParkingLotUpdateStatus:
-    camera = await crud.camera.one_camera(
+    camera = await crud.camera_repo.one_camera(
         db, input_camera_code=parkinglot_in.camera_code
     )
 
-    check = await crud.parkinglot.one_parkinglot(
+    check = await crud.parkinglot_repo.one_parkinglot(
         db,
         input_camera_id=camera.id,
         input_number_line=parkinglot_in.number_line,
@@ -139,12 +139,12 @@ async def update_status(
     check.lpr_img_id = parkinglot_in.lpr_img_id
     check.ocr_img_id = parkinglot_in.ocr_img_id
     check.latest_time_modified = datetime.now()
-    return await crud.parkinglot.update(db, db_obj=check)
+    return await crud.parkinglot_repo.update(db, db_obj=check)
 
 
 async def get_status(db: AsyncSession):
     parkinglot_details = []
-    parkinglots = await crud.parkinglot.get_multi(db)
+    parkinglots = await crud.parkinglot_repo.get_multi(db)
 
     for parkinglot in parkinglots:
         parkinglot_details.append(
@@ -176,7 +176,7 @@ async def get_status(db: AsyncSession):
 
 
 async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
-    camera = await crud.camera.one_camera(db, input_camera_code=camera_code)
+    camera = await crud.camera_repo.one_camera(db, input_camera_code=camera_code)
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
@@ -184,7 +184,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         )
 
     # find line's camera
-    parkinglot_lines = await crud.parkinglot.find_lines_camera(
+    parkinglot_lines = await crud.parkinglot_repo.find_lines_camera(
         db, input_camera_id=camera.id
     )
 
@@ -217,6 +217,6 @@ async def update_price(
     db: AsyncSession, data: schemas.PriceUpdateInParkingLot
 ):
 
-    find_park = await crud.parkinglot.get(db, id=data.id_park)
+    find_park = await crud.parkinglot_repo.get(db, id=data.id_park)
     find_park.price_model_id = data.price_model_id
-    return await crud.parkinglot.update(db, db_obj=find_park)
+    return await crud.parkinglot_repo.update(db, db_obj=find_park)

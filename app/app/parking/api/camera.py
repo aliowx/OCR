@@ -23,7 +23,7 @@ async def read_camera(
     """
     Get All Camera.
     """
-    cameras = await crud.camera.get_multi(db, skip=skip, limit=limit)
+    cameras = await crud.camera_repo.get_multi(db, skip=skip, limit=limit)
     return APIResponse(
         schemas.GetCamera(items=cameras, all_items_count=len(cameras))
     )
@@ -38,7 +38,7 @@ async def create_camera(
     """
     Create New Camera.
     """
-    camera_exist = await crud.camera.find_cameras(
+    camera_exist = await crud.camera_repo.find_cameras(
         db, input_camera_code=camera_in.camera_code
     )
 
@@ -55,7 +55,7 @@ async def create_camera(
             msg_code=utils.MessageCodes.not_found,
         )
 
-    return APIResponse(await crud.camera.create(db, obj_in=camera_in))
+    return APIResponse(await crud.camera_repo.create(db, obj_in=camera_in))
 
 
 @router.get("/search")
@@ -72,7 +72,7 @@ async def search_cameras(
     Search Cameras.
     """
 
-    camera = await crud.camera.find_cameras(
+    camera = await crud.camera_repo.find_cameras(
         db,
         input_camera_code=input_camera_code,
         input_camera_ip=input_camera_ip,
@@ -100,7 +100,7 @@ async def get_camera_by_id(
     Get One Camera.
     """
 
-    camera = await crud.camera.get(db, id=id)
+    camera = await crud.camera_repo.get(db, id=id)
 
     if not camera:
         raise exc.ServiceFailure(
@@ -121,14 +121,14 @@ async def update_camera(
     """
     Update Camera.
     """
-    camera = await crud.camera.get(db, id=id)
+    camera = await crud.camera_repo.get(db, id=id)
     if not camera:
         raise exc.ServiceFailure(
             detail="The camera not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
     return APIResponse(
-        await crud.camera.update(db, db_obj=camera, obj_in=camera_in)
+        await crud.camera_repo.update(db, db_obj=camera, obj_in=camera_in)
     )
 
 
@@ -141,13 +141,13 @@ async def delete_camera(
     """
     Delete camera
     """
-    camera = await crud.camera.get(db, id=id)
+    camera = await crud.camera_repo.get(db, id=id)
     if not camera:
         raise exc.ServiceFailure(
             detail="The camera not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
-    return APIResponse(await crud.camera._remove_async(db, id=id))
+    return APIResponse(await crud.camera_repo._remove_async(db, id=id))
 
 
 @router.post("/upload_photo")
@@ -158,7 +158,7 @@ async def upload_photo(
     current_user: models.User = Depends(deps.get_current_active_user),
 ):
 
-    camera = await crud.camera.one_camera(db, input_camera_code=camera_code)
+    camera = await crud.camera_repo.one_camera(db, input_camera_code=camera_code)
 
     if not camera:
         raise exc.ServiceFailure(
@@ -166,4 +166,4 @@ async def upload_photo(
             msg_code=utils.MessageCodes.not_found,
         )
     camera.image_id = image_id
-    return APIResponse(await crud.camera.update(db, db_obj=camera))
+    return APIResponse(await crud.camera_repo.update(db, db_obj=camera))

@@ -176,7 +176,9 @@ async def get_status(db: AsyncSession):
 
 
 async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
-    camera = await crud.camera_repo.one_camera(db, input_camera_code=camera_code)
+    camera = await crud.camera_repo.one_camera(
+        db, input_camera_code=camera_code
+    )
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",

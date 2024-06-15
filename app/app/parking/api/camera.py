@@ -158,7 +158,9 @@ async def upload_photo(
     current_user: models.User = Depends(deps.get_current_active_user),
 ):
 
-    camera = await crud.camera_repo.one_camera(db, input_camera_code=camera_code)
+    camera = await crud.camera_repo.one_camera(
+        db, input_camera_code=camera_code
+    )
 
     if not camera:
         raise exc.ServiceFailure(

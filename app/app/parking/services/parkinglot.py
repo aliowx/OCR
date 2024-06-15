@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas, utils
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
-from app.parking.repo import parkinglot_repo
+from app.parking.repo import parkingzone_repo
 
 
 async def create_line(
@@ -14,7 +14,7 @@ async def create_line(
 ) -> schemas.ParkingLotInDBBase:
 
     if parkinglot_in.zone_id:
-        zone = await parkinglot_repo.get(db, id=parkinglot_in.zone_id)
+        zone = await parkingzone_repo.get(db, id=parkinglot_in.zone_id)
         if not zone:
             raise exc.ServiceFailure(
                 detail="Zone not found.",

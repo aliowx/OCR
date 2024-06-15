@@ -45,7 +45,9 @@ async def create_zone(
                 msg_code=utils.MessageCodes.not_found,
             )
 
-    parkingzone = await repo.parkingzone_repo.create(db, obj_in=parkingzone_input)
+    parkingzone = await repo.parkingzone_repo.create(
+        db, obj_in=parkingzone_input
+    )
     return parkingzone
 
 

@@ -1,18 +1,18 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
 
 # Shared properties
 class RecordBase(BaseModel):
-    ocr: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    best_lpr_id: Optional[int] = None
-    best_big_image_id: Optional[int] = None
-    price_model: Optional[dict]
-    score: Optional[float] = None
+    ocr: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    best_lpr_id: int | None = None
+    best_big_image_id: int | None = None
+    price_model: dict | None = None
+    score: float | None = None
 
 
 # Properties to receive on item creation
@@ -31,16 +31,16 @@ class RecordUpdate(RecordBase):
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int
-    created: Optional[datetime]
-    modified: Optional[datetime]
+    created: datetime | None
+    modified: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Properties to return to client
 class Record(RecordInDBBase):
-    parkinglot_time: Optional[str] = None
-    parkinglot_price: Optional[float] = None
+    parkinglot_time: str | None = None
+    parkinglot_price: float | None = None
     # pass
 
 

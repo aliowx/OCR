@@ -21,12 +21,12 @@ class Plate(Base):
     floor_number: Mapped[int] = mapped_column(Integer)
     floor_name: Mapped[str] = mapped_column(String)
 
-    name_parking: Mapped[str] = mapped_column(String)
+    name_parkinglot: Mapped[str] = mapped_column(String)
 
     camera_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("camera.id"), index=True
     )
-    camera_plate = relationship("Camera", back_populates="parking_plate")
+    camera_plate = relationship("Camera", back_populates="parkinglot_plate")
 
     record_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("record.id"), index=True, nullable=True

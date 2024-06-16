@@ -1,7 +1,10 @@
-from .camera import Camera
+from app.parking.models.camera import Camera
+from app.parking.models.parking import Parking, ParkingZone
+from app.parking.models.parkinglot import ParkingLot
+from app.pricing.models import Price
+from app.users.models import User
+
+from .base import UserType
 from .image import Image
-from .parking import Parking
 from .plate import Plate
-from .price import Price
 from .record import Record
-from .user import User

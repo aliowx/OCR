@@ -4,11 +4,10 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
-from app import exceptions as exc
-from app import models, schemas, utils
+from app import crud, models, schemas, utils
 from app.api import deps
 from app.api.services import records_services
+from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
 
 logger = logging.getLogger(__name__)

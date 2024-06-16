@@ -201,8 +201,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db.scalar(q)
 
     def remove(
-        self, db: Session, *, id: int, commit: bool = True
+        self, db: Session | AsyncSession, *, id: int, commit: bool = True
     ) -> ModelType:
+        if isinstance(db, AsyncSession):
+            return self._remove_async(db, id=id, commit=commit)
         obj = db.query(self.model).get(id)
         return self.update(
             db=db, db_obj=obj, obj_in={"is_deleted": True}, commit=commit

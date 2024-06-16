@@ -7,10 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
 
-from app import crud
-from app import exceptions as exc
-from app import schemas, utils
+from app import crud, schemas, utils
 from app.api import deps
+from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
 
 router = APIRouter()

@@ -1,5 +1,6 @@
 import logging
 
+from typing import Awaitable
 from sqlalchemy import and_, false, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -87,6 +88,26 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
                 db.scalars(query.offset(filters.skip).limit(filters.limit))
             ),
             await total_count,
+        )
+
+    async def find_model_price(
+        self,
+        db: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        input_name_fa_price: str = None,
+    ) -> list[Price] | Awaitable[list[Price]]:
+
+        query = select(Price)
+
+        filters = [Price.is_deleted == false()]
+
+        if input_name_fa_price is not None:
+            filters.append(Price.name_fa.like(f"%{input_name_fa_price}%"))
+
+        return await self._all(
+            db.scalars(query.filter(*filters).offset(skip).limit(limit))
         )
 
 

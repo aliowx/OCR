@@ -8,6 +8,7 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.pricing import schemas as price_schemas
 from app.pricing import services as pricing_services
+from app.pricing.repo import price_repo
 from app.utils import APIResponse, APIResponseType, PaginatedContent
 
 router = APIRouter()
@@ -25,6 +26,21 @@ async def read_price(
     Get All price.
     """
     prices = await pricing_services.read_prices(db, params=params)
+    return APIResponse(prices)
+
+
+@router.get("/search")
+async def find_price(
+    db: AsyncSession = Depends(deps.get_db_async),
+    input_model_price: str = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[list[price_schemas.Price]]:
+    """
+    Get All price.
+    """
+    prices = await price_repo.find_model_price(
+        db, input_name_fa_price=input_model_price
+    )
     return APIResponse(prices)
 
 

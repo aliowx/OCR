@@ -2,8 +2,12 @@ import requests
 import random
 import string
 from app.core.config import settings
-from app.parking.schemas import parking as pschemas
-from app.parking.schemas import parkingzone as zschemas
+from app import schemas
+from app.parking.schemas import parking as parkingSchemas
+from app.parking.schemas import parkingzone as zoneSchemas
+from app.parking.schemas import camera as cameraShemas
+from app.parking.schemas import parkinglot as parkinglotShemas
+from app.pricing.schemas import price as priceSchemas
 from .image_data_base64 import lpr_img1, ocr_img1, lpr_img2, ocr_img2, image
 from datetime import datetime, timedelta
 
@@ -28,7 +32,7 @@ def main_request(list: list):
     """
     --------------        create parking main            -----------------
     """
-    data_create_parking = pschemas.ParkingCreate(
+    data_create_parking = parkingSchemas.ParkingCreate(
         name=generate_random_string(5, True),
         brand_name=generate_random_string(5, True),
         floor_count=5,
@@ -46,7 +50,7 @@ def main_request(list: list):
         owner_sheba_number="iranmal+123",
         owner_address="iranmal",
         owner_type=1,
-        beneficiary_data=pschemas.Beneficiary(
+        beneficiary_data=parkingSchemas.Beneficiary(
             company_name="iranmal",
             company_register_code=generate_random_string(5),
             company_national_code=generate_random_string(5),
@@ -63,6 +67,9 @@ def main_request(list: list):
         parking = requests.post(
             f"{url}/parking/main", json=data_create_parking, auth=auth
         )
+        print("parking", parking.url, parking.status_code)
+    else:
+        parking = requests.get(f"{url}/parking/main", auth=auth)
         print("parking", parking.url, parking.status_code)
 
     """
@@ -81,7 +88,7 @@ def main_request(list: list):
             -subzone1
     """
 
-    zone1 = zschemas.ParkingZoneCreate(
+    zone1 = zoneSchemas.ParkingZoneCreate(
         tag=generate_random_string(5),
         name="z1c1-30",
         parking_id=parking.json()["content"]["id"],
@@ -97,14 +104,14 @@ def main_request(list: list):
         zone1_create = requests.post(
             f"{url}/parkingzone/", json=zone1, auth=auth
         )
-        sub1_zone1 = zschemas.ParkingZoneCreate(
+        sub1_zone1 = zoneSchemas.ParkingZoneCreate(
             tag=generate_random_string(5),
             name="sz1c1-15",
             parking_id=parking.json()["content"]["id"],
             parent_id=zone1_create.json()["content"]["id"],
         )
 
-        sub2_zone1 = zschemas.ParkingZoneCreate(
+        sub2_zone1 = zoneSchemas.ParkingZoneCreate(
             tag=generate_random_string(5),
             name="sz1c16-30",
             parking_id=parking.json()["content"]["id"],
@@ -127,14 +134,14 @@ def main_request(list: list):
             f"{url}/parkingzone/", json=zone2, auth=auth
         )
         print("zone 2", zone2_create.url, zone2_create.status_code)
-        sub1_zone2 = zschemas.ParkingZoneCreate(
+        sub1_zone2 = zoneSchemas.ParkingZoneCreate(
             tag=generate_random_string(5),
             name="sz1c1-30",
             parking_id=parking.json()["content"]["id"],
             parent_id=zone2_create.json()["content"]["id"],
         )
 
-        sub1_sub1_zone2 = zschemas.ParkingZoneCreate(
+        sub1_sub1_zone2 = zoneSchemas.ParkingZoneCreate(
             tag=generate_random_string(5),
             name="z1c30-90",
             parking_id=parking.json()["content"]["id"],
@@ -156,20 +163,21 @@ def main_request(list: list):
             sub1_sub1_zone2_create.url,
             sub1_sub1_zone2_create.status_code,
         )
+    
 
     """
     --------------        create image            -----------------
     """
 
-    data_image = {"image": image}
+    data_image = schemas.ImageCreateBase64(image=image)
 
-    lpr1_img = {"image": lpr_img1}
+    lpr1_img = schemas.ImageCreateBase64(image=lpr_img1)
 
-    ocr1_img = {"image": ocr_img1}
+    ocr1_img = schemas.ImageCreateBase64(image=ocr_img1)
 
-    lpr2_img = {"image": lpr_img2}
+    lpr2_img = schemas.ImageCreateBase64(image=lpr_img2)
 
-    ocr2_img = {"image": ocr_img2}
+    ocr2_img = schemas.ImageCreateBase64(image=ocr_img2)
 
     if "image" in list:
         img_create = requests.post(
@@ -197,13 +205,13 @@ def main_request(list: list):
     --------------        create camera            -----------------
     """
 
-    data_camera = {
-        "is_active": True,
-        "camera_ip": "127.0.0.1",
-        "camera_code": generate_random_string(5),
-        "location": "z1c",
-        "image_id": img_create.json()["content"]["id"],
-    }
+    data_camera = cameraShemas.CameraCreate(
+        is_active=True,
+        camera_ip="127.0.0.1",
+        camera_code=generate_random_string(5),
+        location="z1c",
+        image_id=img_create.json()["content"]["id"],
+    )
     if "camera" in list:
         camera_create = requests.post(
             f"{url}/camera/", json=data_camera, auth=auth
@@ -214,26 +222,26 @@ def main_request(list: list):
     --------------        create pricing            -----------------
     """
 
-    data_price = {
-        "price_model": {
-            "price_type": "weekly",
-            "saturday": 10,
-            "sunday": 20,
-            "monday": 30,
-            "tuesday": 4,
-            "wednesday": 50,
-            "thursday": 60,
-            "friday": 70,
-        },
-        "name": generate_random_string(5),
-        "name_fa": "هفتگی",
-        "entrance_fee": 1,
-        "hourly_fee": 1,
-        "daily_fee": 1,
-        "penalty_fee": 1,
-        "expiration_datetime": str(datetime.now() + timedelta(days=365)),
-        "parking_id": parking.json()["content"]["id"],
-        "zone_ids": [
+    data_price = priceSchemas.PriceCreate(
+        price_model=priceSchemas.WeeklyDaysPriceModel(
+            price_type="weekly",
+            saturday=10,
+            sunday=20,
+            monday=30,
+            tuesday=4,
+            wednesday=50,
+            thursday=60,
+            friday=70,
+        ),
+        name=generate_random_string(5),
+        name_fa="هفتگی",
+        entrance_fee=1,
+        hourly_fee=1,
+        daily_fee=1,
+        penalty_fee=1,
+        expiration_datetime=str(datetime.now() + timedelta(days=365)),
+        parking_id=parking.json()["content"]["id"],
+        zone_ids=[
             zone1_create.json()["content"]["id"],
             sub1_zone1_create.json()["content"]["id"],
             sub2_zone1_create.json()["content"]["id"],
@@ -241,19 +249,21 @@ def main_request(list: list):
             sub1_zone2_create.json()["content"]["id"],
             sub1_sub1_zone2_create.json()["content"]["id"],
         ],
-        "priority": 1,
-    }
-    data_price2 = {
-        "price_model": {"price_type": "zone", "price": 1000},
-        "name": generate_random_string(5),
-        "name_fa": "مکان",
-        "entrance_fee": 1,
-        "hourly_fee": 1,
-        "daily_fee": 1,
-        "penalty_fee": 1,
-        "expiration_datetime": str(datetime.now() + timedelta(days=365)),
-        "parking_id": parking.json()["content"]["id"],
-        "zone_ids": [
+        priority=1,
+    )
+    data_price2 = priceSchemas.PriceCreate(
+        price_model=priceSchemas.WeeklyDaysPriceModel(
+            price_type="zone", price=1000
+        ),
+        name=generate_random_string(5),
+        name_fa="مکان",
+        entrance_fee=1,
+        hourly_fee=1,
+        daily_fee=1,
+        penalty_fee=1,
+        expiration_datetime=str(datetime.now() + timedelta(days=365)),
+        parking_id=parking.json()["content"]["id"],
+        zone_ids=[
             zone1_create.json()["content"]["id"],
             sub1_zone1_create.json()["content"]["id"],
             sub2_zone1_create.json()["content"]["id"],
@@ -261,8 +271,8 @@ def main_request(list: list):
             sub1_zone2_create.json()["content"]["id"],
             sub1_sub1_zone2_create.json()["content"]["id"],
         ],
-        "priority": 1,
-    }
+        priority=1,
+    )
     if "price" in list:
         price_create = requests.post(
             f"{url}/price/", json=data_price, auth=auth
@@ -277,11 +287,11 @@ def main_request(list: list):
     --------------        create parling lot            -----------------
     """
 
-    data_lots = {
-        "floor_number": random.randint(1, 10),
-        "floor_name": generate_random_string(5),
-        "name_parkinglot": generate_random_string(5),
-        "coordinates_rectangles": [
+    data_lots = parkinglotShemas.ParkingLotCreate(
+        floor_number=random.randint(1, 10),
+        floor_name=generate_random_string(5),
+        name_parkinglot=generate_random_string(5),
+        coordinates_rectangles=[
             {
                 "coordinates_rectangle_big": [[0.58, 0.26], [1.887, 1.3]],
                 "coordinates_rectangle_small": [[0.55, 0.20], [1.05, 1.0]],
@@ -299,9 +309,9 @@ def main_request(list: list):
                 "price_model_id": price_create2.json()["content"]["id"],
             },
         ],
-        "camera_id": camera_create.json()["content"]["id"],
-        "zone_id": sub1_zone1_create.json()["content"]["id"],
-    }
+        camera_id=camera_create.json()["content"]["id"],
+        zone_id=sub1_zone1_create.json()["content"]["id"],
+    )
     if "parkinglot" in list:
         lot_create = requests.post(
             f"{url}/parkinglot/", json=data_lots, auth=auth, headers=headers
@@ -312,30 +322,30 @@ def main_request(list: list):
     --------------        create plate and record            -----------------
     """
 
-    data_plate1 = {
-        "ocr": "77ج44366",
-        "lpr_id": ocr1_img_create.json()["content"]["id"],
-        "big_image_id": lpr1_img_create.json()["content"]["id"],
-        "record_time": "2024-07-15T09:20:37.480Z",
-        "camera_id": camera_create.json()["content"]["id"],
-        "number_line": 1,  # importent create to lot
-        "floor_number": -1,  # importent create to lot
-        "floor_name": "iranmal",  # importent create to lot
-        "name_parkinglot": "lot1",  # importent create to lot
-        "price_model": price_create.json()["content"]["price_model"],
-    }
-    data_plate2 = {
-        "ocr": "12ب34511",
-        "lpr_id": ocr2_img_create.json()["content"]["id"],
-        "big_image_id": lpr2_img_create.json()["content"]["id"],
-        "record_time": "2024-07-15T09:20:37.480Z",
-        "camera_id": camera_create.json()["content"]["id"],
-        "number_line": 1,  # importent create to lot
-        "floor_number": -1,  # importent create to lot
-        "floor_name": "iranmal",  # importent create to lot
-        "name_parkinglot": "lot1",  # importent create to lot
-        "price_model": price_create.json()["content"]["price_model"],
-    }
+    data_plate1 = schemas.PlateCreate(
+        ocr="77ج44366",
+        lpr_id=ocr1_img_create.json()["content"]["id"],
+        big_image_id=lpr1_img_create.json()["content"]["id"],
+        record_time="2024-07-15T09:20:37.480Z",
+        camera_id=camera_create.json()["content"]["id"],
+        number_line=1,  # importent create to lot
+        floor_number=-1,  # importent create to lot
+        floor_name="iranmal",  # importent create to lot
+        name_parkinglot="lot1",  # importent create to lot
+        price_model=price_create.json()["content"]["price_model"],
+    )
+    data_plate2 = schemas.PlateCreate(
+        ocr="12ب34511",
+        lpr_id=ocr2_img_create.json()["content"]["id"],
+        big_image_id=lpr2_img_create.json()["content"]["id"],
+        record_time="2024-07-15T09:20:37.480Z",
+        camera_id=camera_create.json()["content"]["id"],
+        number_line=1,  # importent create to lot
+        floor_number=-1,  # importent create to lot
+        floor_name="iranmal",  # importent create to lot
+        name_parkinglot="lot1",  # importent create to lot
+        price_model=price_create.json()["content"]["price_model"],
+    )
     if "plate" in list:
         i = 0
         while i < 5:

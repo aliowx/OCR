@@ -130,9 +130,9 @@ class GetParkingLot(BaseModel):
 class ParkingLotUpdateStatus(BaseModel):
     camera_code: str = Field(...)
     number_line: int = Field(...)
-    lpr_img_id: int = Field(...)
-    ocr_img_id: int = Field(...)
-    ocr: str = Field(...)
+    lpr_img_id: Optional[int] = Field(None)
+    ocr_img_id: Optional[int] = Field(None)
+    ocr: Optional[str] = Field(None)
     status: Status = Status.empty
     latest_time_modified: Optional[datetime]
 

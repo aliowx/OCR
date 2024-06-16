@@ -17,7 +17,14 @@ class Camera(Base):
 
     # TODO: rename this column
     image_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("image.id"), index=True, nullable=True
+        Integer,
+        ForeignKey(
+            "image.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+        ),
+        index=True,
+        nullable=True,
     )
     image_parkinglot = relationship("Image", back_populates="image_parkinglot")
 

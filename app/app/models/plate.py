@@ -37,6 +37,7 @@ class Plate(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     lpr = relationship("Image", foreign_keys=lpr_id)
 
@@ -44,6 +45,7 @@ class Plate(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     big_image = relationship("Image", foreign_keys=big_image_id)
 

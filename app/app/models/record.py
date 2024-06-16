@@ -27,6 +27,7 @@ class Record(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     best_lpr = relationship("Image", foreign_keys=best_lpr_id)
 
@@ -34,6 +35,7 @@ class Record(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     best_big_image = relationship("Image", foreign_keys=best_big_image_id)
 

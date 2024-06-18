@@ -9,6 +9,8 @@ class Status(str, Enum):
     full = "full"
     empty = "empty"
     dissconnect = "dissconnect"
+    entranceDoor = "entranceDoor"
+    exitDoor = "exitDoor"
 
 
 class ParkingLotBase(BaseModel):

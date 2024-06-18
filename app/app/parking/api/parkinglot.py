@@ -64,6 +64,18 @@ async def get_detail_line_by_camera(
     )
 
 
+@router.get("/lots/{zone_id}")
+async def get_detail_line_by_zone(
+    zone_id: int,
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[list[schemas.ParkingLotCreate]]:
+
+    return APIResponse(
+        await parkinglot_services.get_details_lot_by_zone_id(db, zone_id)
+    )
+
+
 @router.post("/update_price")
 async def update_price(
     price_in: schemas.PriceUpdateInParkingLot,

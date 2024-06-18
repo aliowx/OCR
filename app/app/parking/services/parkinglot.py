@@ -40,7 +40,7 @@ async def create_line(
         )
 
     # update line's camera
-    find_parkinglot = await crud.parkinglot_repo.find_lines_camera(
+    find_parkinglot = await crud.parkinglot_repo.find_lines(
         db, input_camera_id=parkinglot_in.camera_id
     )
     if find_parkinglot:
@@ -186,7 +186,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         )
 
     # find line's camera
-    parkinglot_lines = await crud.parkinglot_repo.find_lines_camera(
+    parkinglot_lines = await crud.parkinglot_repo.find_lines(
         db, input_camera_id=camera.id
     )
 
@@ -205,7 +205,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
                 "price_model_id": line.price_model_id,
             }
         )
-
+   # TODO return zone_id
     return schemas.ParkingLotCreate(
         camera_id=camera.id,
         floor_number=parkinglot_lines[0].floor_number,
@@ -213,6 +213,41 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         name_parkinglot=parkinglot_lines[0].name_parkinglot,
         coordinates_rectangles=coordinate_details,
     )
+
+
+async def get_details_lot_by_zone_id(db: AsyncSession, zone_id: int):
+
+    lots = await crud.parkinglot_repo.find_lines(db, input_zone_id=zone_id)
+
+    all_lots_zone = []
+    coordinate_details = []
+
+    for line in lots:
+        coordinate_details.append(
+            {
+                "percent_rotation_rectangle_small": line.percent_rotation_rectangle_small,
+                "percent_rotation_rectangle_big": line.percent_rotation_rectangle_big,
+                "number_line": line.number_line,
+                "status": line.status,
+                "lpr_img_id": line.lpr_img_id,
+                "ocr_img_id": line.ocr_img_id,
+                "coordinates_rectangle_big": line.coordinates_rectangle_big,
+                "coordinates_rectangle_small": line.coordinates_rectangle_small,
+                "price_model_id": line.price_model_id,
+            }
+        )
+
+        list_lots = schemas.ParkingLotCreate(
+            camera_id=line.camera_id,
+            floor_number=line.floor_number,
+            floor_name=line.floor_name,
+            name_parkinglot=line.name_parkinglot,
+            zone_id=line.zone_id,
+            coordinates_rectangles=coordinate_details,
+        )
+        all_lots_zone.append(list_lots)
+
+    return all_lots_zone
 
 
 async def update_price(

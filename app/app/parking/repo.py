@@ -49,12 +49,13 @@ logger = logging.getLogger(__name__)
 class ParkingLotRepository(
     CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]
 ):
-    async def find_lines_camera(
+    async def find_lines(
         self,
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
         input_number_line: int = None,
+        input_zone_id: int = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[ParkingLot] | Awaitable[List[ParkingLot]]:
@@ -63,14 +64,19 @@ class ParkingLotRepository(
 
         filters = [ParkingLot.is_deleted == false()]
 
-        if input_camera_id:
+        if input_camera_id is not None:
             filters.append(ParkingLot.camera_id == input_camera_id)
 
-        if input_number_line:
+        if input_number_line is not None:
             filters.append(ParkingLot.number_line == input_number_line)
 
+        if input_zone_id is not None:
+            filters.append(ParkingLot.zone_id == input_zone_id)
+
         if limit is None:
-            return self._all(db.scalars(query.offset(skip)))
+            return await self._all(
+                db.scalars(query.filter(*filters).offset(skip))
+            )
 
         return await self._all(
             db.scalars(query.filter(*filters).offset(skip).limit(limit))

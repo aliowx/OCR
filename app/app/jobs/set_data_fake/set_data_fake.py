@@ -1,16 +1,18 @@
-import requests
 import random
 import string
 import time
-from app.core.config import settings
-from app import schemas
-from app.parking.schemas import parking as parkingSchemas
-from app.parking.schemas import parkingzone as zoneSchemas
-from app.parking.schemas import camera as cameraShemas
-from app.parking.schemas import parkinglot as parkinglotShemas
-from app.pricing.schemas import price as priceSchemas
-from image_data_base64 import lpr_img1, ocr_img1, lpr_img2, ocr_img2, image
 from datetime import datetime, timedelta
+
+import requests
+from image_data_base64 import image, lpr_img1, lpr_img2, ocr_img1, ocr_img2
+
+from app import schemas
+from app.core.config import settings
+from app.parking.schemas import camera as cameraShemas
+from app.parking.schemas import parking as parkingSchemas
+from app.parking.schemas import parkinglot as parkinglotShemas
+from app.parking.schemas import parkingzone as zoneSchemas
+from app.pricing.schemas import price as priceSchemas
 
 url = "http://0.0.0.0:8585/park/api/v1"
 headers = {"Content-Type": "application/json"}
@@ -275,8 +277,12 @@ def main_request(list: list):
             camera_exit_door_create.url,
             camera_exit_door_create.status_code,
         )
-        camera_entrance_door_create=camera_entrance_door_create.json()["content"]["id"]
-        camera_exit_door_create=camera_exit_door_create.json()["content"]["id"]
+        camera_entrance_door_create = camera_entrance_door_create.json()[
+            "content"
+        ]["id"]
+        camera_exit_door_create = camera_exit_door_create.json()["content"][
+            "id"
+        ]
     else:
         params = [
             {"input_camera_code": "entrance door"},

@@ -1,6 +1,6 @@
 import logging
-
 from typing import Awaitable
+
 from sqlalchemy import and_, false, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select

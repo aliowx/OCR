@@ -258,7 +258,7 @@ def main_request(list: list):
             data=data_camera_entrance_door.model_dump_json(),
             auth=auth,
             headers=headers,
-        ).json()["content"]["id"]
+        )
         print(
             "camera",
             camera_entrance_door_create.url,
@@ -269,12 +269,14 @@ def main_request(list: list):
             data=data_camera_exit_door_create.model_dump_json(),
             auth=auth,
             headers=headers,
-        ).json()["content"]["id"]
+        )
         print(
             "camera",
             camera_exit_door_create.url,
             camera_exit_door_create.status_code,
         )
+        camera_entrance_door_create=camera_entrance_door_create.json()["content"]["id"]
+        camera_exit_door_create=camera_exit_door_create.json()["content"]["id"]
     else:
         params = [
             {"input_camera_code": "entrance door"},
@@ -539,7 +541,7 @@ def main_request(list: list):
             ocr_img_id=ocr1_img_create.json()["content"]["id"],
             lpr_img_id=lpr1_img_create.json()["content"]["id"],
             ocr="77ج44366",
-            status="full",
+            status="entranceDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data4_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
@@ -548,7 +550,7 @@ def main_request(list: list):
             ocr_img_id=ocr1_img_create.json()["content"]["id"],
             lpr_img_id=lpr1_img_create.json()["content"]["id"],
             ocr="77ج44366",
-            status="full",
+            status="exitDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data5_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
@@ -557,7 +559,7 @@ def main_request(list: list):
             ocr_img_id=ocr2_img_create.json()["content"]["id"],
             lpr_img_id=lpr2_img_create.json()["content"]["id"],
             ocr="12ب34511",
-            status="full",
+            status="entranceDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data6_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
@@ -566,7 +568,7 @@ def main_request(list: list):
             ocr_img_id=ocr2_img_create.json()["content"]["id"],
             lpr_img_id=lpr2_img_create.json()["content"]["id"],
             ocr="12ب34511",
-            status="full",
+            status="exitDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data_status = [
@@ -603,7 +605,7 @@ if __name__ == "__main__":
         "parking",
         "zone",
         "image",
-        "camera",
+        # "camera",
         "price",
         "parkinglot",
         "status",

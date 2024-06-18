@@ -29,41 +29,42 @@ def generate_random_string(length):
 
 
 def main_request(list: list):
-    """
-    --------------        create parking main            -----------------
-    """
-    data_create_parking = parkingSchemas.ParkingCreate(
-        name="iranmal",
-        brand_name="iranmal",
-        floor_count=5,
-        area=1,
-        location_lat=-90,
-        location_lon=-180,
-        parking_address="teh",
-        parking_logo_base64="logo",
-        owner_first_name=generate_random_string(5),
-        owner_last_name=generate_random_string(5),
-        owner_national_id="ir-teh",
-        owner_postal_code="iranmal",
-        owner_phone_number="+98iranmal",
-        owner_email="iranmal@gmail.com",
-        owner_sheba_number="iranmal+123",
-        owner_address="iranmal",
-        owner_type=1,
-        beneficiary_data=parkingSchemas.Beneficiary(
-            company_name="iranmal",
-            company_register_code=generate_random_string(5),
-            company_national_code=generate_random_string(5),
-            company_economic_code=generate_random_string(5),
-            company_email="iranmal@mail.com",
-            company_phone_number=generate_random_string(5),
-            company_postal_code=generate_random_string(5),
-            company_sheba_number=generate_random_string(5),
-            company_address=generate_random_string(5),
-            beneficiary_type=1,
-        ),
-    )
     if "parking" in list:
+
+        """
+        --------------        create parking main            -----------------
+        """
+        data_create_parking = parkingSchemas.ParkingCreate(
+            name="iranmal",
+            brand_name="iranmal",
+            floor_count=5,
+            area=1,
+            location_lat=-90,
+            location_lon=-180,
+            parking_address="teh",
+            parking_logo_base64="logo",
+            owner_first_name=generate_random_string(5),
+            owner_last_name=generate_random_string(5),
+            owner_national_id="ir-teh",
+            owner_postal_code="iranmal",
+            owner_phone_number="+98iranmal",
+            owner_email="iranmal@gmail.com",
+            owner_sheba_number="iranmal+123",
+            owner_address="iranmal",
+            owner_type=1,
+            beneficiary_data=parkingSchemas.Beneficiary(
+                company_name="iranmal",
+                company_register_code=generate_random_string(5),
+                company_national_code=generate_random_string(5),
+                company_economic_code=generate_random_string(5),
+                company_email="iranmal@mail.com",
+                company_phone_number=generate_random_string(5),
+                company_postal_code=generate_random_string(5),
+                company_sheba_number=generate_random_string(5),
+                company_address=generate_random_string(5),
+                beneficiary_type=1,
+            ),
+        )
         parking = requests.post(
             f"{url}/parking/main",
             data=data_create_parking.model_dump_json(),
@@ -356,20 +357,28 @@ def main_request(list: list):
             headers=headers,
         )
         print("create price2", price_create2.url, price_create2.status_code)
+        price_create = price_create.json()["content"]["id"]
+        price_create2 = price_create2.json()["content"]["id"]
 
     else:
-        price_create = requests.post(
-            f"{url}/price/",
-            data=data_price.model_dump_json(),
+        params_price = [
+            {"input_model_price": "هفتگی"},
+            {"input_model_price": "مکان"},
+        ]
+
+        price_create = requests.get(
+            f"{url}/price/search",
+            params=params_price[0]["input_model_price"],
             auth=auth,
             headers=headers,
-        )
-        price_create2 = requests.post(
-            f"{url}/price/",
-            data=data_price2.model_dump_json(),
+        ).json()["content"][0]["id"]
+
+        price_create2 = requests.get(
+            f"{url}/price/search",
+            params=params_price[1]["input_model_price"],
             auth=auth,
             headers=headers,
-        )
+        ).json()["content"][0]["id"]
 
     """
     --------------        create parling lot            -----------------
@@ -386,7 +395,7 @@ def main_request(list: list):
                     "number_line": 1,
                     "percent_rotation_rectangle_big": 90,
                     "percent_rotation_rectangle_small": 90,
-                    "price_model_id": price_create.json()["content"]["id"],
+                    "price_model_id": price_create,
                 }
             ],
             camera_id=camera_entrance_door_create,
@@ -403,7 +412,7 @@ def main_request(list: list):
                     "number_line": 1,
                     "percent_rotation_rectangle_big": 90,
                     "percent_rotation_rectangle_small": 90,
-                    "price_model_id": price_create2.json()["content"]["id"],
+                    "price_model_id": price_create2,
                 },
             ],
             camera_id=camera_exit_door_create,
@@ -424,6 +433,25 @@ def main_request(list: list):
             headers=headers,
         )
         print("lot exit", lot_create2.url, lot_create2.status_code)
+    else:
+
+        lot_create = requests.get(
+            f"{url}/parkinglot/entrance door",
+            auth=auth,
+            headers=headers,
+        )
+
+        lot_create2 = requests.get(
+            f"{url}/parkinglot/exit door",
+            auth=auth,
+            headers=headers,
+        )
+
+        if not (
+            (lot_create.json()["header"]["status"] == 0)
+            and (lot_create2.json()["header"]["status"] == 0)
+        ):
+            raise Exception("please create lots")
 
     """
     --------------        create plate and record            -----------------
@@ -552,19 +580,22 @@ def main_request(list: list):
 
         s = 0
         while s < 20:
+
+            data_status_lot = random.choice(data_status)
+            print(data_status_lot)
             status_lot = requests.post(
                 f"{url}/parkinglot/update_status/",
-                data=random.choice(data_status).model_dump_json(),
+                data=data_status_lot.model_dump_json(),
                 auth=auth,
                 headers=headers,
             )
             print("status_lot", status_lot.url, status_lot.status_code)
             if status_lot.status_code == 400:
                 print(status_lot.json())
-            time.sleep
+            time.sleep(10)
             s += 1
 
-    return "finish"
+    return
 
 
 if __name__ == "__main__":
@@ -572,7 +603,7 @@ if __name__ == "__main__":
         "parking",
         "zone",
         "image",
-        # "camera",
+        "camera",
         "price",
         "parkinglot",
         "status",

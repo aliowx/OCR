@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 async def zone_status(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
-    params: report_schemas.SearchZoneLots = Depends(),
-) -> APIResponseType[Any]:
+    params: report_schemas.ReadZoneLotsParams = Depends(),
+) -> APIResponseType[PaginatedContent[list[report_schemas.ZoneLots]]]:
 
-    return APIResponse(await report_services.report_zone(db))
+    return APIResponse(await report_services.report_zone(db, params))

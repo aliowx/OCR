@@ -1,11 +1,13 @@
 """redis.py"""
 
 import os
-import redis
 from typing import Tuple
+
+import redis
 from redis import asyncio as aioredis
-from cache.enums import RedisStatus
+
 from app.core.config import settings
+from cache.enums import RedisStatus
 
 
 async def redis_connect(

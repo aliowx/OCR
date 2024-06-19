@@ -1,6 +1,7 @@
-from typing import Optional, List
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Shared properties
@@ -19,19 +20,22 @@ class PlateBase(BaseModel):
     floor_number: Optional[int] = Field(None)
     floor_name: Optional[str] = Field(None)
 
-    name_parking: Optional[str] = Field(None)
+    name_parkinglot: Optional[str] = Field(None)
+
+    price_model: Optional[dict] = Field(None)
 
 
 class PlateCreate(PlateBase):
     ocr: str
     record_time: datetime
-    name_parking: str
+    name_parkinglot: str
     floor_number: int
     floor_name: str
     number_line: int
     camera_id: int
     lpr_id: int
     big_image_id: int
+    price_model: dict
 
 
 # Properties to receive on item update

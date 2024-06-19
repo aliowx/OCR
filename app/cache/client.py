@@ -2,8 +2,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
-from aioredis import client
 from fastapi import Request, Response
+from redis.asyncio import client
 
 from cache.enums import RedisEvent, RedisStatus
 from cache.key_gen import get_cache_key, get_cache_key_pattern

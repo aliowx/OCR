@@ -2,41 +2,37 @@
 name = "app"
 version = "0.1.0"
 description = ""
-authors = ["Kamran Abdi <kamranabdicse@gmail.com>"]
+authors = ["Mohammad Sharif <mamadsh404@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-uvicorn = {extras = ["standard"], version = "^0.20.0"}
-gunicorn = "^21.2.0"
-pydantic = {extras = ["email"], version = "^2.6.4"}
-psycopg2-binary = "^2.9.9"
+python = "^3.12"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+gunicorn = "^22.0.0"
+fastapi = {extras = ["all"], version = "^0.111.0"}
+pydantic = {extras = ["email"], version = "^2.7.1"}
 alembic = "^1.13.1"
-SQLAlchemy = "^2.0.29"
-celery = "^5.3.6"
-fastapi = {version = "^0.110.1", extras = ["all"]}
+SQLAlchemy = "^2.0.30"
+asyncpg = "^0.29.0"
+python-multipart = "^0.0.9"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
-persiantools = "^4.0.0"
-python-multipart = "^0.0.9"
-tenacity = "^8.2.3"
-rocketry = "^2.5.1"
-fakeredis = "^2.21.3"
-aioredis = "^2.0.1"
-redis = "^5.0.3"
-asyncpg = "^0.29.0"
-pytz = "^2024.1"
-pandas = "^2.2.1"
-xlsxwriter = "^3.2.0"
-openpyxl = "^3.1.2"
+celery = "^5.4.0"
+persiantools = "^4.0.2"
+tenacity = "^8.3.0"
+fakeredis = "^2.23.1"
+redis = "^5.0.4"
 asgi-logger = "^0.1.0"
 python-rapidjson = "^1.16"
+psycopg2-binary = "^2.9.9"
 
-[tool.poetry.dev-dependencies]
-pytest="*"
-black="*"
-ruff="*"
-isort="*"
+[tool.poetry.group.dev.dependencies]
+pytest-asyncio = "^0.21.2"
+pytest = "^8.2.0"
+aiosqlite = "^0.20.0"
+ruff = "^0.4.5"
+black = "^24.4.2"
+isort = "^5.13.2"
 
 [tool.black]
 line-length = 79

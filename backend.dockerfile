@@ -1,4 +1,4 @@
-FROM dr2.parswitch.com/devops/python:3-10
+FROM dr2.parswitch.com/devops/python:3-12
 
 WORKDIR /app/
 

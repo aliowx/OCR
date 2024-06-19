@@ -1,11 +1,13 @@
-# ACQUIRER FASTAPI PROJECT
+# PARKING FASTAPI PROJECT
 
 ## for develop the project you need:
 
-- docker / docker compose **(first of all install)**
+ **(first of all install)**
+- docker / docker compose
 - postgres
 - redis
 - pgadmin
+- poetry
 
 **_note: there is no need to install postgres and redis in your local system_**
 
@@ -50,7 +52,6 @@ in our root project directory go to app folder
 for create virtual env and go to that and after that install dependency use below commands
 
 ```
-
 poetry shell
 
 poetry install

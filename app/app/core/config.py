@@ -2,16 +2,11 @@ import enum
 import logging
 import secrets
 from pathlib import Path
-
-from pydantic import (
-    AnyHttpUrl,
-    EmailStr,
-    PostgresDsn,
-    RedisDsn,
-    field_validator,
-)
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 import app
 
 logging.basicConfig(
@@ -36,10 +31,9 @@ class SettingsBase(BaseSettings):
     PROJECT_NAME: str
     API_V1_STR: str = "/api/v1"
     SUB_PATH: str | None = None
-    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
     DEBUG: bool = False
-    CORE_ID: int
     TZ: str = "Asia/Tehran"
     PGTZ: str = "Asia/Tehran"
 
@@ -108,6 +102,15 @@ class StorageSettings(SettingsBase):
     SQLALCHEMY_POOL_TIMEOUT: int = 30
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
+
+    # database test
+    TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
+    # dsn database test
+    TEST_DSN_POSTGRES_NAME: str = None
+    TEST_DSN_POSTGRES_PASSWORD: str = None
+    TEST_DSN_POSTGRES_IP: str = None
+    TEST_DSN_POSTGRES_PORT: str = None
+    TEST_DSN_POSTGRES_DB_NAME: str = None
 
     @property
     def async_database_url(self) -> str | None:

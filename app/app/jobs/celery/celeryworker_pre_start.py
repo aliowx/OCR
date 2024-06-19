@@ -1,6 +1,6 @@
 import logging
+
 import redis
-from app.core.config import settings
 from tenacity import (
     after_log,
     before_log,
@@ -9,7 +9,7 @@ from tenacity import (
     wait_fixed,
 )
 
-from app.db.session import SessionLocal
+from app.core.config import settings
 from cache.redis import redis_connect_sync
 
 logging.basicConfig(level=logging.INFO)

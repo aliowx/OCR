@@ -1,6 +1,23 @@
-from .msg import Msg
-from .token import Token, TokenPayload
-from .user import (
+from app.parking.schemas.camera import (
+    Camera,
+    CameraCreate,
+    CameraUpdate,
+    GetCamera,
+)
+from app.parking.schemas.parkinglot import (
+    GetParkingLot,
+    ParkingLotBase,
+    ParkingLotCreate,
+    ParkingLotCreateLineInDB,
+    ParkingLotInDBBase,
+    ParkingLotShowDetailByCamera,
+    ParkingLotUpdateStatus,
+    PriceUpdateInParkingLot,
+)
+from app.parking.schemas.parkingzone import *
+from app.pricing.schemas import *
+from app.users.schemas.token import Token, TokenPayload
+from app.users.schemas.user import (
     User,
     UserBase,
     UserCreate,
@@ -8,22 +25,14 @@ from .user import (
     UserInDBBase,
     UserUpdate,
 )
-from .parking import (
-    ParkingCreate,
-    ParkingCreateLineInDB,
-    GetParking,
-    ParkingInDBBase,
-    ParkingBase,
-    ParkingUpdateStatus,
-    ParkingShowDetailByCamera,
-)
-from .camera import CameraCreate, CameraUpdate, GetCamera, Camera
+
 from .image import (
-    ImageCreateBase64,
-    ImageUpdateBase64,
     Image,
-    ImageDetails,
     ImageBase64InDB,
+    ImageCreateBase64,
+    ImageDetails,
+    ImageUpdateBase64,
 )
-from .plate import GetPlates, PlateCreate, PlateUpdate, Plate
-from .record import RecordCreate, RecordUpdate, GetRecords, Record
+from .msg import Msg
+from .plate import GetPlates, Plate, PlateCreate, PlateUpdate
+from .record import GetRecords, Record, RecordCreate, RecordUpdate

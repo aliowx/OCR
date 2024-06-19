@@ -1,7 +1,8 @@
 from sqlalchemy import Integer
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from app.db.base_class import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
+
+from app.db.base_class import Base
 
 
 class Image(Base):
@@ -9,4 +10,6 @@ class Image(Base):
 
     image: Mapped[str] = mapped_column(LargeBinary)
 
-    image_parking = relationship("Camera", back_populates="image_parking")
+    image_parkinglot = relationship(
+        "Camera", back_populates="image_parkinglot"
+    )

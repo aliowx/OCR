@@ -1,17 +1,19 @@
-from sqlalchemy.orm import Session
+import base64
+from typing import Any, Awaitable, Dict, List, Optional, Union
+
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
 from app.crud.base import CRUDBase
 from app.models.image import Image
 from app.schemas.image import (
     ImageBase64InDB,
-    ImageCreateBinary,
     ImageCreateBase64,
-    ImageUpdateBinary,
+    ImageCreateBinary,
     ImageUpdateBase64,
+    ImageUpdateBinary,
 )
-import base64
-from typing import Any, Optional, List, Dict, Union, Awaitable
-from fastapi.encoders import jsonable_encoder
 
 
 class CRUDImage(

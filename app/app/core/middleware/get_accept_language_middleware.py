@@ -1,11 +1,11 @@
 from contextvars import ContextVar
 
-from starlette.requests import Request
-from starlette.responses import Response
 from starlette.middleware.base import (
     BaseHTTPMiddleware,
     RequestResponseEndpoint,
 )
+from starlette.requests import Request
+from starlette.responses import Response
 
 REQUEST_ACCEPT_LANGUAGE_KEY = "request_accept_language"
 

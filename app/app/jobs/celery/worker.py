@@ -1,17 +1,17 @@
+import logging
 import math
 import random
-import logging
-from app.core.celery_app import celery_app
-from app import schemas, crud, models
+from datetime import datetime, timedelta
+
 from sqlalchemy import text
+
+from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
-from app.schemas import RecordUpdate, PlateUpdate
-from datetime import timedelta, datetime
-from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.core.config import settings
+from app.jobs.celery.celeryworker_pre_start import redis_client
+from app.schemas import PlateUpdate, RecordUpdate
 
-
-namespace = "parking"
+namespace = "parkinglot"
 logger = logging.getLogger(__name__)
 
 
@@ -72,16 +72,15 @@ def update_record(self, plate_id) -> str:
         record = crud.record.get_by_plate(
             db=self.session, plate=plate, for_update=True
         )
-
         if record is None:
             record = schemas.RecordCreate(
                 ocr=plate.ocr,
-                record_number=0,
                 start_time=plate.record_time,
                 end_time=plate.record_time,
                 score=0.01,
                 best_lpr_id=plate.lpr_id,
                 best_big_image_id=plate.big_image_id,
+                price_model=plate.price_model,
             )
             record = crud.record.create(db=self.session, obj_in=record)
 
@@ -174,10 +173,11 @@ def cleanup(self, table_name: str = "image"):
     redis_client.setex(
         lock_name, timedelta(seconds=60 * settings.CLEANUP_PERIOD), 1
     )
+    result = None
     try:
         if table_name == "image":
             model_img = models.Image
-            img_ids = crud.camera.get_multi(self.session)
+            img_ids = crud.camera_repo.get_multi(self.session)
             for img_id in img_ids:
                 subquery = (
                     self.session.query(model_img.id)

@@ -37,6 +37,12 @@ class MessageCodes:
     input_error = 4
     operation_failed = 5
     forbidden = 6
+    incorrect_username_or_password = 7
+    duplicate_zone_name = 8
+    duplicate_ip_address = 9
+    duplicate_serial_number = 10
+    duplicate_zone_pricing = 11
+    duplicate_name = 12
 
     english_messages_names = {
         0: "Successful Operation",
@@ -46,6 +52,12 @@ class MessageCodes:
         4: "Input Error",
         5: "Operation Failed",
         6: "Forbidden",
+        7: "Incorrect username or password",
+        8: "Duplicate zone name",
+        9: "Duplicate ip address",
+        10: "Duplicate serial number",
+        11: "Duplicate zone pricing",
+        12: "Duplicate name",
     }
 
     persian_message_names = {
@@ -56,4 +68,10 @@ class MessageCodes:
         4: "ورودی نامعتبر",
         5: "عملیات ناموفق",
         6: "دسترسی غیرمجاز",
+        7: "نام کاربری یا کلمه عبور اشتباه است",
+        8: "نام منطقه تکراری است",
+        9: "آی‌پی تکراری است",
+        10: "شماره سریال تکراری است",
+        11: "قیمت‌گذاری وارد شده برای این منطقه تکراری است",
+        12: "نام تکرایر است",
     }

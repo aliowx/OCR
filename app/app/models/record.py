@@ -1,12 +1,9 @@
-from sqlalchemy import (
-    ForeignKey,
-    Integer,
-    String,
-    DateTime,
-    Float,
-)
 from datetime import datetime
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base_class import Base
 
 
@@ -30,6 +27,7 @@ class Record(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     best_lpr = relationship("Image", foreign_keys=best_lpr_id)
 
@@ -37,7 +35,10 @@ class Record(Base):
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
     best_big_image = relationship("Image", foreign_keys=best_big_image_id)
 
     plates = relationship("Plate", back_populates="record")
+
+    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)

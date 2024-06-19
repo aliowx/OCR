@@ -4,7 +4,7 @@ from app.api.endpoints import images, plates, records, utils
 from app.parking.router import router as parking_router
 from app.pricing.router import router as pricing_router
 from app.users.api import router as users_router
-from app.report.api.report import router as report_router
+from app.report.router import router as report_router
 
 api_router = APIRouter()
 api_router.include_router(users_router, prefix="/user", tags=["users"])

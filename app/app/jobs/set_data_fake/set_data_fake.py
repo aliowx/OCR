@@ -3,6 +3,9 @@ import string
 import time
 from datetime import datetime, timedelta
 
+<<<<<<< 2b9460058c535046cdd77200a478ba4d1256a738
+url = settings.URL_FOR_SET_DATA_FAKE
+=======
 import requests
 from image_data_base64 import image, lpr_img1, lpr_img2, ocr_img1, ocr_img2
 
@@ -15,6 +18,7 @@ from app.parking.schemas import parkingzone as zoneSchemas
 from app.pricing.schemas import price as priceSchemas
 
 url = "http://0.0.0.0:8585/park/api/v1"
+>>>>>>> c7f4431b0ebbc74ec70131f2f8ffaf178b19187b
 headers = {"Content-Type": "application/json"}
 auth = (settings.FIRST_SUPERUSER, settings.FIRST_SUPERUSER_PASSWORD)
 

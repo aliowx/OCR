@@ -103,6 +103,8 @@ class StorageSettings(SettingsBase):
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
 
+    URL_FOR_SET_DATA_FAKE: str = None
+
     # database test
     TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     # dsn database test

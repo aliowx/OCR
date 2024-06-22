@@ -590,7 +590,7 @@ def main_request(list: list):
             data_status_lot = random.choice(data_status)
             print(data_status_lot)
             status_lot = requests.post(
-                f"{url}/parkinglot/update_status/",
+                f"{url}/parkinglot/update_status",
                 data=data_status_lot.model_dump_json(),
                 auth=auth,
                 headers=headers,
@@ -598,7 +598,7 @@ def main_request(list: list):
             print("status_lot", status_lot.url, status_lot.status_code)
             if status_lot.status_code == 400:
                 print(status_lot.json())
-            time.sleep(10)
+            # time.sleep(10)
             s += 1
 
     return

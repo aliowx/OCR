@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas, utils
+from app.parking.schemas import parkinglot as parkinglotsSchemas
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.parking.repo import parkingzone_repo
@@ -111,7 +112,7 @@ async def update_status(
             msg_code=utils.MessageCodes.operation_failed,
         )
     price_model = await crud.price_repo.get(db, id=check.price_model_id)
-    if parkinglot_in.status == "full":
+    if parkinglot_in.status == parkinglotsSchemas.Status.full:
         plate_in = schemas.PlateCreate(
             ocr=parkinglot_in.ocr,
             record_time=datetime.now().isoformat(),

@@ -16,7 +16,6 @@ RUN useradd -m -d /home/dockeruser -s /bin/bash dockeruser && \
 COPY ./gunicorn_conf.py ./scripts/start-server.sh  ./scripts/prestart.sh ./scripts/run.sh /
 COPY ./app/worker-start.sh /worker-start.sh
 COPY ./app .
-COPY ./app/app/jobs/set_data_fake/* /app
 
 
 # Switch to the non-root user

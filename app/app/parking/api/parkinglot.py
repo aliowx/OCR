@@ -33,7 +33,7 @@ async def create_lines_parkinglot(
 async def update_status(
     parkinglot_in: schemas.ParkingLotUpdateStatus,
     db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[dict]:
 
     return APIResponse(

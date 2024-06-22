@@ -205,7 +205,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
                 "price_model_id": line.price_model_id,
             }
         )
-   # TODO return zone_id
+    # TODO return zone_id
     return schemas.ParkingLotCreate(
         camera_id=camera.id,
         floor_number=parkinglot_lines[0].floor_number,

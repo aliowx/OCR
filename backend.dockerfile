@@ -16,11 +16,11 @@ RUN useradd -m -d /home/dockeruser -s /bin/bash dockeruser && \
 COPY ./gunicorn_conf.py ./scripts/start-server.sh  ./scripts/prestart.sh ./scripts/run.sh /
 COPY ./app/worker-start.sh /worker-start.sh
 COPY ./app .
-COPY ./app/app/jobs/set_data_fake/* /
+COPY ./app/app/jobs/set_data_fake/* /app
 
 
 # Switch to the non-root user
 USER dockeruser
 
-CMD if [ "$BUILD_TYPE" = "backend" ]; then bash /run.sh; python ./set_data_fake.py; else bash /worker-start.sh; fi
+CMD if [ "$BUILD_TYPE" = "backend" ]; then bash /run.sh; else bash /worker-start.sh; fi
 

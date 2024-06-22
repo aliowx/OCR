@@ -56,8 +56,8 @@ class ParkingLotRepository(
         input_camera_id: int = None,
         input_number_line: int = None,
         input_zone_id: int = None,
-        skip: int = 0,
-        limit: int = 100,
+        skip: int  = 0,
+        limit: int | None = 100,
     ) -> List[ParkingLot] | Awaitable[List[ParkingLot]]:
 
         query = select(ParkingLot)

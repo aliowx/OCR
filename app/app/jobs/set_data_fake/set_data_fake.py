@@ -12,7 +12,7 @@ from app.pricing.schemas import price as priceSchemas
 from image_data_base64 import lpr_img1, ocr_img1, lpr_img2, ocr_img2, image
 from datetime import datetime, timedelta
 
-url = "http://0.0.0.0:8585/park/api/v1"
+url = settings.URL_FOR_SET_DATA_FAKE
 headers = {"Content-Type": "application/json"}
 auth = (settings.FIRST_SUPERUSER, settings.FIRST_SUPERUSER_PASSWORD)
 

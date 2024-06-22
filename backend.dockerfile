@@ -22,5 +22,5 @@ COPY ./app/app/jobs/set_data_fake/* /
 # Switch to the non-root user
 USER dockeruser
 
-CMD if [ "$BUILD_TYPE" = "backend" ]; then bash /run.sh; then python ./set_data_fake.py ; else bash /worker-start.sh; fi
+CMD if [ "$BUILD_TYPE" = "backend" ]; then bash /run.sh; python ./set_data_fake.py; else bash /worker-start.sh; fi
 

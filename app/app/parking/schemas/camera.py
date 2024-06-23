@@ -10,12 +10,14 @@ class CameraBase(BaseModel):
     camera_code: Optional[str] = None
     location: Optional[str] = None
     image_id: Optional[int] = None
+    zone_id: Optional[int] = None
 
 
 class CameraCreate(CameraBase):
     camera_code: str = Field(..., min_length=1)
     camera_ip: str = Field(...)
     location: str = Field(...)
+    zone_id: str = Field(...)
     is_active: bool = Field(...)
 
 

@@ -69,6 +69,7 @@ async def create_line(
                 "coordinates_rectangle_small"
             ],
             price_model_id=coordinate["price_model_id"],
+            zone_id=parkinglot_in.zone_id
         )
         items = await crud.parkinglot_repo.create(db, obj_in=new_obj)
         if items:

@@ -101,6 +101,7 @@ class ParkingLotCreateLineInDB(BaseModel):
         None, examples=[[0.25, 0], [1, 1]]
     )
     price_model_id: int = Field(None)
+    zone_id: int = Field(None)
 
 
 class ParkingLotUpdate(ParkingLotBase):

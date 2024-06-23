@@ -41,7 +41,6 @@ class RecordInDBBase(RecordBase):
 class Record(RecordInDBBase):
     parkinglot_time: str | None = None
     parkinglot_price: float | None = None
-    # pass
 
 
 # Properties properties stored in DB

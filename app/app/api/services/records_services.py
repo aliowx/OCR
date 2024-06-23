@@ -1,11 +1,23 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app import crud, schemas
 
 
-async def calculator_price(db: AsyncSession, *, score, skip, limit, asc):
+async def calculator_price(
+    db: AsyncSession,
+    *,
+    score: float = None,
+    skip: int = 0,
+    limit: int = 100,
+    asc: bool = True,
+    input_ocr: str = None
+):
     records = await crud.record.find_records(
-        db, input_score=score, skip=skip, limit=limit, asc=asc
+        db=db,
+        input_score=score,
+        input_ocr=input_ocr,
+        skip=skip,
+        limit=limit,
+        asc=asc,
     )
 
     weekdays = [
@@ -26,9 +38,11 @@ async def calculator_price(db: AsyncSession, *, score, skip, limit, asc):
         )
         # Calculation hours, conversion minutes and seconds to hours
         hours, minutes, seconds = map(
-            int, item_record.parkinglot_time.split(":")
+            float, item_record.parkinglot_time.split(":")
         )
-        total_hours = hours + minutes / 60 + seconds / 3600
+        minutes = minutes / 60 if minutes > 0 else 0
+        seconds = seconds / 3600 if seconds > 0 else 0
+        total_hours = hours + minutes + seconds
 
         if item_record.price_model["price_type"] == "weekly":
             price_weekly_day = weekdays[item_record.end_time.weekday()]

@@ -11,6 +11,7 @@ class ZoneLots(BaseModel):
     list_lots: list = None
     capacity: int = None
     capacity_empty: int = None
+    record : list = None
 
 
 

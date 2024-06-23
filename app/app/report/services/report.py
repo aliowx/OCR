@@ -10,6 +10,7 @@ from app.report.repo import (
 )
 from app.utils import MessageCodes, PaginatedContent
 from app.report.schemas import ZoneLots, ReadZoneLotsParams
+from app.api.services import records_services
 
 
 async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
@@ -31,9 +32,13 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
             for lot in lots:
                 if lot["status"] == Status.full:
                     capacity_empty = capacity - 1
+                records = await records_services.calculator_price(
+                    db=db, input_ocr=lot["ocr"]
+                )
             zone_lots = ZoneLots(
                 zone_name=zone.name,
                 list_lots=lots,
+                record=records.items,
                 capacity=capacity,
                 capacity_empty=capacity_empty,
             )

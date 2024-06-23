@@ -69,7 +69,7 @@ async def create_line(
                 "coordinates_rectangle_small"
             ],
             price_model_id=coordinate["price_model_id"],
-            zone_id=parkinglot_in.zone_id
+            zone_id=parkinglot_in.zone_id,
         )
         items = await crud.parkinglot_repo.create(db, obj_in=new_obj)
         if items:
@@ -160,6 +160,7 @@ async def get_status(db: AsyncSession):
                 "floor_number": parkinglot.floor_number,
                 "name_parkinglot": parkinglot.name_parkinglot,
                 "floor_name": parkinglot.floor_name,
+                "zone_id": parkinglot.zone_id,
                 "coordinates_rectangles": [
                     {
                         "percent_rotation_rectangle_small": parkinglot.percent_rotation_rectangle_small,

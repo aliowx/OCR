@@ -112,7 +112,11 @@ async def update_status(
             msg_code=utils.MessageCodes.operation_failed,
         )
     price_model = await crud.price_repo.get(db, id=check.price_model_id)
-    if parkinglot_in.status == parkinglotsSchemas.Status.full:
+    if (
+        parkinglot_in.status == parkinglotsSchemas.Status.full
+        or parkinglotsSchemas.Status.entranceDoor
+        or parkinglotsSchemas.Status.exitDoor
+    ):
         plate_in = schemas.PlateCreate(
             ocr=parkinglot_in.ocr,
             record_time=datetime.now().isoformat(),

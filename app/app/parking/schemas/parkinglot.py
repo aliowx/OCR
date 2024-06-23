@@ -136,7 +136,7 @@ class ParkingLotUpdateStatus(BaseModel):
     ocr_img_id: Optional[int] = Field(None)
     ocr: Optional[str] = Field(None)
     status: Status = Status.empty
-    latest_time_modified: Optional[datetime]
+    latest_time_modified: Optional[datetime] = None
 
 
 class PriceUpdateInParkingLot(BaseModel):

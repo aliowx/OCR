@@ -201,8 +201,8 @@ def cleanup(self, table_name: str = "image"):
             limit = datetime.now() - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )
-            filter = models.Plate.record_time
-            model = models.Plate
+            filter = models.PlateDetected.record_time
+            model = models.PlateDetected
         elif table_name == "record":
             limit = datetime.now() - timedelta(
                 days=settings.CLEANUP_RECORDS_AGE

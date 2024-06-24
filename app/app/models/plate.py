@@ -7,19 +7,24 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class Plate(Base):
+class PlateDetected(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    ocr: Mapped[str] = mapped_column(String, index=True)
+    plate: Mapped[str] = mapped_column(String, index=True)
 
     record_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
-    number_line: Mapped[int] = mapped_column(Integer)
+    zone_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("parkingzone.id"), index=True, nullable=True
+    )
+    zone = relationship("ParkingZone", foreign_keys=zone_id)
 
-    floor_number: Mapped[int] = mapped_column(Integer)
-    floor_name: Mapped[str] = mapped_column(String)
+    parkinglot_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("parkinglot.id"), index=True, nullable=True
+    )
+    parkinglot = relationship("ParkingLot", foreign_keys=parkinglot_id)
 
     name_parkinglot: Mapped[str] = mapped_column(String)
 
@@ -49,4 +54,7 @@ class Plate(Base):
     )
     big_image = relationship("Image", foreign_keys=big_image_id)
 
-    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)
+    price_model_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("price.id"), index=True, nullable=True
+    )
+    price = relationship("Price", foreign_keys=price_model_id)

@@ -9,9 +9,6 @@ from app.db.base_class import Base
 class ParkingLot(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    floor_number: Mapped[int] = mapped_column(Integer)
-    floor_name: Mapped[str] = mapped_column(String)
-
     name_parkinglot: Mapped[str] = mapped_column(String)
 
     percent_rotation_rectangle_small: Mapped[int] = mapped_column(
@@ -32,7 +29,7 @@ class ParkingLot(Base):
 
     status: Mapped[str] = mapped_column(String, nullable=True)
 
-    ocr: Mapped[str] = mapped_column(String, nullable=True)
+    plate: Mapped[str] = mapped_column(String, nullable=True)
 
     latest_time_modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True

@@ -6,5 +6,5 @@ from app.users.models import User
 
 from .base import UserType
 from .image import Image
-from .plate import Plate
+from .plate import PlateDetected
 from .record import Record

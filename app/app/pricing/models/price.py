@@ -13,12 +13,14 @@ class Price(Base):
 
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     name_fa: Mapped[str] = mapped_column(String(50), nullable=True)
-    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)
+    weekly_days: Mapped[dict] = mapped_column(JSON, nullable=True)
     entrance_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     hourly_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     daily_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     penalty_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
-    expiration_datetime = mapped_column(DateTime, default=datetime.utcnow)
+    expiration_datetime: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.now, index=True
+    )
 
     parking_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("parking.id"), nullable=True

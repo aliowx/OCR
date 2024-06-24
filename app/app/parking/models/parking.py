@@ -35,6 +35,8 @@ class ParkingZone(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     tag: Mapped[str] = mapped_column(String(50), nullable=True)
+    floor_number: Mapped[int] = mapped_column(Integer, nullable=True)
+    floor_name: Mapped[str] = mapped_column(String, nullable=True)
     parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
     parent_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("parkingzone.id"), nullable=True

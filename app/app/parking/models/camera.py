@@ -38,4 +38,6 @@ class Camera(Base):
 
     parkinglot = relationship("ParkingLot", back_populates="camera_rpi")
 
-    parkinglot_plate = relationship("Plate", back_populates="camera_plate")
+    parkinglot_plate = relationship(
+        "PlateDetected", back_populates="camera_plate"
+    )

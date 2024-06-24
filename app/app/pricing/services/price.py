@@ -47,7 +47,7 @@ async def read_prices(
     db: AsyncSession, params: price_schemas.ReadPricesParams
 ) -> PaginatedContent[list[price_schemas.Price]]:
     prices, total_count = await price_repo.get_multi_with_filters(
-        db, filters=params.db_filters
+        db, filters=params
     )
     return PaginatedContent(
         data=prices,

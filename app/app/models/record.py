@@ -39,6 +39,6 @@ class Record(Base):
     )
     best_big_image = relationship("Image", foreign_keys=best_big_image_id)
 
-    plates = relationship("Plate", back_populates="record")
+    plates = relationship("PlateDetected", back_populates="record")
 
     price_model: Mapped[dict] = mapped_column(JSON, nullable=True)

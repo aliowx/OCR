@@ -67,23 +67,26 @@ def update_record(self, plate_id) -> str:
 
     try:
         # lock plates table to prevent multiple record insertion
-        self.session.execute(text("LOCK TABLE plate IN EXCLUSIVE MODE"))
+        self.session.execute(
+            text("LOCK TABLE platedetected IN EXCLUSIVE MODE")
+        )
         plate = crud.plate.get(self.session, plate_id)
         record = crud.record.get_by_plate(
             db=self.session, plate=plate, for_update=True
         )
         if record is None:
             record = schemas.RecordCreate(
-                ocr=plate.ocr,
+                plate=plate.plate,
                 start_time=plate.record_time,
                 end_time=plate.record_time,
                 score=0.01,
-                best_lpr_id=plate.lpr_id,
-                best_big_image_id=plate.big_image_id,
-                price_model=plate.price_model,
+                best_lpr_image_id=plate.lpr_image_id,
+                best_plate_image_id=plate.plate_image_id,
+                price_model_id=plate.price_model_id,
+                parkinglot_id=plate.parkinglot_id,
+                zone_id=plate.zone_id,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-
         else:
             if record.start_time > plate.record_time:
                 record_update = RecordUpdate(
@@ -94,8 +97,8 @@ def update_record(self, plate_id) -> str:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     end_time=plate.record_time,
-                    best_lpr_id=plate.lpr_id,
-                    best_big_image_id=plate.big_image_id,
+                    best_lpr_image_id=plate.lpr_image_id,
+                    best_plate_image_id=plate.plate_image_id,
                 )
             else:
                 record_update = RecordUpdate(
@@ -146,7 +149,7 @@ def setup_periodic_tasks(sender, **kwargs):
         )
         sender.add_periodic_task(
             settings.CLEANUP_PERIOD,
-            cleanup.s("plate"),
+            cleanup.s("platedetected"),
             name="cleanup plate task",
         )
         sender.add_periodic_task(
@@ -197,7 +200,7 @@ def cleanup(self, table_name: str = "image"):
                     .filter(model_img.id.in_(subquery))
                     .delete(synchronize_session="fetch")
                 )
-        elif table_name == "plate":
+        elif table_name == "platedetected":
             limit = datetime.now() - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )

@@ -35,4 +35,4 @@ from .image import (
 )
 from .msg import Msg
 from .plate import GetPlates, Plate, PlateCreate, PlateUpdate
-from .record import GetRecords, Record, RecordCreate, RecordUpdate
+from .record import GetRecords, Record, RecordCreate, RecordUpdate, ParamsRecord

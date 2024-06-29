@@ -97,7 +97,13 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             )
             if lots:
                 result_moment.append(jsonable_encoder(lots))
-
+    else:
+        lots = await parkinglotreportrepository.find_lines_moment(
+        db, params=ParamsRecordMomentFilters(
+                    input_camera_id=camera)
+        )
+        for lot in lots:
+            result_moment.append(jsonable_encoder(lot))
     if params.size is not None:  # limit
         result_moment = result_moment[: params.size]
 

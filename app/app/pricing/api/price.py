@@ -29,21 +29,6 @@ async def read_price(
     return APIResponse(prices)
 
 
-@router.get("/search")
-async def find_price(
-    db: AsyncSession = Depends(deps.get_db_async),
-    input_model_price: str = None,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[list[price_schemas.Price]]:
-    """
-    Get All price.
-    """
-    prices = await price_repo.find_model_price(
-        db, input_name_fa_price=input_model_price
-    )
-    return APIResponse(prices)
-
-
 @router.post("/")
 async def create_price(
     price_in: schemas.PriceCreate,

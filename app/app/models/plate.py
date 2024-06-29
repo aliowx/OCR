@@ -16,6 +16,8 @@ class PlateDetected(Base):
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
+    type_status_parkinglot: Mapped[str] = mapped_column(String, nullable=True)
+
     zone_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("parkingzone.id"), index=True, nullable=True
     )
@@ -25,8 +27,6 @@ class PlateDetected(Base):
         Integer, ForeignKey("parkinglot.id"), index=True, nullable=True
     )
     parkinglot = relationship("ParkingLot", foreign_keys=parkinglot_id)
-
-    name_parkinglot: Mapped[str] = mapped_column(String)
 
     camera_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("camera.id"), index=True
@@ -38,21 +38,21 @@ class PlateDetected(Base):
     )
     record = relationship("Record", back_populates="plates")
 
-    lpr_id: Mapped[int] = mapped_column(
+    plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    lpr = relationship("Image", foreign_keys=lpr_id)
+    plate_image = relationship("Image", foreign_keys=plate_image_id)
 
-    big_image_id: Mapped[int] = mapped_column(
+    lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    big_image = relationship("Image", foreign_keys=big_image_id)
+    lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
     price_model_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("price.id"), index=True, nullable=True

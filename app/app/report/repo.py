@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import exists, false, func
 from typing import Awaitable
-from app.report.schemas import ReadZoneLotsParams
+from app.report.schemas import ReadZoneLotsParams, ParamsRecordMomentFilters
 
 
 class ParkingZoneReportRepository(
@@ -47,7 +47,6 @@ class ParkingLotReportRepository(
         self,
         db: AsyncSession,
         *,
-        input_zone_id: int = None,
         params: ReadZoneLotsParams,
     ) -> list[ParkingLot] | Awaitable[list[ParkingLot]]:
 
@@ -55,13 +54,9 @@ class ParkingLotReportRepository(
 
         filters = [ParkingLot.is_deleted == false()]
 
-        if input_zone_id is not None:
-            filters.append(ParkingLot.zone_id == input_zone_id)
+        if params.input_zone_id is not None:
+            filters.append(ParkingLot.zone_id == params.input_zone_id)
 
-        if params.input_floor_number is not None:
-            filters.append(
-                ParkingLot.floor_number == params.input_floor_number
-            )
         if params.input_start_time is not None:
             filters.append(ParkingLot.created >= params.input_start_time)
         if params.input_end_time is not None:
@@ -69,6 +64,27 @@ class ParkingLotReportRepository(
 
         return await self._all(db.scalars(query.filter(*filters)))
 
+    async def find_lines_moment(
+        self,
+        db: AsyncSession,
+        *,
+        params: ParamsRecordMomentFilters,
+    ) -> list[ParkingLot] | Awaitable[list[ParkingLot]]:
 
+        query = select(ParkingLot)
+
+        filters = [ParkingLot.is_deleted == false()]
+
+        if params.input_camera_id is not None:
+            filters.append(ParkingLot.camera_id == params.input_camera_id)
+
+        if params.input_zone_id is not None:
+            filters.append(ParkingLot.zone_id == params.input_zone_id)
+
+        if params.input_plate is not None:
+            filters.append(ParkingLot.plate == params.input_plate)
+
+        return await self._all(db.scalars(query.filter(*filters)))
+    
 parkingzonereportrepository = ParkingZoneReportRepository(ParkingZone)
 parkinglotreportrepository = ParkingLotReportRepository(ParkingLot)

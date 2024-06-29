@@ -2,15 +2,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
 from app.core.exceptions import ServiceFailure
 from app.parking.repo import parking_repo
-from app.parking.schemas import Status
+from app.parking.schemas import Status, ParamsCamera
 from app.parking.services import parkingzone as parkingzone_services
 from app.report.repo import (
     parkingzonereportrepository,
     parkinglotreportrepository,
 )
 from app.utils import MessageCodes, PaginatedContent
-from app.report.schemas import ZoneLots, ReadZoneLotsParams
+from app.report.schemas import (
+    ZoneLots,
+    ReadZoneLotsParams,
+    ParamsRecordMoment,
+    ParamsRecordMomentFilters,
+)
 from app.api.services import records_services
+from app import schemas, crud
 
 
 async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
@@ -24,7 +30,7 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
     for zone in parkingzones:
         # list lots zone
         lots = await parkinglotreportrepository.find_lines(
-            db, input_zone_id=zone.id, params=params
+            db, params=ReadZoneLotsParams(input_zone_id=zone.id)
         )
         if lots:
             capacity_empty = capacity = len(lots)
@@ -33,7 +39,8 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
                 if lot["status"] == Status.full:
                     capacity_empty = capacity - 1
                 records = await records_services.calculator_price(
-                    db=db, input_ocr=lot["ocr"]
+                    db=db,
+                    params=schemas.ParamsRecord(input_plate=lot["plate"]),
                 )
             zone_lots = ZoneLots(
                 zone_name=zone.name,
@@ -58,3 +65,36 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
         size=params.size,
         page=params.page,
     )
+
+
+async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
+    if params.input_camera_code is not None:
+        camera = await crud.camera_repo.find_cameras(
+            db, params=ParamsCamera(input_camera_code=params.input_camera_code)
+        )
+    if (
+        params.input_name_zone
+        or params.input_floor_number
+        or params.input_name_sub_zone
+    ):
+        parkingzones = await parkingzonereportrepository.get_multi_by_filter(
+            db,
+            params=ReadZoneLotsParams(
+                input_name_sub_zone=params.input_name_sub_zone,
+                input_floor_number=params.input_floor_number,
+                input_name_zone=params.input_name_zone,
+            ),
+        )
+
+        
+
+    lots = await parkinglotreportrepository.find_lines_moment(
+        db,
+        params=ParamsRecordMomentFilters(
+            input_camera_id=camera[0].id,
+            input_zone_id=parkingzones[0].id
+        ),
+    )
+    for i in lots:
+        print(i)
+    return

@@ -1,1 +1,1 @@
-from .report import report_zone
+from .report import *

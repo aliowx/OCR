@@ -18,9 +18,7 @@ router = APIRouter()
 @router.get("/")
 async def read_records(
     db: AsyncSession = Depends(deps.get_db_async),
-    score: float = 0,
-    skip: int = 0,
-    limit: int = 100,
+    record_in: schemas.ParamsRecord = Depends(),
     asc: bool = False,
 ) -> APIResponseType[schemas.GetRecords]:
     """
@@ -28,7 +26,7 @@ async def read_records(
     """
 
     records = await records_services.calculator_price(
-        db, score=score, skip=skip, limit=limit, asc=asc
+        db, params=record_in
     )
 
     return APIResponse(records)
@@ -65,33 +63,3 @@ async def read_record(
     return APIResponse(record)
 
 
-@router.get("/find/search")
-async def findrecords(
-    db: AsyncSession = Depends(deps.get_db_async),
-    input_ocr: str = None,
-    input_start_time_min: datetime = None,
-    input_start_time_max: datetime = None,
-    input_end_time_min: datetime = None,
-    input_end_time_max: datetime = None,
-    input_score: float = None,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetRecords]:
-    """
-    Retrieve records.
-    """
-    records = await crud.record.find_records(
-        db,
-        input_ocr=input_ocr,
-        input_start_time_min=input_start_time_min,
-        input_start_time_max=input_start_time_max,
-        input_end_time_min=input_end_time_min,
-        input_end_time_max=input_end_time_max,
-        input_score=input_score,
-        skip=skip,
-        limit=limit,
-    )
-
-    return APIResponse(
-        schemas.GetRecords(items=records[0], all_items_count=records[1])
-    )

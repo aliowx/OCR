@@ -20,7 +20,7 @@ from .models import (
     Rule,
     ZoneRule,
 )
-from .schemas.camera import CameraCreate, CameraUpdate
+from .schemas.camera import CameraCreate, CameraUpdate, ParamsCamera
 from .schemas.equipment import (
     EquipmentCreate,
     EquipmentUpdate,
@@ -56,7 +56,7 @@ class ParkingLotRepository(
         input_camera_id: int = None,
         input_number_line: int = None,
         input_zone_id: int = None,
-        skip: int  = 0,
+        skip: int = 0,
         limit: int | None = 100,
     ) -> List[ParkingLot] | Awaitable[List[ParkingLot]]:
 
@@ -106,34 +106,31 @@ class ParkingLotRepository(
 class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
 
     async def find_cameras(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_camera_code: str = None,
-        input_camera_ip: str = None,
-        input_location: str = None,
-        skip: int = 0,
-        limit: int = 100,
+        self, db: Session | AsyncSession, *, params: ParamsCamera
     ) -> list[Camera] | Awaitable[list[Camera]]:
 
         query = select(Camera)
 
         filters = [Camera.is_deleted == false()]
 
-        if input_camera_code is not None:
-            filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
+        if params.input_camera_code is not None:
+            filters.append(Camera.camera_code == params.input_camera_code)
 
-        if input_camera_ip is not None:
-            filters.append(Camera.camera_ip.like(f"%{input_camera_ip}%"))
+        if params.input_camera_ip is not None:
+            filters.append(Camera.camera_ip == params.input_camera_ip)
 
-        if input_location is not None:
-            filters.append(Camera.location.like(f"%{input_location}%"))
+        if params.input_location is not None:
+            filters.append(Camera.location == params.input_location)
 
-        if limit is None:
-            return self._all(db.scalars(query.filter(*filters).offset(skip)))
+        if params.limit is None:
+            return self._all(
+                db.scalars(query.filter(*filters).offset(params.skip))
+            )
 
         return await self._all(
-            db.scalars(query.filter(*filters).offset(skip).limit(limit))
+            db.scalars(
+                query.filter(*filters).offset(params.skip).limit(params.limit)
+            )
         )
 
     async def one_camera(

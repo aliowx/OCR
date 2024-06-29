@@ -40,21 +40,21 @@ class ParkingLot(Base):
     )
     camera_rpi = relationship("Camera", back_populates="parkinglot")
 
-    ocr_img_id: Mapped[int] = mapped_column(
+    plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    ocr_img = relationship("Image", foreign_keys=ocr_img_id)
+    plate_image = relationship("Image", foreign_keys=plate_image_id)
 
-    lpr_img_id: Mapped[int] = mapped_column(
+    lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    lpr_img = relationship("Image", foreign_keys=lpr_img_id)
+    lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
     price_model_id: Mapped[int] = mapped_column(
         Integer,

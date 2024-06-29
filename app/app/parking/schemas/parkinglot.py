@@ -33,10 +33,11 @@ class ParkingLotBase(BaseModel):
     )
     status: Optional[Status] = Field(None)
     plate: Optional[str] = Field(None)
-    lpr_img_id: Optional[int] = Field(None)
-    ocr_img_id: Optional[int] = Field(None)
+    lpr_image_id: Optional[int] = Field(None)
+    plate_image_id: Optional[int] = Field(None)
     latest_time_modified: Optional[datetime] = Field(None)
-    zone_id: int | None = None
+    zone_id: Optional[int] = Field(None)
+    
 
 
 class ParkingLotCreate(BaseModel):
@@ -126,11 +127,17 @@ class GetParkingLot(BaseModel):
 class ParkingLotUpdateStatus(BaseModel):
     camera_code: str = Field(...)
     number_line: int = Field(...)
-    lpr_img_id: Optional[int] = Field(None)
-    ocr_img_id: Optional[int] = Field(None)
+    lpr_image_id: Optional[int] = Field(None)
+    plate_image_id: Optional[int] = Field(None)
     plate: Optional[str] = Field(None)
     status: Status = Status.empty
     latest_time_modified: Optional[datetime] = None
+
+    class Config:
+        @staticmethod
+        def json_schema_extra(schema, model):
+            if "properties" in schema:
+                schema["properties"].pop("latest_time_modified", None)
 
 
 class PriceUpdateInParkingLot(BaseModel):

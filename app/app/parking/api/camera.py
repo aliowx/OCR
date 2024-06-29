@@ -7,6 +7,7 @@ from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
+from app.parking import schemas as cameraSchema
 
 router = APIRouter()
 namespace = "camera"
@@ -16,14 +17,13 @@ logger = logging.getLogger(__name__)
 @router.get("/")
 async def read_camera(
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 1000,
+    params: cameraSchema.ParamsCamera = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.GetCamera]:
     """
     Get All Camera.
     """
-    cameras = await crud.camera_repo.get_multi(db, skip=skip, limit=limit)
+    cameras = await crud.camera_repo.find_cameras(db, params=params)
     return APIResponse(
         schemas.GetCamera(items=cameras, all_items_count=len(cameras))
     )
@@ -56,38 +56,6 @@ async def create_camera(
         )
 
     return APIResponse(await crud.camera_repo.create(db, obj_in=camera_in))
-
-
-@router.get("/search")
-async def search_cameras(
-    db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_user),
-    input_camera_code: str = None,
-    input_camera_ip: str = None,
-    input_location: str = None,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetCamera]:
-    """
-    Search Cameras.
-    """
-
-    camera = await crud.camera_repo.find_cameras(
-        db,
-        input_camera_code=input_camera_code,
-        input_camera_ip=input_camera_ip,
-        input_location=input_location,
-        skip=skip,
-        limit=limit,
-    )
-    if not camera:
-        raise exc.ServiceFailure(
-            detail="The camera not exists in the system.",
-            msg_code=utils.MessageCodes.not_found,
-        )
-    return APIResponse(
-        schemas.GetCamera(items=camera, all_items_count=len(camera))
-    )
 
 
 @router.get("/{id}")

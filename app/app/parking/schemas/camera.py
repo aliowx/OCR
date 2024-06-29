@@ -41,6 +41,14 @@ class CameraInDB(CameraInDBBase):
     pass
 
 
+class ParamsCamera(BaseModel):
+    input_camera_code: str | None = None
+    input_camera_ip: str | None = None
+    input_location: str | None = None
+    skip: int | None = 0
+    limit: int | None = 100
+
+
 class GetCamera(BaseModel):
     items: List[Camera]
     all_items_count: int

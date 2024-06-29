@@ -30,6 +30,6 @@ async def zone_status(
     db: AsyncSession = Depends(deps.get_db_async),
     params: report_schemas.ParamsRecordMoment = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[Any]:
+) -> APIResponseType[PaginatedContent[list]]:
 
     return APIResponse(await report_services.report_moment(db, params))

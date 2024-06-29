@@ -39,6 +39,16 @@ class ParamsRecordMoment(BaseModel):
     input_name_zone: str | None = None
     input_name_sub_zone: str | None = None
     input_floor_number: int | None = None
+    size: int | None = 100
+    page: int | None = 1
+    asc: bool | None = True
+
+    @property
+    def skip(self) -> int:
+        skip = 0
+        if self.size is not None:
+            skip = (self.page * self.size) - self.size
+        return skip
 
 
 class ParamsRecordMomentFilters(BaseModel):

@@ -97,4 +97,19 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             )
             if lots:
                 result_moment.append(jsonable_encoder(lots))
-    return result_moment
+
+    if params.size is not None:  # limit
+        result_moment = result_moment[: params.size]
+
+    if params.page is not None:  # skip
+        result_moment = result_moment[:: params.page]
+
+    if params.asc:
+        result_moment.reverse()
+
+    return PaginatedContent(
+        data=result_moment,
+        total_count=len(result_moment),
+        size=params.size,
+        page=params.page,
+    )

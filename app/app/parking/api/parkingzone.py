@@ -35,10 +35,8 @@ async def read_parkingzones(
 @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_parkingzone_by_id(
     *,
-    zone_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 100,
+    zone_id: int,
     _: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.ParkingZone]:
     """

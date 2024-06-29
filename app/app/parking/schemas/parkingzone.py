@@ -8,6 +8,8 @@ class ParkingZoneBase(BaseModel):
     tag: str | None = None
     parking_id: int | None = None
     parent_id: int | None = None
+    floor_name: str | None = None
+    floor_number: int | None = None
 
 
 class ParkingZoneComplete(ParkingZoneBase):
@@ -24,14 +26,20 @@ class ParkingZoneUpdate(ParkingZoneBase): ...
 
 
 class ParkingZoneInDBBase(ParkingZoneComplete):
-    id: int | None = None
+    id: int | None = None 
     created: datetime
     modified: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class ParkingZone(ParkingZoneInDBBase): ...
+class ParkingZone(ParkingZoneInDBBase):
+    parent: str| None = Field(default=None, exclude=True)
+    class Config:
+        @staticmethod
+        def json_schema_extra(schema, model):
+            if "properties" in schema:
+                schema["properties"].pop("parent", None)
 
 
 class ParkingZoneInDB(ParkingZoneInDBBase): ...

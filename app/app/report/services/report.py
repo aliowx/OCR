@@ -68,10 +68,12 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
 
 
 async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
+    camera = None
+    result_moment = []
     if params.input_camera_code is not None:
         camera = await crud.camera_repo.find_cameras(
             db, params=ParamsCamera(input_camera_code=params.input_camera_code)
-        )
+        )[0].id
     if (
         params.input_name_zone
         or params.input_floor_number
@@ -86,15 +88,13 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             ),
         )
 
-        
-
-    lots = await parkinglotreportrepository.find_lines_moment(
-        db,
-        params=ParamsRecordMomentFilters(
-            input_camera_id=camera[0].id,
-            input_zone_id=parkingzones[0].id
-        ),
-    )
-    for i in lots:
-        print(i)
-    return
+        for zone in parkingzones:
+            lots = await parkinglotreportrepository.find_lines_moment(
+                db,
+                params=ParamsRecordMomentFilters(
+                    input_camera_id=camera, input_zone_id=zone.id
+                ),
+            )
+            if lots:
+                result_moment.append(jsonable_encoder(lots))
+    return result_moment

@@ -45,7 +45,6 @@ class ParamsRecordMomentFilters(BaseModel):
     input_camera_id: int | None = None
     input_plate: str | None = None
     input_zone_id: int | None = None
-    input_floor_number: int | None = None
 
 
 class ReportCreate(ReportBase): ...

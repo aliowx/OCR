@@ -71,17 +71,6 @@ class CameraInDB(PriceInDBBase):
     pass
 
 
-# class ReadPricesFilter(BaseModel):
-#     name__contains: str | None = None
-#     name_fa__contains: str | None = None
-#     parking_id__eq: int | None = None
-#     zone_id__eq: int | None = None
-#     expiration_datetime__gte: str | None = None
-#     expiration_datetime__lte: str | None = None
-#     created__gte: str | None = None
-#     created__lte: str | None = None
-#     limit: int | None = 100
-#     skip: int = 0
 
     
 
@@ -107,23 +96,4 @@ class ReadPricesParams(BaseModel):
         return skip
 
 
-    # @property
-    # def db_filters(self) -> ReadPricesFilter:
-    #     filters = ReadPricesFilter(limit=self.size, skip=self.skip)
-    #     if self.name:
-    #         filters.name__contains = self.name
-    #     if self.name_fa:
-    #         filters.name_fa__contains = self.name_fa
-    #     if self.parking_id:
-    #         filters.parking_id__eq = self.parking_id
-    #     if self.zone_id:
-    #         filters.zone_id__eq = self.zone_id
-    #     if self.expiration_datetime_start:
-    #         filters.expiration_datetime__gte = self.expiration_datetime_start
-    #     if self.expiration_datetime_end:
-    #         filters.expiration_datetime__lte = self.expiration_datetime_end
-    #     if self.start_date:
-    #         filters.created__gte = self.start_date
-    #     if self.end_date:
-    #         filters.created__lte = self.end_date
-    #     return filters
+

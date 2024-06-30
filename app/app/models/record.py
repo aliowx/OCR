@@ -10,7 +10,7 @@ from app.db.base_class import Base
 class Record(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    ocr: Mapped[str] = mapped_column(String, index=True)
+    plate: Mapped[str] = mapped_column(String, index=True, nullable=True)
 
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True
@@ -23,22 +23,44 @@ class Record(Base):
         Float, nullable=True, default=None, index=True
     )
 
-    best_lpr_id: Mapped[int] = mapped_column(
+    best_lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    best_lpr = relationship("Image", foreign_keys=best_lpr_id)
+    best_lpr_image = relationship("Image", foreign_keys=best_lpr_image_id)
 
-    best_big_image_id: Mapped[int] = mapped_column(
+    best_plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    best_big_image = relationship("Image", foreign_keys=best_big_image_id)
+    best_plate_image = relationship("Image", foreign_keys=best_plate_image_id)
 
-    plates = relationship("Plate", back_populates="record")
+    zone_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parkingzone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    zone = relationship("ParkingZone", foreign_keys=zone_id)
 
-    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)
+    parkinglot_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parkinglot.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    parking_lot = relationship("ParkingLot", foreign_keys=parkinglot_id)
+
+    plates = relationship("PlateDetected", back_populates="record")
+
+    price_model_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("price.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    price_model = relationship("Price", foreign_keys=price_model_id)

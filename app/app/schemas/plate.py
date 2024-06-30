@@ -1,41 +1,46 @@
 from datetime import datetime
 from typing import List, Optional
 
+from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class Status(str, Enum):
+    full = "full"
+    entranceDoor = "entranceDoor"
+    exitDoor = "exitDoor"
 
 
 # Shared properties
 class PlateBase(BaseModel):
-    ocr: Optional[str] = None
+    plate: Optional[str] = None
 
     record_time: Optional[datetime] = None
 
-    lpr_id: Optional[int] = None
-    big_image_id: Optional[int] = None
+    plate_image_id: Optional[int] = None
+    lpr_image_id: Optional[int] = None
     record_id: Optional[int] = None
 
     camera_id: Optional[int] = Field(None, ge=1)
-    number_line: Optional[int] = Field(None, ge=1)
 
-    floor_number: Optional[int] = Field(None)
-    floor_name: Optional[str] = Field(None)
+    parkinglot_id: Optional[int] = None
+    zone_id: Optional[int] = None
 
-    name_parkinglot: Optional[str] = Field(None)
+    price_model_id: Optional[int] = Field(None)
 
-    price_model: Optional[dict] = Field(None)
+    type_status_parkinglot: Optional[Status] = Field(None)
 
 
 class PlateCreate(PlateBase):
-    ocr: str
+    plate: str
     record_time: datetime
-    name_parkinglot: str
-    floor_number: int
-    floor_name: str
-    number_line: int
+    parkinglot_id: int
+    zone_id: int
     camera_id: int
-    lpr_id: int
-    big_image_id: int
-    price_model: dict
+    lpr_image_id: int
+    plate_image_id: int
+    price_model_id: int
+    type_status_parkinglot: Status
 
 
 # Properties to receive on item update
@@ -65,3 +70,13 @@ class PlateInDB(PlateInDBBase):
 class GetPlates(BaseModel):
     items: List[Plate]
     all_items_count: int
+
+
+class ParamsPlates(BaseModel):
+    input_plate: str | None = None
+    input_camera_code: str | None = None
+    input_time_min: datetime | None = None
+    input_time_max: datetime | None = None
+    input_camera_id: int | None = None
+    skip: int | None = 0
+    limit: int | None = 100

@@ -7,21 +7,26 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class Plate(Base):
+class PlateDetected(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    ocr: Mapped[str] = mapped_column(String, index=True)
+    plate: Mapped[str] = mapped_column(String, index=True)
 
     record_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
-    number_line: Mapped[int] = mapped_column(Integer)
+    type_status_parkinglot: Mapped[str] = mapped_column(String, nullable=True)
 
-    floor_number: Mapped[int] = mapped_column(Integer)
-    floor_name: Mapped[str] = mapped_column(String)
+    zone_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("parkingzone.id"), index=True, nullable=True
+    )
+    zone = relationship("ParkingZone", foreign_keys=zone_id)
 
-    name_parkinglot: Mapped[str] = mapped_column(String)
+    parkinglot_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("parkinglot.id"), index=True, nullable=True
+    )
+    parkinglot = relationship("ParkingLot", foreign_keys=parkinglot_id)
 
     camera_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("camera.id"), index=True
@@ -33,20 +38,23 @@ class Plate(Base):
     )
     record = relationship("Record", back_populates="plates")
 
-    lpr_id: Mapped[int] = mapped_column(
+    plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    lpr = relationship("Image", foreign_keys=lpr_id)
+    plate_image = relationship("Image", foreign_keys=plate_image_id)
 
-    big_image_id: Mapped[int] = mapped_column(
+    lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    big_image = relationship("Image", foreign_keys=big_image_id)
+    lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
-    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)
+    price_model_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("price.id"), index=True, nullable=True
+    )
+    price = relationship("Price", foreign_keys=price_model_id)

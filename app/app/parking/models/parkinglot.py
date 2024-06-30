@@ -9,9 +9,6 @@ from app.db.base_class import Base
 class ParkingLot(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    floor_number: Mapped[int] = mapped_column(Integer)
-    floor_name: Mapped[str] = mapped_column(String)
-
     name_parkinglot: Mapped[str] = mapped_column(String)
 
     percent_rotation_rectangle_small: Mapped[int] = mapped_column(
@@ -32,7 +29,7 @@ class ParkingLot(Base):
 
     status: Mapped[str] = mapped_column(String, nullable=True)
 
-    ocr: Mapped[str] = mapped_column(String, nullable=True)
+    plate: Mapped[str] = mapped_column(String, nullable=True)
 
     latest_time_modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now, index=True
@@ -43,21 +40,21 @@ class ParkingLot(Base):
     )
     camera_rpi = relationship("Camera", back_populates="parkinglot")
 
-    ocr_img_id: Mapped[int] = mapped_column(
+    plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    ocr_img = relationship("Image", foreign_keys=ocr_img_id)
+    plate_image = relationship("Image", foreign_keys=plate_image_id)
 
-    lpr_img_id: Mapped[int] = mapped_column(
+    lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    lpr_img = relationship("Image", foreign_keys=lpr_img_id)
+    lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
     price_model_id: Mapped[int] = mapped_column(
         Integer,

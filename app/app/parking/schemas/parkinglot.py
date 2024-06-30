@@ -15,8 +15,6 @@ class Status(str, Enum):
 
 class ParkingLotBase(BaseModel):
     camera_id: Optional[int] = Field(None)
-    floor_number: Optional[int] = Field(None)
-    floor_name: Optional[str] = Field(None)
     name_parkinglot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
@@ -34,16 +32,15 @@ class ParkingLotBase(BaseModel):
         ],
     )
     status: Optional[Status] = Field(None)
-    ocr: Optional[str] = Field(None)
-    lpr_img_id: Optional[int] = Field(None)
-    ocr_img_id: Optional[int] = Field(None)
+    plate: Optional[str] = Field(None)
+    lpr_image_id: Optional[int] = Field(None)
+    plate_image_id: Optional[int] = Field(None)
     latest_time_modified: Optional[datetime] = Field(None)
-    zone_id: int | None = None
+    zone_id: Optional[int] = Field(None)
+    
 
 
 class ParkingLotCreate(BaseModel):
-    floor_number: int = Field(...)
-    floor_name: str = Field(...)
     name_parkinglot: str = Field(...)
     coordinates_rectangles: List[Dict] = Field(
         ...,
@@ -66,8 +63,6 @@ class ParkingLotCreate(BaseModel):
 
 class ParkingLotShowDetailByCamera(BaseModel):
     camera_id: Optional[int] = Field(None)
-    floor_number: Optional[int] = Field(None)
-    floor_name: Optional[str] = Field(None)
     name_parkinglot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
@@ -84,13 +79,12 @@ class ParkingLotShowDetailByCamera(BaseModel):
             ]
         ],
     )
+    zone_id: int | None = None
 
 
 class ParkingLotCreateLineInDB(BaseModel):
     number_line: int = Field(None, ge=1)
     camera_id: int = Field(..., ge=1)
-    floor_number: int = Field(...)
-    floor_name: str = Field(...)
     name_parkinglot: str = Field(...)
     percent_rotation_rectangle_big: int = Field(..., le=360, ge=0)
     coordinates_rectangle_big: List[List[float]] = Field(
@@ -101,6 +95,7 @@ class ParkingLotCreateLineInDB(BaseModel):
         None, examples=[[0.25, 0], [1, 1]]
     )
     price_model_id: int = Field(None)
+    zone_id: int = Field(None)
 
 
 class ParkingLotUpdate(ParkingLotBase):
@@ -132,11 +127,17 @@ class GetParkingLot(BaseModel):
 class ParkingLotUpdateStatus(BaseModel):
     camera_code: str = Field(...)
     number_line: int = Field(...)
-    lpr_img_id: Optional[int] = Field(None)
-    ocr_img_id: Optional[int] = Field(None)
-    ocr: Optional[str] = Field(None)
+    lpr_image_id: Optional[int] = Field(None)
+    plate_image_id: Optional[int] = Field(None)
+    plate: Optional[str] = Field(None)
     status: Status = Status.empty
     latest_time_modified: Optional[datetime] = None
+
+    class Config:
+        @staticmethod
+        def json_schema_extra(schema, model):
+            if "properties" in schema:
+                schema["properties"].pop("latest_time_modified", None)
 
 
 class PriceUpdateInParkingLot(BaseModel):

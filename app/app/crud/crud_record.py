@@ -45,7 +45,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         q = (
             db.query(Record)
             .filter(
-                (Record.ocr == plate.ocr)
+                (Record.plate == plate.plate)
                 & (Record.end_time >= plate.record_time - offset)
                 & (Record.start_time <= plate.record_time + offset)
             )
@@ -61,7 +61,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self,
         db: Session | AsyncSession,
         *,
-        input_ocr: str = None,
+        input_plate: str = None,
         input_start_time_min: datetime = None,
         input_start_time_max: datetime = None,
         input_end_time_min: datetime = None,
@@ -76,8 +76,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [Record.is_deleted == False]
 
-        if input_ocr is not None:
-            filters.append(Record.ocr.like(f"%{input_ocr}%"))
+        if input_plate is not None:
+            filters.append(Record.plate == input_plate)
 
         if input_start_time_min is not None:
             filters.append(Record.start_time >= input_start_time_min)

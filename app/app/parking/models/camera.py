@@ -15,8 +15,7 @@ class Camera(Base):
 
     location: Mapped[str] = mapped_column(String, nullable=True)
 
-    # TODO: rename this column
-    image_id: Mapped[int] = mapped_column(
+    image_main_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey(
             "image.id",
@@ -26,8 +25,19 @@ class Camera(Base):
         index=True,
         nullable=True,
     )
+
+    zone_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parkingzone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    zone = relationship("ParkingZone", foreign_keys=zone_id)
+
     image_parkinglot = relationship("Image", back_populates="image_parkinglot")
 
     parkinglot = relationship("ParkingLot", back_populates="camera_rpi")
 
-    parkinglot_plate = relationship("Plate", back_populates="camera_plate")
+    parkinglot_plate = relationship(
+        "PlateDetected", back_populates="camera_plate"
+    )

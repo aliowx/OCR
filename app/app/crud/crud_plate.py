@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.plate import PlateDetected
-from app.schemas.plate import PlateCreate, PlateUpdate
+from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
 from cache.redis import redis_client
 
 
@@ -46,7 +46,10 @@ class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
     ) -> list[PlateDetected] | Awaitable[list[PlateDetected]]:
         query = (
             select(self.model)
-            .filter(PlateDetected.record_id == record_id, PlateDetected.is_deleted == False)
+            .filter(
+                PlateDetected.record_id == record_id,
+                PlateDetected.is_deleted == False,
+            )
             .order_by(self.model.id.asc() if asc else self.model.id.desc())
             .offset(skip)
         )
@@ -55,42 +58,36 @@ class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
         return self._all(db.scalars(query.limit(limit)))
 
     async def find_plates(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_ocr: str = None,
-        input_camera_id: int = None,
-        input_time_min: datetime = None,
-        input_time_max: datetime = None,
-        skip: int = 0,
-        limit: int = 100,
+        self, db: Session | AsyncSession, *, params: ParamsPlates
     ) -> list[PlateDetected] | Awaitable[list[PlateDetected]]:
 
         query = select(PlateDetected)
 
         filters = [PlateDetected.is_deleted == False]
 
-        if input_ocr is not None:
-            filters.append(PlateDetected.ocr.like(f"%{input_ocr}%"))
+        if params.input_plate is not None:
+            filters.append(PlateDetected.plate == params.input_plate)
 
-        if input_camera_id is not None:
-            filters.append(PlateDetected.camera_id == input_camera_id)
+        if params.input_camera_id is not None:
+            filters.append(PlateDetected.camera_id == params.input_camera_id)
 
-        if input_time_min is not None:
-            filters.append(PlateDetected.record_time >= input_time_min)
+        if params.input_time_min is not None:
+            filters.append(PlateDetected.record_time >= params.input_time_min)
 
-        if input_time_max is not None:
-            filters.append(PlateDetected.record_time <= input_time_max)
+        if params.input_time_max is not None:
+            filters.append(PlateDetected.record_time <= params.input_time_max)
 
-        if limit is None:
+        if params.limit is None:
             return await self._all(
-                db.scalars(query.filter(*filters).offset(skip))
+                db.scalars(query.filter(*filters).offset(params.skip))
             )
 
         all_items_count = await self.count_by_filter(db, filters=filters)
 
         items = await self._all(
-            db.scalars(query.filter(*filters).offset(skip).limit(limit))
+            db.scalars(
+                query.filter(*filters).offset(params.skip).limit(params.limit)
+            )
         )
 
         return [items, all_items_count]

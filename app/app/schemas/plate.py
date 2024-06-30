@@ -70,3 +70,13 @@ class PlateInDB(PlateInDBBase):
 class GetPlates(BaseModel):
     items: List[Plate]
     all_items_count: int
+
+
+class ParamsPlates(BaseModel):
+    input_plate: str | None = None
+    input_camera_code: str | None = None
+    input_time_min: datetime | None = None
+    input_time_max: datetime | None = None
+    input_camera_id: int | None = None
+    skip: int | None = 0
+    limit: int | None = 100

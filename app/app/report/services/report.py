@@ -1,14 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
-from app.core.exceptions import ServiceFailure
-from app.parking.repo import parking_repo
 from app.parking.schemas import Status, ParamsCamera
-from app.parking.services import parkingzone as parkingzone_services
 from app.report.repo import (
     parkingzonereportrepository,
     parkinglotreportrepository,
 )
-from app.utils import MessageCodes, PaginatedContent
+from app.utils import PaginatedContent
 from app.report.schemas import (
     ZoneLots,
     ReadZoneLotsParams,
@@ -70,10 +67,12 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
 async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
     camera = None
     result_moment = []
+    # search by camera
     if params.input_camera_code is not None:
         camera = await crud.camera_repo.find_cameras(
             db, params=ParamsCamera(input_camera_code=params.input_camera_code)
         )[0].id
+    # search in zone
     if (
         params.input_name_zone
         or params.input_floor_number
@@ -95,15 +94,19 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
                     input_camera_id=camera, input_zone_id=zone.id
                 ),
             )
-            if lots:
-                result_moment.append(jsonable_encoder(lots))
+    # list all lots
     else:
         lots = await parkinglotreportrepository.find_lines_moment(
-        db, params=ParamsRecordMomentFilters(
-                    input_camera_id=camera)
+            db, params=ParamsRecordMomentFilters(input_camera_id=camera)
         )
+    # set camera_code in dict lot
+    if lots:
         for lot in lots:
-            result_moment.append(jsonable_encoder(lot))
+            camera_code = await crud.camera_repo.get(db, id=lot.camera_id)
+            lot = jsonable_encoder(lot)
+            lot.update({"camera_code": camera_code.camera_code})
+            result_moment.append(lot)
+
     if params.size is not None:  # limit
         result_moment = result_moment[: params.size]
 

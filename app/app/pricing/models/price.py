@@ -22,10 +22,6 @@ class Price(Base):
         DateTime, default=datetime.now, index=True
     )
 
-    parking_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parking.id"), nullable=True
-    )
-    parking = relationship("Parking")
     pricings = relationship(
         "ParkingZonePrice", back_populates="price", lazy="immediate"
     )

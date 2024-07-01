@@ -18,10 +18,11 @@ class ParkingPaymentType(IntEnum):
 
 
 class EquipmentType(IntEnum):
-    CAMERA = 1
-    ROADBLOCK = 2
-    DISPLAY = 3
-    ERS = 4
+    CAMERA_ZONE = 1
+    CAMERA_SPOT = 2
+    ROADBLOCK = 3
+    DISPLAY = 4
+    ERS = 5
 
 
 class EquipmentStatus(IntEnum):

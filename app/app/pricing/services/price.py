@@ -12,15 +12,7 @@ from app.utils import MessageCodes, PaginatedContent
 async def create_price(
     db: AsyncSession, price_data: price_schemas.PriceCreate
 ) -> price_schemas.Price:
-    if price_data.parking_id:
-        parking = await parking_repo.get(db, id=price_data.parking_id)
-    else:
-        parking = await parking_repo.get_main_parking(db)
-    if not parking:
-        raise ServiceFailure(
-            detail="Parking not found",
-            msg_code=MessageCodes.not_found,
-        )
+
     price_data_create = price_data.model_copy(
         update={"zone_ids": None, "priority": None}
     )

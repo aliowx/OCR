@@ -37,8 +37,6 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
             orm_filters.append(self.model.name.contains(filters.name))
         if filters.name_fa:
             orm_filters.append(self.model.name_fa.contains(filters.name_fa))
-        if filters.parking_id:
-            orm_filters.append(self.model.parking_id == filters.parking_id)
         if filters.zone_id:
             orm_filters.append(
                 and_(

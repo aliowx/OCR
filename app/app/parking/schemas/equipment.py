@@ -11,14 +11,12 @@ class EquipmentBase(BaseModel):
     tag: str | None = None
     serial_number: str | None = None
     ip_address: str | None = None
-    parking_id: int | None = None
     zone_id: int | None = None
     additional_data: dict | None = None
 
 
 class EquipmentCreate(EquipmentBase):
     equipment_type: EquipmentType
-    parking_id: int | None = None
     zone_id: int
     tag: str | None = Field(None, max_length=30)
     serial_number: str | None = Field(None, max_length=50)
@@ -48,7 +46,6 @@ class EquipmentInDB(EquipmentInDBBase): ...
 class ReadEquipmentsFilter(BaseModel):
     ip_address__eq: str | None = None
     serial_number__eq: str | None = None
-    parking_id__eq: int | None = None
     zone_id__eq: int | None = None
     equipment_type__eq: int | None = None
     equipment_status__eq: int | None = None
@@ -61,7 +58,6 @@ class ReadEquipmentsFilter(BaseModel):
 class ReadEquipmentsParams(BaseModel):
     ip_address: str | None = None
     serial_number: str | None = None
-    parking_id: int | None = None
     zone_id: int | None = None
     equipment_type: EquipmentType | None = Field(
         QueryParam(None, description=str(list(EquipmentType)))
@@ -85,8 +81,6 @@ class ReadEquipmentsParams(BaseModel):
     @property
     def db_filters(self) -> ReadEquipmentsFilter:
         filters = ReadEquipmentsFilter(limit=self.size, skip=self.skip)
-        if self.parking_id:
-            filters.parking_id__eq = self.parking_id
         if self.ip_address:
             filters.ip_address__eq = self.ip_address
         if self.serial_number:
@@ -100,3 +94,60 @@ class ReadEquipmentsParams(BaseModel):
         if self.end_date:
             filters.created__lte = self.end_date
         return filters
+    
+# # for camera
+# from datetime import datetime
+# from typing import List, Optional
+
+# from pydantic import BaseModel, ConfigDict, Field
+
+
+# class CameraBase(BaseModel):
+#     is_active: Optional[bool] = True
+#     camera_ip: Optional[str] = None
+#     camera_code: Optional[str] = None
+#     location: Optional[str] = None
+#     image_id: Optional[int] = None
+#     zone_id: Optional[int] = None
+
+
+# class CameraCreate(CameraBase):
+#     camera_code: str = Field(..., min_length=1)
+#     camera_ip: str = Field(...)
+#     location: str = Field(...)
+#     zone_id: str = Field(...)
+#     is_active: bool = Field(...)
+
+
+# class CameraUpdate(CameraBase):
+#     pass
+
+
+# class CameraInDBBase(CameraBase):
+#     id: int
+#     created: datetime
+#     modified: datetime
+
+#     model_config = ConfigDict(from_attributes=True)
+
+
+# class Camera(CameraInDBBase):
+#     pass
+
+
+# class CameraInDB(CameraInDBBase):
+#     pass
+
+
+# class ParamsCamera(BaseModel):
+#     input_camera_code: str | None = None
+#     input_camera_ip: str | None = None
+#     input_location: str | None = None
+#     skip: int | None = 0
+#     limit: int | None = 100
+
+
+# class GetCamera(BaseModel):
+#     items: List[Camera]
+#     all_items_count: int
+

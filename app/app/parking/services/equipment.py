@@ -42,7 +42,6 @@ async def create_equipment(
             msg_code=MessageCodes.not_found,
         )
     params = schemas.ReadEquipmentsParams(
-        parking_id=equipment_data.parking_id,
         ip_address=equipment_data.ip_address,
     )
     ip_address_check = await read_equipments(db, params=params)
@@ -94,13 +93,6 @@ async def update_equipment(
             msg_code=MessageCodes.not_found,
         )
 
-    if equipment_data.parking_id is not None:
-        parking = await parking_repo.get(db, id=equipment_data.parking_id)
-        if not parking:
-            raise ServiceFailure(
-                detail="Parking Not Found",
-                msg_code=MessageCodes.not_found,
-            )
     if equipment_data.zone_id is not None:
         parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
         if not parkingzone:

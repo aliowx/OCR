@@ -13,9 +13,9 @@ class Status(str, Enum):
     exitDoor = "exitDoor"
 
 
-class ParkingLotBase(BaseModel):
+class SpotBase(BaseModel):
     camera_id: Optional[int] = Field(None)
-    name_parkinglot: Optional[str] = Field(None)
+    name_spot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
@@ -26,7 +26,6 @@ class ParkingLotBase(BaseModel):
                     "number_line": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                    "price_model_id": 1,
                 }
             ]
         ],
@@ -37,11 +36,10 @@ class ParkingLotBase(BaseModel):
     plate_image_id: Optional[int] = Field(None)
     latest_time_modified: Optional[datetime] = Field(None)
     zone_id: Optional[int] = Field(None)
-    
 
 
-class ParkingLotCreate(BaseModel):
-    name_parkinglot: str = Field(...)
+class SpotCreate(BaseModel):
+    name_spot: str = Field(...)
     coordinates_rectangles: List[Dict] = Field(
         ...,
         examples=[
@@ -52,7 +50,6 @@ class ParkingLotCreate(BaseModel):
                     "number_line": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                    "price_model_id": 1,
                 }
             ]
         ],
@@ -61,9 +58,27 @@ class ParkingLotCreate(BaseModel):
     zone_id: int | None = None
 
 
-class ParkingLotShowDetailByCamera(BaseModel):
+class CoordinateSpotsByCamera(BaseModel):
+    percent_rotation_rectangle_small: Optional[int]
+    percent_rotation_rectangle_big: Optional[int]
+    number_line: Optional[int]
+    status: Optional[Status]
+    lpr_image_id: Optional[int]
+    plate_image_id: Optional[int]
+    coordinates_rectangle_big: Optional[list[list]]
+    coordinates_rectangle_small: Optional[list[list]]
+    zone_id: Optional[int]
+    name_spot: Optional[str]
+
+
+class SpotsByCamera(BaseModel):
+    camera_id: int
+    coordinates_rectangles: list[CoordinateSpotsByCamera]
+
+
+class SpotShowDetailByCamera(BaseModel):
     camera_id: Optional[int] = Field(None)
-    name_parkinglot: Optional[str] = Field(None)
+    name_spot: Optional[str] = Field(None)
     coordinates_rectangles: Optional[List[Dict]] = Field(
         None,
         examples=[
@@ -74,7 +89,6 @@ class ParkingLotShowDetailByCamera(BaseModel):
                     "number_line": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
-                    "price_model_id": 1,
                 }
             ]
         ],
@@ -82,10 +96,10 @@ class ParkingLotShowDetailByCamera(BaseModel):
     zone_id: int | None = None
 
 
-class ParkingLotCreateLineInDB(BaseModel):
+class SpotCreateLineInDB(BaseModel):
     number_line: int = Field(None, ge=1)
     camera_id: int = Field(..., ge=1)
-    name_parkinglot: str = Field(...)
+    name_spot: str = Field(...)
     percent_rotation_rectangle_big: int = Field(..., le=360, ge=0)
     coordinates_rectangle_big: List[List[float]] = Field(
         None, examples=[[0.25, 0], [1, 1]]
@@ -94,15 +108,14 @@ class ParkingLotCreateLineInDB(BaseModel):
     coordinates_rectangle_small: List[List[float]] = Field(
         None, examples=[[0.25, 0], [1, 1]]
     )
-    price_model_id: int = Field(None)
     zone_id: int = Field(None)
 
 
-class ParkingLotUpdate(ParkingLotBase):
+class SpotUpdate(SpotBase):
     pass
 
 
-class ParkingLotInDBBase(ParkingLotBase):
+class SpotInDBBase(SpotBase):
     id: Optional[int] = None
     created: Optional[datetime]
     modified: Optional[datetime]
@@ -110,21 +123,21 @@ class ParkingLotInDBBase(ParkingLotBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ParkingLotInDB(ParkingLotInDBBase):
+class SpotInDB(SpotInDBBase):
     pass
 
 
 # Properties to return to client
-class ParkingLot(ParkingLotInDBBase):
+class Spot(SpotInDBBase):
     pass
 
 
-class GetParkingLot(BaseModel):
+class GetSpot(BaseModel):
     items: dict
     all_items_count: int
 
 
-class ParkingLotUpdateStatus(BaseModel):
+class SpotUpdateStatus(BaseModel):
     camera_code: str = Field(...)
     number_line: int = Field(...)
     lpr_image_id: Optional[int] = Field(None)
@@ -140,6 +153,14 @@ class ParkingLotUpdateStatus(BaseModel):
                 schema["properties"].pop("latest_time_modified", None)
 
 
-class PriceUpdateInParkingLot(BaseModel):
-    id_park: int
-    price_model_id: int
+class ParamsSpotStatus(BaseModel):
+    size: int | None = 100
+    page: int = 1
+    asc: bool = True
+
+    @property
+    def skip(self) -> int:
+        skip = 0
+        if self.size is not None:
+            skip = (self.page * self.size) - self.size
+        return skip

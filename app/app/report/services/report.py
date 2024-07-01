@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from app.parking.schemas import Status, ParamsCamera
 from app.report.repo import (
     parkingzonereportrepository,
-    parkinglotreportrepository,
+    spotreportrepository,
 )
 from app.utils import PaginatedContent
 from app.report.schemas import (
@@ -26,7 +26,7 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
     list_lots_zone = []
     for zone in parkingzones:
         # list lots zone
-        lots = await parkinglotreportrepository.find_lines(
+        lots = await spotreportrepository.find_lines(
             db, params=ReadZoneLotsParams(input_zone_id=zone.id)
         )
         if lots:
@@ -88,7 +88,7 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
         )
 
         for zone in parkingzones:
-            lots = await parkinglotreportrepository.find_lines_moment(
+            lots = await spotreportrepository.find_lines_moment(
                 db,
                 params=ParamsRecordMomentFilters(
                     input_camera_id=camera, input_zone_id=zone.id
@@ -96,7 +96,7 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             )
     # list all lots
     else:
-        lots = await parkinglotreportrepository.find_lines_moment(
+        lots = await spotreportrepository.find_lines_moment(
             db, params=ParamsRecordMomentFilters(input_camera_id=camera)
         )
     # set camera_code in dict lot

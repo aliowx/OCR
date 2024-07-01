@@ -2,7 +2,7 @@ from app.parking.repo import (
     camera_repo,
     equipment_repo,
     parking_repo,
-    parkinglot_repo,
+    spot_repo,
     parkingzone_repo,
     parkingzoneprice_repo,
 )

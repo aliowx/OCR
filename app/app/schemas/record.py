@@ -13,7 +13,7 @@ class RecordBase(BaseModel):
     best_plate_image_id: int | None = None
     price_model_id: int | None = None
     score: float | None = None
-    parkinglot_id: int | None = None
+    spot_id: int | None = None
     zone_id: int | None = None
 
 
@@ -23,7 +23,7 @@ class RecordCreate(RecordBase):
     start_time: datetime
     end_time: datetime
     price_model_id: int
-    parkinglot_id: int
+    spot_id: int
     zone_id: int
 
 
@@ -43,8 +43,8 @@ class RecordInDBBase(RecordBase):
 
 # Properties to return to client
 class Record(RecordInDBBase):
-    parkinglot_time: str | None = None
-    parkinglot_price: float | None = None
+    spot_time: str | None = None
+    spot_price: float | None = None
 
 
 # Properties properties stored in DB

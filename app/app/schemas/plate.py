@@ -23,24 +23,24 @@ class PlateBase(BaseModel):
 
     camera_id: Optional[int] = Field(None, ge=1)
 
-    parkinglot_id: Optional[int] = None
+    spot_id: Optional[int] = None
     zone_id: Optional[int] = None
 
     price_model_id: Optional[int] = Field(None)
 
-    type_status_parkinglot: Optional[Status] = Field(None)
+    type_status_spot: Optional[Status] = Field(None)
 
 
 class PlateCreate(PlateBase):
     plate: str
     record_time: datetime
-    parkinglot_id: int
+    spot_id: int
     zone_id: int
     camera_id: int
     lpr_image_id: int
     plate_image_id: int
     price_model_id: int
-    type_status_parkinglot: Status
+    type_status_spot: Status
 
 
 # Properties to receive on item update

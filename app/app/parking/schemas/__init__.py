@@ -1,5 +1,5 @@
 from .camera import *
 from .parking import *
-from .parkinglot import *
+from .spot import *
 from .parkingzone import *
 from .rule import *

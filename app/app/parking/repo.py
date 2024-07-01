@@ -13,7 +13,7 @@ from .models import (
     Camera,
     Equipment,
     Parking,
-    ParkingLot,
+    Spot,
     ParkingZone,
     ParkingZonePrice,
     PlateRule,
@@ -27,7 +27,7 @@ from .schemas.equipment import (
     ReadEquipmentsFilter,
 )
 from .schemas.parking import ParkingCreate, ParkingUpdate
-from .schemas.parkinglot import ParkingLotCreate, ParkingLotUpdate
+from .schemas.spot import SpotCreate, SpotUpdate
 from .schemas.parkingzone import (
     ParkingZoneCreate,
     ParkingZonePriceCreate,
@@ -46,8 +46,8 @@ ModelType = TypeVar("ModelType", bound=Base)
 logger = logging.getLogger(__name__)
 
 
-class ParkingLotRepository(
-    CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]
+class SpotRepository(
+    CRUDBase[Spot, SpotCreate, SpotUpdate]
 ):
     async def find_lines(
         self,
@@ -58,20 +58,20 @@ class ParkingLotRepository(
         input_zone_id: int = None,
         skip: int = 0,
         limit: int | None = 100,
-    ) -> List[ParkingLot] | Awaitable[List[ParkingLot]]:
+    ) -> List[Spot] | Awaitable[List[Spot]]:
 
-        query = select(ParkingLot)
+        query = select(Spot)
 
-        filters = [ParkingLot.is_deleted == false()]
+        filters = [Spot.is_deleted == false()]
 
         if input_camera_id is not None:
-            filters.append(ParkingLot.camera_id == input_camera_id)
+            filters.append(Spot.camera_id == input_camera_id)
 
         if input_number_line is not None:
-            filters.append(ParkingLot.number_line == input_number_line)
+            filters.append(Spot.number_line == input_number_line)
 
         if input_zone_id is not None:
-            filters.append(ParkingLot.zone_id == input_zone_id)
+            filters.append(Spot.zone_id == input_zone_id)
 
         if limit is None:
             return await self._all(
@@ -82,23 +82,23 @@ class ParkingLotRepository(
             db.scalars(query.filter(*filters).offset(skip).limit(limit))
         )
 
-    async def one_parkinglot(
+    async def one_spot(
         self,
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
         input_number_line: int = None,
-    ) -> ParkingLot | Awaitable[ParkingLot]:
+    ) -> Spot | Awaitable[Spot]:
 
-        query = select(ParkingLot)
+        query = select(Spot)
 
-        filters = [ParkingLot.is_deleted == false()]
+        filters = [Spot.is_deleted == false()]
 
         if input_camera_id is not None:
-            filters.append(ParkingLot.camera_id == input_camera_id)
+            filters.append(Spot.camera_id == input_camera_id)
 
         if input_number_line is not None:
-            filters.append(ParkingLot.number_line == input_number_line)
+            filters.append(Spot.number_line == input_number_line)
 
         return await self._first(db.scalars(query.filter(*filters)))
 
@@ -114,13 +114,13 @@ class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
         filters = [Camera.is_deleted == false()]
 
         if params.input_camera_code is not None:
-            filters.append(Camera.camera_code == params.input_camera_code)
+            filters.append(Equipment.serial_number == params.input_camera_code)
 
         if params.input_camera_ip is not None:
-            filters.append(Camera.camera_ip == params.input_camera_ip)
+            filters.append(Equipment.ip_address == params.input_camera_ip)
 
         if params.input_location is not None:
-            filters.append(Camera.location == params.input_location)
+            filters.append(Equipment.zone_id == params.input_location)
 
         if params.limit is None:
             return self._all(
@@ -180,8 +180,6 @@ class EquipmentRepository(
 ):
     def _build_filters(self, filters: ReadEquipmentsFilter) -> list:
         orm_filters = []
-        if filters.parking_id__eq:
-            orm_filters.append(self.model.parking_id == filters.parking_id__eq)
         if filters.zone_id__eq:
             orm_filters.append(self.model.zone_id == filters.zone_id__eq)
         if filters.equipment_type__eq:
@@ -368,7 +366,7 @@ class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
         return rule
 
 
-parkinglot_repo = ParkingLotRepository(ParkingLot)
+spot_repo = SpotRepository(Spot)
 camera_repo = CameraRepository(Camera)
 parking_repo = ParkingRepository(Parking)
 parkingzone_repo = ParkingZoneRepository(ParkingZone)

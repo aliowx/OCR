@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from .api.camera import router as camera_router
 from .api.equipment import router as equipment_router
 from .api.parking import router as parking_router
-from .api.parkinglot import router as parkinglot_router
+from .api.spot import router as spot_router
 from .api.parkingzone import router as parkingzone_router
 from .api.rule import router as rule_router
 
@@ -13,7 +13,7 @@ router.include_router(
     parkingzone_router, prefix="/parkingzone", tags=["parkingzone"]
 )
 router.include_router(
-    parkinglot_router, prefix="/parkinglot", tags=["parkinglot"]
+    spot_router, prefix="/spot", tags=["spot"]
 )
 router.include_router(camera_router, prefix="/camera", tags=["camera"])
 router.include_router(

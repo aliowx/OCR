@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class PlateDetected(Base):
+class Plate(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     plate: Mapped[str] = mapped_column(String, index=True)
@@ -16,22 +16,22 @@ class PlateDetected(Base):
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
-    type_status_parkinglot: Mapped[str] = mapped_column(String, nullable=True)
+    type_status_spot: Mapped[str] = mapped_column(String, nullable=True)
 
     zone_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("parkingzone.id"), index=True, nullable=True
     )
     zone = relationship("ParkingZone", foreign_keys=zone_id)
 
-    parkinglot_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkinglot.id"), index=True, nullable=True
+    spot_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("spot.id"), index=True, nullable=True
     )
-    parkinglot = relationship("ParkingLot", foreign_keys=parkinglot_id)
+    spot = relationship("Spot", foreign_keys=spot_id)
 
     camera_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("camera.id"), index=True
     )
-    camera_plate = relationship("Camera", back_populates="parkinglot_plate")
+    camera_plate = relationship("Camera", back_populates="spot_plate")
 
     record_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("record.id"), index=True, nullable=True

@@ -4,18 +4,19 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, schemas, utils
-from app.parking.schemas import parkinglot as parkinglotsSchemas
+from app.parking.schemas import spot as spotsSchemas
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.parking.repo import parkingzone_repo
+from app.utils import PaginatedContent
 
 
 async def create_line(
-    db: AsyncSession, parkinglot_in: schemas.ParkingLotCreate
-) -> schemas.ParkingLotInDBBase:
+    db: AsyncSession, spot_in: schemas.SpotCreate
+) -> schemas.SpotInDBBase:
 
-    if parkinglot_in.zone_id:
-        zone = await parkingzone_repo.get(db, id=parkinglot_in.zone_id)
+    if spot_in.zone_id:
+        zone = await parkingzone_repo.get(db, id=spot_in.zone_id)
         if not zone:
             raise exc.ServiceFailure(
                 detail="Zone not found.",
@@ -24,7 +25,7 @@ async def create_line(
 
     # check line number
     check_line_number = set()
-    for i in parkinglot_in.coordinates_rectangles:
+    for i in spot_in.coordinates_rectangles:
         if i["number_line"] in check_line_number:
             raise exc.ServiceFailure(
                 detail="for this camera,s number line confilict.",
@@ -33,7 +34,7 @@ async def create_line(
         check_line_number.add(i["number_line"])
 
     # check camera exist
-    camera = await crud.camera_repo.get(db, id=parkinglot_in.camera_id)
+    camera = await crud.camera_repo.get(db, id=spot_in.camera_id)
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
@@ -41,35 +42,35 @@ async def create_line(
         )
 
     # update line's camera
-    find_parkinglot = await crud.parkinglot_repo.find_lines(
-        db, input_camera_id=parkinglot_in.camera_id
+    find_spot = await crud.spot_repo.find_lines(
+        db, input_camera_id=spot_in.camera_id
     )
-    if find_parkinglot:
-        for p in find_parkinglot:
-            await crud.parkinglot_repo._remove_async(db, id=p.id)
+    if find_spot:
+        for p in find_spot:
+            await crud.spot_repo._remove_async(db, id=p.id)
 
     # create new line's
     coordinates_rectangles = []
-    for coordinate in parkinglot_in.coordinates_rectangles:
+    for coordinate in spot_in.coordinates_rectangles:
         # This schemas change map field to save to db
-        new_obj = schemas.ParkingLotCreateLineInDB(
-            camera_id=parkinglot_in.camera_id,
+        new_obj = schemas.SpotCreateLineInDB(
+            camera_id=spot_in.camera_id,
             percent_rotation_rectangle_small=coordinate[
                 "percent_rotation_rectangle_small"
             ],
             percent_rotation_rectangle_big=coordinate[
                 "percent_rotation_rectangle_big"
             ],
-            name_parkinglot=parkinglot_in.name_parkinglot,
+            name_spot=spot_in.name_spot,
             number_line=coordinate["number_line"],
             coordinates_rectangle_big=coordinate["coordinates_rectangle_big"],
             coordinates_rectangle_small=coordinate[
                 "coordinates_rectangle_small"
             ],
             price_model_id=coordinate["price_model_id"],
-            zone_id=parkinglot_in.zone_id,
+            zone_id=spot_in.zone_id,
         )
-        items = await crud.parkinglot_repo.create(db, obj_in=new_obj)
+        items = await crud.spot_repo.create(db, obj_in=new_obj)
         if items:
             reverse_coordinates_rectangles = {
                 "number_line": new_obj.number_line,
@@ -80,9 +81,9 @@ async def create_line(
                 "price_model_id": new_obj.price_model_id,
             }
             coordinates_rectangles.append(reverse_coordinates_rectangles)
-    return schemas.ParkingLotInDBBase(
+    return schemas.SpotInDBBase(
         camera_id=items.camera_id,
-        name_parkinglot=items.name_parkinglot,
+        name_spot=items.name_spot,
         coordinates_rectangles=coordinates_rectangles,
         # This id,created,modified lates record save in DB
         created=items.created,
@@ -92,16 +93,16 @@ async def create_line(
 
 
 async def update_status(
-    db: AsyncSession, parkinglot_in: schemas.ParkingLotUpdateStatus
-) -> schemas.ParkingLotUpdateStatus:
+    db: AsyncSession, spot_in: schemas.SpotUpdateStatus
+) -> schemas.SpotUpdateStatus:
     camera = await crud.camera_repo.one_camera(
-        db, input_camera_code=parkinglot_in.camera_code
+        db, input_camera_code=spot_in.camera_code
     )
 
-    check = await crud.parkinglot_repo.one_parkinglot(
+    check = await crud.spot_repo.one_spot(
         db,
         input_camera_id=camera.id,
-        input_number_line=parkinglot_in.number_line,
+        input_number_line=spot_in.number_line,
     )
     if not check:
         raise exc.ServiceFailure(
@@ -109,29 +110,29 @@ async def update_status(
             msg_code=utils.MessageCodes.operation_failed,
         )
     if (
-        parkinglot_in.status == parkinglotsSchemas.Status.full.value
-        or parkinglotsSchemas.Status.entranceDoor.value
-        or parkinglotsSchemas.Status.exitDoor.value
+        spot_in.status == spotsSchemas.Status.full.value
+        or spotsSchemas.Status.entranceDoor.value
+        or spotsSchemas.Status.exitDoor.value
     ):
 
         plate_in = schemas.PlateCreate(
-            plate=parkinglot_in.plate,
+            plate=spot_in.plate,
             record_time=datetime.now().isoformat(),
             lpr_image_id=(
-                parkinglot_in.lpr_image_id
-                if parkinglot_in.lpr_image_id
+                spot_in.lpr_image_id
+                if spot_in.lpr_image_id
                 else None
             ),
             plate_image_id=(
-                parkinglot_in.plate_image_id
-                if parkinglot_in.plate_image_id
+                spot_in.plate_image_id
+                if spot_in.plate_image_id
                 else None
             ),
-            parkinglot_id=check.id,
+            spot_id=check.id,
             zone_id=check.zone_id,
             camera_id=camera.id,
             price_model_id=check.price_model_id,
-            type_status_parkinglot=parkinglot_in.status,
+            type_status_spot=spot_in.status,
         )
 
         celery_app.send_task(
@@ -139,43 +140,59 @@ async def update_status(
             args=[jsonable_encoder(plate_in)],
         )
 
-    check.plate = parkinglot_in.plate
-    check.status = parkinglot_in.status
-    check.lpr_image_id = parkinglot_in.lpr_image_id
-    check.plate_image_id = parkinglot_in.plate_image_id
+    check.plate = spot_in.plate
+    check.status = spot_in.status
+    check.lpr_image_id = spot_in.lpr_image_id
+    check.plate_image_id = spot_in.plate_image_id
     check.latest_time_modified = datetime.now()
-    return await crud.parkinglot_repo.update(db, db_obj=check)
+    return await crud.spot_repo.update(db, db_obj=check)
 
 
-async def get_status(db: AsyncSession):
-    parkinglot_details = []
-    parkinglots = await crud.parkinglot_repo.get_multi(db)
-    for parkinglot in parkinglots:
-        parkinglot_details.append(
+async def get_status(
+    db: AsyncSession,
+    params: spotsSchemas.ParamsSpotStatus,
+):
+    spot_details = []
+    spots = await crud.spot_repo.get_multi(db)
+    for spot in spots:
+        spot_details.append(
             {
-                "id": parkinglot.id,
-                "camera_id": parkinglot.camera_id,
-                "name_parkinglot": parkinglot.name_parkinglot,
-                "zone_id": parkinglot.zone_id,
+                "id": spot.id,
+                "camera_id": spot.camera_id,
+                "name_spot": spot.name_spot,
+                "zone_id": spot.zone_id,
                 "coordinates_rectangles": [
                     {
-                        "percent_rotation_rectangle_small": parkinglot.percent_rotation_rectangle_small,
-                        "percent_rotation_rectangle_big": parkinglot.percent_rotation_rectangle_big,
-                        "number_line": parkinglot.number_line,
-                        "coordinates_rectangle_big": parkinglot.coordinates_rectangle_big,
-                        "coordinates_rectangle_small": parkinglot.coordinates_rectangle_small,
-                        "price_model_id": parkinglot.price_model_id,
-                        "status": parkinglot.status,
-                        "plate": parkinglot.plate,
-                        "latest_time_modified": parkinglot.latest_time_modified,
-                        "lpr_image_id": parkinglot.lpr_image_id,
-                        "plate_image_id": parkinglot.plate_image_id,
+                        "percent_rotation_rectangle_small": spot.percent_rotation_rectangle_small,
+                        "percent_rotation_rectangle_big": spot.percent_rotation_rectangle_big,
+                        "number_line": spot.number_line,
+                        "coordinates_rectangle_big": spot.coordinates_rectangle_big,
+                        "coordinates_rectangle_small": spot.coordinates_rectangle_small,
+                        "price_model_id": spot.price_model_id,
+                        "status": spot.status,
+                        "plate": spot.plate,
+                        "latest_time_modified": spot.latest_time_modified,
+                        "lpr_image_id": spot.lpr_image_id,
+                        "plate_image_id": spot.plate_image_id,
                     }
                 ],
             }
         )
+    if params.size is not None:  # limit
+        spot_details = spot_details[: params.size]
 
-    return parkinglot_details
+    if params.page is not None:  # skip
+        spot_details = spot_details[:: params.page]
+
+    if params.asc:
+        spot_details.reverse()
+
+    return PaginatedContent(
+        data=spot_details,
+        total_count=len(spot_details),
+        size=params.size,
+        page=params.page,
+    )
 
 
 async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
@@ -189,41 +206,42 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         )
 
     # find line's camera
-    parkinglot_lines = await crud.parkinglot_repo.find_lines(
+    spot_lines = await crud.spot_repo.find_lines(
         db, input_camera_id=camera.id
     )
 
     coordinate_details = []
-    for line in parkinglot_lines:
+    for line in spot_lines:
         coordinate_details.append(
-            {
-                "percent_rotation_rectangle_small": line.percent_rotation_rectangle_small,
-                "percent_rotation_rectangle_big": line.percent_rotation_rectangle_big,
-                "number_line": line.number_line,
-                "status": line.status,
-                "lpr_image_id": line.lpr_image_id,
-                "plate_image_id": line.plate_image_id,
-                "coordinates_rectangle_big": line.coordinates_rectangle_big,
-                "coordinates_rectangle_small": line.coordinates_rectangle_small,
-                "price_model_id": line.price_model_id,
-                "zone_id": line.zone_id,
-            }
+            jsonable_encoder(
+                spotsSchemas.CoordinateSpotsByCamera(
+                    percent_rotation_rectangle_small=line.percent_rotation_rectangle_small,
+                    percent_rotation_rectangle_big=line.percent_rotation_rectangle_big,
+                    number_line=line.number_line,
+                    status=line.status,
+                    lpr_image_id=line.lpr_image_id,
+                    plate_image_id=line.plate_image_id,
+                    coordinates_rectangle_big=line.coordinates_rectangle_big,
+                    coordinates_rectangle_small=line.coordinates_rectangle_small,
+                    price_model_id=line.price_model_id,
+                    zone_id=line.zone_id,
+                    name_spot=line.name_spot,
+                )
+            )
         )
-    return schemas.ParkingLotCreate(
-        camera_id=camera.id,
-        name_parkinglot=parkinglot_lines[0].name_parkinglot,
-        coordinates_rectangles=coordinate_details,
+    return spotsSchemas.SpotsByCamera(
+        camera_id=camera.id, coordinates_rectangles=coordinate_details
     )
 
 
-async def get_details_lot_by_zone_id(db: AsyncSession, zone_id: int):
+async def get_details_spot_by_zone_id(db: AsyncSession, zone_id: int):
 
-    lots = await crud.parkinglot_repo.find_lines(db, input_zone_id=zone_id)
+    spots = await crud.spot_repo.find_lines(db, input_zone_id=zone_id)
 
-    all_lots_zone = []
+    all_spots_zone = []
     coordinate_details = []
 
-    for line in lots:
+    for line in spots:
         coordinate_details.append(
             {
                 "percent_rotation_rectangle_small": line.percent_rotation_rectangle_small,
@@ -238,21 +256,21 @@ async def get_details_lot_by_zone_id(db: AsyncSession, zone_id: int):
             }
         )
 
-        list_lots = schemas.ParkingLotCreate(
+        list_spots = schemas.SpotCreate(
             camera_id=line.camera_id,
-            name_parkinglot=line.name_parkinglot,
+            name_spot=line.name_spot,
             zone_id=line.zone_id,
             coordinates_rectangles=coordinate_details,
         )
-        all_lots_zone.append(list_lots)
+        all_spots_zone.append(list_spots)
 
-    return all_lots_zone
+    return all_spots_zone
 
 
 async def update_price(
-    db: AsyncSession, data: schemas.PriceUpdateInParkingLot
+    db: AsyncSession, data: schemas.PriceUpdateInSpot
 ):
 
-    find_park = await crud.parkinglot_repo.get(db, id=data.id_park)
+    find_park = await crud.spot_repo.get(db, id=data.id_park)
     find_park.price_model_id = data.price_model_id
-    return await crud.parkinglot_repo.update(db, db_obj=find_park)
+    return await crud.spot_repo.update(db, db_obj=find_park)

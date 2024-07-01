@@ -10,6 +10,3 @@ class Image(Base):
 
     image: Mapped[str] = mapped_column(LargeBinary)
 
-    image_parkinglot = relationship(
-        "Camera", back_populates="image_parkinglot"
-    )

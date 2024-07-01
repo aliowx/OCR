@@ -47,13 +47,13 @@ class Record(Base):
     )
     zone = relationship("ParkingZone", foreign_keys=zone_id)
 
-    parkinglot_id: Mapped[int] = mapped_column(
+    spot_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("parkinglot.id", onupdate="CASCADE", ondelete="SET NULL"),
+        ForeignKey("spot.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    parking_lot = relationship("ParkingLot", foreign_keys=parkinglot_id)
+    spot = relationship("Spot", foreign_keys=spot_id)
 
     plates = relationship("PlateDetected", back_populates="record")
 

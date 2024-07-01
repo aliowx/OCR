@@ -6,10 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class ParkingLot(Base):
+class Spot(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    name_parkinglot: Mapped[str] = mapped_column(String)
+    name_spot: Mapped[str] = mapped_column(String, nullable=True)
 
     percent_rotation_rectangle_small: Mapped[int] = mapped_column(
         Integer, nullable=True
@@ -19,13 +19,13 @@ class ParkingLot(Base):
     )
 
     coordinates_rectangle_big: Mapped[list] = mapped_column(
-        ARRAY(Float), nullable=False, index=True
+        ARRAY(Float), nullable=True, index=True
     )
     coordinates_rectangle_small: Mapped[list] = mapped_column(
-        ARRAY(Float), nullable=False, index=True
+        ARRAY(Float), nullable=True, index=True
     )
 
-    number_line: Mapped[int] = mapped_column(Integer)
+    number_line: Mapped[int] = mapped_column(Integer, nullable=True)
 
     status: Mapped[str] = mapped_column(String, nullable=True)
 
@@ -36,9 +36,9 @@ class ParkingLot(Base):
     )
 
     camera_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("camera.id"), index=True
+        Integer, ForeignKey("quipment.id"), index=True, nullable=True
     )
-    camera_rpi = relationship("Camera", back_populates="parkinglot")
+    camera = relationship("Equipment", back_populates=camera_id)
 
     plate_image_id: Mapped[int] = mapped_column(
         Integer,
@@ -55,14 +55,6 @@ class ParkingLot(Base):
         nullable=True,
     )
     lpr_image = relationship("Image", foreign_keys=lpr_image_id)
-
-    price_model_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("price.id", onupdate="CASCADE", ondelete="SET NULL"),
-        index=True,
-        nullable=True,
-    )
-    price_model = relationship("Price", foreign_keys=price_model_id)
 
     zone_id: Mapped[int] = mapped_column(
         Integer,

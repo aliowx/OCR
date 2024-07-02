@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
-from app.parking.schemas import ParkingZonePrice
+from app.parking.schemas import ZonePrice
 
 
 class WeeklyDays(BaseModel):
@@ -28,7 +28,7 @@ class PriceBase(BaseModel):
 
 
 class PriceBaseComplete(PriceBase):
-    pricings: list[ParkingZonePrice] = Field(default_factory=list)
+    pricings: list[ZonePrice] = Field(default_factory=list)
 
 
 class PriceCreate(PriceBase):

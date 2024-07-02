@@ -7,7 +7,7 @@ from app import crud, schemas, utils
 from app.parking.schemas import spot as spotsSchemas
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
-from app.parking.repo import parkingzone_repo
+from app.parking.repo import zone_repo
 from app.utils import PaginatedContent
 
 
@@ -16,7 +16,7 @@ async def create_line(
 ) -> schemas.SpotInDBBase:
 
     if spot_in.zone_id:
-        zone = await parkingzone_repo.get(db, id=spot_in.zone_id)
+        zone = await zone_repo.get(db, id=spot_in.zone_id)
         if not zone:
             raise exc.ServiceFailure(
                 detail="Zone not found.",

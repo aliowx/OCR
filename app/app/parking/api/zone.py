@@ -4,69 +4,69 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import models
 from app.api import deps
 from app.core.exceptions import ServiceFailure
-from app.parking.repo import parkingzone_repo
-from app.parking.schemas import parkingzone as schemas
-from app.parking.services import parkingzone as parkingzone_services
+from app.parking.repo import zone_repo
+from app.parking.schemas import zone as schemas
+from app.parking.services import zone as zone_services
 from app.utils import APIResponse, APIResponseType, MessageCodes
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
 
 router = APIRouter()
-namespace = "parkingzones"
+namespace = "zones"
 
 
 @router.get("/")
 @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
-async def read_parkingzones(
+async def read_zones(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
     skip: int = 0,
     limit: int = 100,
     _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[list[schemas.ParkingZone]]:
+) -> APIResponseType[list[schemas.Zone]]:
     """
     Read parking zones.
     """
-    parkingzones = await parkingzone_repo.get_multi(db, limit=limit, skip=skip)
-    return APIResponse(parkingzones)
+    zones = await zone_repo.get_multi(db, limit=limit, skip=skip)
+    return APIResponse(zones)
 
 
 @router.get("/{zone_id}")
 @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
-async def read_parkingzone_by_id(
+async def read_zone_by_id(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
     zone_id: int,
     _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.ParkingZone]:
+) -> APIResponseType[schemas.Zone]:
     """
-    Read parking zones.
+    Read zones.
     """
-    parkingzone = await parkingzone_repo.get(db, id=zone_id)
-    if not parkingzone:
+    zone = await zone_repo.get(db, id=zone_id)
+    if not zone:
         raise ServiceFailure(
-            detail="ParkingZone Not Found",
+            detail="Zone Not Found",
             msg_code=MessageCodes.not_found,
         )
-    return APIResponse(parkingzone)
+    return APIResponse(zone)
 
 
 @router.post("/")
 @invalidate(namespace=namespace)
-async def create_parkingzone(
+async def create_zone(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
-    parkingzone_input: schemas.ParkingZoneCreate,
+    zone_input: schemas.ZoneCreate,
     _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.ParkingZone]:
+) -> APIResponseType[schemas.Zone]:
     """
-    Create a parking zone.
+    Create a zone.
     """
-    parkingzone = await parkingzone_services.create_zone(
+    zone = await zone_services.create_zone(
         db,
-        parkingzone_input=parkingzone_input,
+        zone_input=zone_input,
     )
-    return APIResponse(parkingzone)
+    return APIResponse(zone)
 
 
 @router.post("/{zone_id}/price")
@@ -77,13 +77,13 @@ async def set_price_on_parking_zone(
     zoneprice_data: schemas.SetZonePriceInput,
     db: AsyncSession = Depends(deps.get_db_async),
     _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.ParkingZonePrice]:
+) -> APIResponseType[schemas.ZonePrice]:
     """
-    Set price on a parking zone.
+    Set price on a zone.
     """
-    parkingzone = await parkingzone_services.set_price(
+    zone = await zone_services.set_price(
         db,
-        parkingzone_id=zone_id,
+        zone_id=zone_id,
         zoneprice_data=zoneprice_data,
     )
-    return APIResponse(parkingzone)
+    return APIResponse(zone)

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ServiceFailure
 from app.parking.models import PlateRule, Rule, ZoneRule
 from app.parking.repo import (
-    parkingzone_repo,
+    zone_repo,
     platerule_repo,
     rule_repo,
     zonerule_repo,
@@ -45,10 +45,10 @@ async def create_rule(
     rule_data_create = rule_data.model_dump(exclude="zone_ids")
     rule = await rule_repo.create(db, obj_in=rule_data_create, commit=False)
     for zone_id in rule_data.zone_ids:
-        parkingzone = await parkingzone_repo.get(db, id=zone_id)
-        if not parkingzone:
+        zone = await zone_repo.get(db, id=zone_id)
+        if not zone:
             raise ServiceFailure(
-                detail=f"ParkingZone [{zone_id}] Not Found",
+                detail=f"Zone [{zone_id}] Not Found",
                 msg_code=MessageCodes.not_found,
             )
         zonerule_create = schemas.ZoneRuleCreate(
@@ -70,10 +70,10 @@ async def set_zone_rule(
             msg_code=MessageCodes.not_found,
         )
     for zone_id in rules.zone_ids:
-        zone = await parkingzone_repo.get(db, id=zone_id)
+        zone = await zone_repo.get(db, id=zone_id)
         if not zone:
             raise ServiceFailure(
-                detail=f"ParkingZone [{zone_id}] Not Found",
+                detail=f"Zone [{zone_id}] Not Found",
                 msg_code=MessageCodes.not_found,
             )
         rule_exists = await zonerule_repo.find(

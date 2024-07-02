@@ -32,6 +32,6 @@ class Equipment(Base):
     image = relationship("Image", back_populates=image_id)
 
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer, ForeignKey("zone.id"), nullable=True
     )
-    zone = relationship("ParkingZone", foreign_keys=zone_id)
+    zone = relationship("Zone", foreign_keys=zone_id)

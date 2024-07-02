@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class ParkingZoneBase(BaseModel):
+class ZoneBase(BaseModel):
     name: str | None = None
     tag: str | None = None
     parking_id: int | None = None
@@ -12,20 +12,20 @@ class ParkingZoneBase(BaseModel):
     floor_number: int | None = None
 
 
-class ParkingZoneComplete(ParkingZoneBase):
-    parent: ParkingZoneBase | None = None
-    children: list["ParkingZone"] = Field(default_factory=list)
-    pricings: list["ParkingZonePrice"] = Field(default_factory=list)
+class ZoneComplete(ZoneBase):
+    parent: ZoneBase | None = None
+    children: list["Zone"] = Field(default_factory=list)
+    pricings: list["ZonePrice"] = Field(default_factory=list)
 
 
-class ParkingZoneCreate(ParkingZoneBase):
+class ZoneCreate(ZoneBase):
     name: str
 
 
-class ParkingZoneUpdate(ParkingZoneBase): ...
+class ZoneUpdate(ZoneBase): ...
 
 
-class ParkingZoneInDBBase(ParkingZoneComplete):
+class ZoneInDBBase(ZoneComplete):
     id: int | None = None 
     created: datetime
     modified: datetime
@@ -33,7 +33,7 @@ class ParkingZoneInDBBase(ParkingZoneComplete):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ParkingZone(ParkingZoneInDBBase):
+class Zone(ZoneInDBBase):
     parent: str| None = Field(default=None, exclude=True)
     class Config:
         @staticmethod
@@ -42,25 +42,25 @@ class ParkingZone(ParkingZoneInDBBase):
                 schema["properties"].pop("parent", None)
 
 
-class ParkingZoneInDB(ParkingZoneInDBBase): ...
+class ZoneInDB(ZoneInDBBase): ...
 
 
-class ParkingZonePriceBase(BaseModel):
+class ZonePriceBase(BaseModel):
     priority: int | None = None
     zone_id: int | None = None
     price_id: int | None = None
 
 
-class ParkingZonePriceCreate(ParkingZonePriceBase):
+class ZonePriceCreate(ZonePriceBase):
     priority: int = Field(ge=1, le=100)
     zone_id: int
     price_id: int
 
 
-class ParkingZonePriceUpdate(ParkingZonePriceBase): ...
+class ZonePriceUpdate(ZonePriceBase): ...
 
 
-class ParkingZonePriceInDBBase(ParkingZonePriceBase):
+class ZonePriceInDBBase(ZonePriceBase):
     id: int | None = None
     created: datetime
     modified: datetime
@@ -68,10 +68,10 @@ class ParkingZonePriceInDBBase(ParkingZonePriceBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ParkingZonePrice(ParkingZonePriceInDBBase): ...
+class ZonePrice(ZonePriceInDBBase): ...
 
 
-class ParkingZonePriceInDB(ParkingZonePriceInDBBase): ...
+class ZonePriceInDB(ZonePriceInDBBase): ...
 
 
 class SetZonePriceInput(BaseModel):
@@ -79,5 +79,5 @@ class SetZonePriceInput(BaseModel):
     priority: int = Field(ge=1, le=100)
 
 
-class ParkingZoneRule(ParkingZoneBase):
+class ZoneRule(ZoneBase):
     id: int | None = None

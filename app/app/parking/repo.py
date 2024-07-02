@@ -14,8 +14,8 @@ from .models import (
     Equipment,
     Parking,
     Spot,
-    ParkingZone,
-    ParkingZonePrice,
+    Zone,
+    ZonePrice,
     PlateRule,
     Rule,
     ZoneRule,
@@ -28,11 +28,11 @@ from .schemas.equipment import (
 )
 from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.spot import SpotCreate, SpotUpdate
-from .schemas.parkingzone import (
-    ParkingZoneCreate,
-    ParkingZonePriceCreate,
-    ParkingZonePriceUpdate,
-    ParkingZoneUpdate,
+from .schemas.zone import (
+    ZoneCreate,
+    ZonePriceCreate,
+    ZonePriceUpdate,
+    ZoneUpdate,
 )
 from .schemas.rule import (
     PlateRuleCreate,
@@ -158,12 +158,12 @@ class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
         return parkings[0]
 
 
-class ParkingZoneRepository(
-    CRUDBase[ParkingZone, ParkingZoneCreate, ParkingZoneUpdate]
+class ZoneRepository(
+    CRUDBase[Zone, ZoneCreate, ZoneUpdate]
 ):
     async def get_by_name(
         self, db: AsyncSession, name: str
-    ) -> ParkingZone | None:
+    ) -> Zone | None:
         zone = await self._first(
             db.scalars(
                 select(self.model).filter(
@@ -230,8 +230,8 @@ class EquipmentRepository(
         )
 
 
-class ParkingZonePriceRepository(
-    CRUDBase[ParkingZonePrice, ParkingZonePriceCreate, ParkingZonePriceUpdate]
+class ZonePriceRepository(
+    CRUDBase[ZonePrice, ZonePriceCreate, ZonePriceUpdate]
 ):
     async def pricing_exists(
         self, db: AsyncSession, zone_id: int, price_id: int, priority: int
@@ -369,9 +369,9 @@ class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
 spot_repo = SpotRepository(Spot)
 camera_repo = CameraRepository(Camera)
 parking_repo = ParkingRepository(Parking)
-parkingzone_repo = ParkingZoneRepository(ParkingZone)
+zone_repo = ZoneRepository(Zone)
 equipment_repo = EquipmentRepository(Equipment)
-parkingzoneprice_repo = ParkingZonePriceRepository(ParkingZonePrice)
+zoneprice_repo = ZonePriceRepository(ZonePrice)
 rule_repo = RuleRepository(Rule)
 zonerule_repo = ZoneRuleRepository(ZoneRule)
 platerule_repo = PlateRuleRepository(PlateRule)

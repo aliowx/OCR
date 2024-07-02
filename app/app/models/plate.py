@@ -19,9 +19,9 @@ class Plate(Base):
     type_status_spot: Mapped[str] = mapped_column(String, nullable=True)
 
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), index=True, nullable=True
+        Integer, ForeignKey("zone.id"), index=True, nullable=True
     )
-    zone = relationship("ParkingZone", foreign_keys=zone_id)
+    zone = relationship("Zone", foreign_keys=zone_id)
 
     spot_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("spot.id"), index=True, nullable=True

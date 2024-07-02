@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ServiceFailure
 from app.parking.repo import parking_repo
 from app.parking.schemas import SetZonePriceInput
-from app.parking.services import parkingzone as parkingzone_services
+from app.parking.services import zone as zone_services
 from app.pricing import schemas as price_schemas
 from app.pricing.repo import price_repo
 from app.utils import MessageCodes, PaginatedContent
@@ -25,9 +25,9 @@ async def create_price(
         zoneprice_data = SetZonePriceInput(
             price_id=price.id, priority=price_data.priority
         )
-        await parkingzone_services.set_price(
+        await zone_services.set_price(
             db,
-            parkingzone_id=zone_id,
+            zone_id=zone_id,
             zoneprice_data=zoneprice_data,
             commit=False,
         )

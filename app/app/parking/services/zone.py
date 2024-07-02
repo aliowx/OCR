@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 async def create_zone(
     db: AsyncSession,
-    parkingzone_input: parking_schemas.ParkingZoneCreate,
-) -> parking_schemas.ParkingZone:
-    parking = await repo.parking_repo.get(db, id=parkingzone_input.parking_id)
+    zone_input: parking_schemas.ZoneCreate,
+) -> parking_schemas.Zone:
+    parking = await repo.parking_repo.get(db, id=zone_input.parking_id)
     if not parking:
         main_parking = await repo.parking_repo.get_main_parking(db)
         if not main_parking:
@@ -23,21 +23,21 @@ async def create_zone(
                 detail="Parking Not Found",
                 msg_code=utils.MessageCodes.not_found,
             )
-        parkingzone_input.parking_id = main_parking.id
+        zone_input.parking_id = main_parking.id
 
-    parkingzone = await repo.parkingzone_repo.get_by_name(
-        db, name=parkingzone_input.name
+    zone = await repo.zone_repo.get_by_name(
+        db, name=zone_input.name
     )
-    if parkingzone:
+    if zone:
         raise exc.ServiceFailure(
-            detail="Parkingzone with this name already exists",
+            detail="zone with this name already exists",
             msg_code=utils.MessageCodes.duplicate_zone_name,
         )
 
     parent_zone = None
-    if parkingzone_input.parent_id is not None:
-        parent_zone = await repo.parkingzone_repo.get(
-            db, id=parkingzone_input.parent_id
+    if zone_input.parent_id is not None:
+        parent_zone = await repo.zone_repo.get(
+            db, id=zone_input.parent_id
         )
         if not parent_zone:
             raise exc.ServiceFailure(
@@ -45,22 +45,22 @@ async def create_zone(
                 msg_code=utils.MessageCodes.not_found,
             )
 
-    parkingzone = await repo.parkingzone_repo.create(
-        db, obj_in=parkingzone_input
+    zone = await repo.zone_repo.create(
+        db, obj_in=zone_input
     )
-    return parkingzone
+    return zone
 
 
 async def set_price(
     db: AsyncSession,
-    parkingzone_id: int,
+    zone_id: int,
     zoneprice_data: parking_schemas.SetZonePriceInput,
     commit: bool = True,
-) -> parking_schemas.ParkingZonePrice:
-    zone = await repo.parkingzone_repo.get(db, id=parkingzone_id)
+) -> parking_schemas.ZonePrice:
+    zone = await repo.zone_repo.get(db, id=zone_id)
     if not zone:
         raise exc.ServiceFailure(
-            detail="ParkingZone Not Found",
+            detail="Zone Not Found",
             msg_code=utils.MessageCodes.not_found,
         )
     price = await price_repo.get(db, id=zoneprice_data.price_id)
@@ -69,7 +69,7 @@ async def set_price(
             detail="Price Not Found",
             msg_code=utils.MessageCodes.not_found,
         )
-    is_duplicate = await repo.parkingzoneprice_repo.pricing_exists(
+    is_duplicate = await repo.zoneprice_repo.pricing_exists(
         db,
         zone_id=zone.id,
         price_id=price.id,
@@ -81,10 +81,10 @@ async def set_price(
             msg_code=utils.MessageCodes.duplicate_zone_pricing,
         )
 
-    zoneprice_create = parking_schemas.ParkingZonePriceCreate(
+    zoneprice_create = parking_schemas.ZonePriceCreate(
         zone_id=zone.id, price_id=price.id, priority=zoneprice_data.priority
     )
-    parkingzone_price = await repo.parkingzoneprice_repo.create(
+    zone_price = await repo.zoneprice_repo.create(
         db, obj_in=zoneprice_create, commit=commit
     )
-    return parkingzone_price
+    return zone_price

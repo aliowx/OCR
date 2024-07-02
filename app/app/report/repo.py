@@ -1,7 +1,7 @@
-from app.parking.models import ParkingZone, Spot
+from app.parking.models import Zone, Spot
 from app.parking.repo import (
-    ParkingZoneCreate,
-    ParkingZoneUpdate,
+    ZoneCreate,
+    ZoneUpdate,
     SpotCreate,
     SpotUpdate,
 )
@@ -13,29 +13,29 @@ from typing import Awaitable
 from app.report.schemas import ReadZoneLotsParams, ParamsRecordMomentFilters
 
 
-class ParkingZoneReportRepository(
-    CRUDBase[ParkingZone, ParkingZoneCreate, ParkingZoneUpdate]
+class ZoneReportRepository(
+    CRUDBase[Zone, ZoneCreate, ZoneUpdate]
 ):
 
     async def get_multi_by_filter(
         self, db: AsyncSession, *, params: ReadZoneLotsParams
-    ) -> list[ParkingZone] | Awaitable[list[ParkingZone]]:
+    ) -> list[Zone] | Awaitable[list[Zone]]:
 
-        query = select(ParkingZone)
+        query = select(Zone)
 
-        filters = [ParkingZone.is_deleted == false()]
+        filters = [Zone.is_deleted == false()]
 
         if params.input_name_zone is not None:
-            filters.append(ParkingZone.name == params.input_name_zone)
+            filters.append(Zone.name == params.input_name_zone)
         if params.input_name_sub_zone is not None:
             filters.append(
-                ParkingZone.name == params.input_name_sub_zone
-                and ParkingZone.parent_id is not None
+                Zone.name == params.input_name_sub_zone
+                and Zone.parent_id is not None
             )
         if params.input_start_time is not None:
-            filters.append(ParkingZone.created >= params.input_start_time)
+            filters.append(Zone.created >= params.input_start_time)
         if params.input_end_time is not None:
-            filters.append(ParkingZone.created <= params.input_end_time)
+            filters.append(Zone.created <= params.input_end_time)
 
         return await self._all(db.scalars(query.filter(*filters)))
 
@@ -86,5 +86,5 @@ class SpotReportRepository(
 
         return await self._all(db.scalars(query.filter(*filters)))
     
-parkingzonereportrepository = ParkingZoneReportRepository(ParkingZone)
+zonereportrepository = ZoneReportRepository(Zone)
 spotreportrepository = SpotReportRepository(Spot)

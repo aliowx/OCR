@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
-from app.parking.repo import equipment_repo, parking_repo, parkingzone_repo
+from app.parking.repo import equipment_repo, parking_repo, zone_repo
 from app.parking.schemas import equipment as schemas
 from app.utils import MessageCodes, PaginatedContent
 
@@ -35,10 +35,10 @@ async def create_equipment(
             detail="Parking Not Found",
             msg_code=MessageCodes.not_found,
         )
-    parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
-    if not parkingzone:
+    zone = await zone_repo.get(db, id=equipment_data.zone_id)
+    if not zone:
         raise ServiceFailure(
-            detail="ParkingZone  Not Found",
+            detail="Zone  Not Found",
             msg_code=MessageCodes.not_found,
         )
     params = schemas.ReadEquipmentsParams(
@@ -94,16 +94,15 @@ async def update_equipment(
         )
 
     if equipment_data.zone_id is not None:
-        parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
-        if not parkingzone:
+        zone = await zone_repo.get(db, id=equipment_data.zone_id)
+        if not zone:
             raise ServiceFailure(
-                detail="ParkingZone Not Found",
+                detail="Zone Not Found",
                 msg_code=MessageCodes.not_found,
             )
 
     if equipment_data.ip_address:
         params = schemas.ReadEquipmentsParams(
-            parking_id=equipment_data.parking_id,
             ip_address=equipment_data.ip_address,
             size=1,
         )
@@ -116,7 +115,6 @@ async def update_equipment(
 
     if equipment_data.serial_number:
         params = schemas.ReadEquipmentsParams(
-            parking_id=equipment_data.parking_id,
             serial_number=equipment_data.serial_number,
             equipment_type=equipment_data.equipment_type.value,
             size=1,

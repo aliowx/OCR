@@ -28,9 +28,9 @@ class Rule(Base):
 class ZoneRule(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer, ForeignKey("zone.id"), nullable=True
     )
-    zone = relationship("ParkingZone", back_populates="rules")
+    zone = relationship("Zone", back_populates="rules")
     rule_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("rule.id"),

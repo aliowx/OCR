@@ -23,5 +23,5 @@ class Price(Base):
     )
 
     pricings = relationship(
-        "ParkingZonePrice", back_populates="price", lazy="immediate"
+        "ZonePrice", back_populates="price", lazy="immediate"
     )

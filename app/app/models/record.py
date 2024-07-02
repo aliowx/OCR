@@ -41,11 +41,11 @@ class Record(Base):
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("parkingzone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        ForeignKey("zone.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    zone = relationship("ParkingZone", foreign_keys=zone_id)
+    zone = relationship("Zone", foreign_keys=zone_id)
 
     spot_id: Mapped[int] = mapped_column(
         Integer,

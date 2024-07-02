@@ -12,9 +12,8 @@ from app.parking.schemas.spot import (
     SpotInDBBase,
     SpotShowDetailByCamera,
     SpotUpdateStatus,
-    # PriceUpdateInSpot,
 )
-from app.parking.schemas.parkingzone import *
+from app.parking.schemas.zone import *
 from app.pricing.schemas import *
 from app.users.schemas.token import Token, TokenPayload
 from app.users.schemas.user import (

@@ -58,7 +58,7 @@ class Spot(Base):
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("parkingzone.id", ondelete="SET NULL"),
+        ForeignKey("zone.id", ondelete="SET NULL"),
         nullable=True,
     )
-    zone = relationship("ParkingZone")
+    zone = relationship("Zone")

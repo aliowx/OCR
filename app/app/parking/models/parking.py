@@ -31,7 +31,7 @@ class Parking(Base):
     beneficiary_data: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
-class ParkingZone(Base):
+class Zone(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     tag: Mapped[str] = mapped_column(String(50), nullable=True)
@@ -39,39 +39,39 @@ class ParkingZone(Base):
     floor_name: Mapped[str] = mapped_column(String, nullable=True)
     parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
     parent_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer, ForeignKey("zone.id"), nullable=True
     )
     parent = relationship(
-        "ParkingZone",
+        "Zone",
         remote_side=[id],
         lazy="selectin",
         back_populates="children",
     )
     children = relationship(
-        "ParkingZone", back_populates="parent", lazy="immediate"
+        "Zone", back_populates="parent", lazy="immediate"
     )
     pricings = relationship(
-        "ParkingZonePrice", back_populates="zone", lazy="immediate"
+        "ZonePrice", back_populates="zone", lazy="immediate"
     )
     rules = relationship("ZoneRule", back_populates="zone", lazy="immediate")
 
     __table_args__ = (
         ForeignKeyConstraint(
             ["parent_id"],
-            ["parkingzone.id"],
+            ["zone.id"],
             deferrable=True,
             initially="DEFERRED",
         ),
     )
 
 
-class ParkingZonePrice(Base):
+class ZonePrice(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     priority: Mapped[int] = mapped_column(Integer, default=100)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer, ForeignKey("zone.id"), nullable=True
     )
-    zone = relationship("ParkingZone", back_populates="pricings")
+    zone = relationship("Zone", back_populates="pricings")
     price_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("price.id"),

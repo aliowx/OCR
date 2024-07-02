@@ -37,9 +37,14 @@ class Zone(Base):
     tag: Mapped[str] = mapped_column(String(50), nullable=True)
     floor_number: Mapped[int] = mapped_column(Integer, nullable=True)
     floor_name: Mapped[str] = mapped_column(String, nullable=True)
-    parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
+    parking_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("parking.id", ondelete="SET NULL", onupdate="CASCADE"),
+    )
     parent_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("zone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
     parent = relationship(
         "Zone",
@@ -47,9 +52,7 @@ class Zone(Base):
         lazy="selectin",
         back_populates="children",
     )
-    children = relationship(
-        "Zone", back_populates="parent", lazy="immediate"
-    )
+    children = relationship("Zone", back_populates="parent", lazy="immediate")
     pricings = relationship(
         "ZonePrice", back_populates="zone", lazy="immediate"
     )
@@ -69,12 +72,14 @@ class ZonePrice(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     priority: Mapped[int] = mapped_column(Integer, default=100)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("zone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
     zone = relationship("Zone", back_populates="pricings")
     price_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("price.id"),
+        ForeignKey("price.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     price = relationship("Price", back_populates="pricings")

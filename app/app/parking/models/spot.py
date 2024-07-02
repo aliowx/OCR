@@ -36,7 +36,10 @@ class Spot(Base):
     )
 
     camera_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("quipment.id"), index=True, nullable=True
+        Integer,
+        ForeignKey("equipment.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
     )
     camera = relationship("Equipment", back_populates=camera_id)
 
@@ -58,7 +61,7 @@ class Spot(Base):
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("zone.id", ondelete="SET NULL"),
+        ForeignKey("zone.id", onupdate="CASCADE", ondelete="SET NULL"),
         nullable=True,
     )
     zone = relationship("Zone")

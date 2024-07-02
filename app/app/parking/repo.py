@@ -367,7 +367,6 @@ class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
 
 
 spot_repo = SpotRepository(Spot)
-camera_repo = CameraRepository(Camera)
 parking_repo = ParkingRepository(Parking)
 zone_repo = ZoneRepository(Zone)
 equipment_repo = EquipmentRepository(Equipment)

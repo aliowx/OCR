@@ -28,12 +28,14 @@ class Rule(Base):
 class ZoneRule(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("zone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
     zone = relationship("Zone", back_populates="rules")
     rule_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("rule.id"),
+        ForeignKey("rule.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     rule = relationship("Rule", back_populates="zones")
@@ -44,7 +46,7 @@ class PlateRule(Base):
     plate: Mapped[str] = mapped_column(String(50))
     rule_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("rule.id"),
+        ForeignKey("rule.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     rule = relationship("Rule", back_populates="plates")

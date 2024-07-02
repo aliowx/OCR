@@ -17,4 +17,4 @@ router.include_router(
 router.include_router(
     equipment_router, prefix="/equipment", tags=["equipment"]
 )
-router.include_router(rule_router, prefix="/rule", tags=["rule"])
+# router.include_router(rule_router, prefix="/rule", tags=["rule"])

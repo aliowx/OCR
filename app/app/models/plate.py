@@ -38,7 +38,7 @@ class Plate(Base):
         ForeignKey("equipment.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
     )
-    camera_plate = relationship("Equipment", back_populates="spot_plate")
+    camera = relationship("Equipment", foreign_keys=camera_id)
 
     record_id: Mapped[int] = mapped_column(
         Integer,

@@ -29,7 +29,7 @@ class Equipment(Base):
         index=True,
         nullable=True,
     )
-    image = relationship("Image", back_populates=image_id)
+    image_camera = relationship("Image", foreign_keys=image_id)
 
     zone_id: Mapped[int] = mapped_column(
         Integer,

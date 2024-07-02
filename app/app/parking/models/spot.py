@@ -41,7 +41,7 @@ class Spot(Base):
         index=True,
         nullable=True,
     )
-    camera = relationship("Equipment", back_populates=camera_id)
+    camera = relationship("Equipment", foreign_keys=camera_id)
 
     plate_image_id: Mapped[int] = mapped_column(
         Integer,

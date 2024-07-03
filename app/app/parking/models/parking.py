@@ -37,10 +37,6 @@ class Zone(Base):
     tag: Mapped[str] = mapped_column(String(50), nullable=True)
     floor_number: Mapped[int] = mapped_column(Integer, nullable=True)
     floor_name: Mapped[str] = mapped_column(String, nullable=True)
-    parking_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("parking.id", ondelete="SET NULL", onupdate="CASCADE"),
-    )
     parent_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
@@ -54,9 +50,11 @@ class Zone(Base):
     )
     children = relationship("Zone", back_populates="parent", lazy="immediate")
     pricings = relationship(
-        "ZonePrice", back_populates="zone", lazy="immediate"
+        "ZonePrice", back_populates="zone_price", lazy="immediate"
     )
-    rules = relationship("ZoneRule", back_populates="zone", lazy="immediate")
+    rules = relationship(
+        "ZoneRule", back_populates="zone_rule", lazy="immediate"
+    )
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -76,7 +74,7 @@ class ZonePrice(Base):
         ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
-    zone = relationship("Zone", back_populates="pricings")
+    zone_price = relationship("Zone", back_populates="pricings")
     price_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("price.id", ondelete="SET NULL", onupdate="CASCADE"),

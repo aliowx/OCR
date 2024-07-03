@@ -32,7 +32,7 @@ class ZoneRule(Base):
         ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
-    zone = relationship("Zone", back_populates="rules")
+    zone_rule = relationship("Zone", back_populates="rules")
     rule_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("rule.id", ondelete="SET NULL", onupdate="CASCADE"),

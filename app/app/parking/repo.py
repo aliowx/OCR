@@ -10,7 +10,6 @@ from app.crud.base import CRUDBase
 from app.db.base_class import Base
 
 from .models import (
-    Camera,
     Equipment,
     Parking,
     Spot,
@@ -33,6 +32,7 @@ from .schemas.zone import (
     ZonePriceCreate,
     ZonePriceUpdate,
     ZoneUpdate,
+    ZonePramsFilters,
 )
 from .schemas.rule import (
     PlateRuleCreate,
@@ -46,9 +46,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 logger = logging.getLogger(__name__)
 
 
-class SpotRepository(
-    CRUDBase[Spot, SpotCreate, SpotUpdate]
-):
+class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
     async def find_lines(
         self,
         db: Session | AsyncSession,
@@ -103,53 +101,6 @@ class SpotRepository(
         return await self._first(db.scalars(query.filter(*filters)))
 
 
-class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
-
-    async def find_cameras(
-        self, db: Session | AsyncSession, *, params: ParamsCamera
-    ) -> list[Camera] | Awaitable[list[Camera]]:
-
-        query = select(Camera)
-
-        filters = [Camera.is_deleted == false()]
-
-        if params.input_camera_code is not None:
-            filters.append(Equipment.serial_number == params.input_camera_code)
-
-        if params.input_camera_ip is not None:
-            filters.append(Equipment.ip_address == params.input_camera_ip)
-
-        if params.input_location is not None:
-            filters.append(Equipment.zone_id == params.input_location)
-
-        if params.limit is None:
-            return self._all(
-                db.scalars(query.filter(*filters).offset(params.skip))
-            )
-
-        return await self._all(
-            db.scalars(
-                query.filter(*filters).offset(params.skip).limit(params.limit)
-            )
-        )
-
-    async def one_camera(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_camera_code: str = None,
-    ) -> Camera | Awaitable[Camera]:
-
-        query = select(Camera)
-
-        filters = [Camera.is_deleted == false()]
-
-        if input_camera_code is not None:
-            filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
-
-        return await self._first(db.scalars(query.filter(*filters)))
-
-
 class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
     async def get_main_parking(self, db: AsyncSession) -> Parking | None:
         parkings = await self.get_multi(db)
@@ -158,12 +109,8 @@ class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
         return parkings[0]
 
 
-class ZoneRepository(
-    CRUDBase[Zone, ZoneCreate, ZoneUpdate]
-):
-    async def get_by_name(
-        self, db: AsyncSession, name: str
-    ) -> Zone | None:
+class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
+    async def get_by_name(self, db: AsyncSession, name: str) -> Zone | None:
         zone = await self._first(
             db.scalars(
                 select(self.model).filter(
@@ -173,6 +120,56 @@ class ZoneRepository(
             )
         )
         return zone
+
+    async def get_multi_by_filter(
+        self,
+        db: AsyncSession,
+        *,
+        params: ZonePramsFilters,
+    ) -> tuple[list[Zone], int]:
+        # ):
+        print("filter", params.skip)
+        query = select(Zone)
+
+        filters = [Zone.is_deleted == false()]
+
+        if params.input_name_zone is not None:
+            filters.append(Zone.name == params.input_name_zone)
+
+        if params.input_name_floor is not None:
+            filters.append(Zone.floor_name == params.input_name_floor)
+
+        if params.input_number_floor is not None:
+            filters.append(Zone.floor_number == params.input_number_floor)
+
+        q = query.filter(*filters).with_only_columns(func.count())
+        total_count = db.scalar(q)
+
+        order_by = Zone.id.asc() if params.asc else Zone.id.desc()
+
+        if params.size is None:
+            return (
+                await self._all(
+                    db.scalars(
+                        query.filter(*filters)
+                        .offset(params.skip)
+                        .order_by(order_by)
+                    )
+                ),
+                await total_count,
+            )
+
+        return (
+            await self._all(
+                db.scalars(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .limit(params.size)
+                    .order_by(order_by)
+                )
+            ),
+            await total_count
+        )        
 
 
 class EquipmentRepository(
@@ -228,6 +225,50 @@ class EquipmentRepository(
             ),
             await total_count,
         )
+
+    # async def find_cameras(
+    #     self, db: Session | AsyncSession, *, params: ParamsCamera
+    # ) -> list[Equipment] | Awaitable[list[Equipment]]:
+
+    #     query = select(Equipment)
+
+    #     filters = [Equipment.is_deleted == false()]
+
+    #     if params.input_camera_code is not None:
+    #         filters.append(Equipment.serial_number == params.input_camera_code)
+
+    #     if params.input_camera_ip is not None:
+    #         filters.append(Equipment.ip_address == params.input_camera_ip)
+
+    #     if params.input_location is not None:
+    #         filters.append(Equipment.zone_id == params.input_location)
+
+    #     if params.limit is None:
+    #         return self._all(
+    #             db.scalars(query.filter(*filters).offset(params.skip))
+    #         )
+
+    #     return await self._all(
+    #         db.scalars(
+    #             query.filter(*filters).offset(params.skip).limit(params.limit)
+    #         )
+    #     )
+
+    # async def one_camera(
+    #     self,
+    #     db: Session | AsyncSession,
+    #     *,
+    #     input_camera_code: str = None,
+    # ) -> Equipment | Awaitable[Equipment]:
+
+    #     query = select(Equipment)
+
+    #     filters = [Equipment.is_deleted == false()]
+
+    #     if input_camera_code is not None:
+    #         filters.append(Equipment.serial_number == input_camera_code)
+
+    #     return await self._first(db.scalars(query.filter(*filters)))
 
 
 class ZonePriceRepository(

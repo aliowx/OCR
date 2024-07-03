@@ -1,5 +1,4 @@
 from app.parking.repo import (
-    camera_repo,
     equipment_repo,
     parking_repo,
     spot_repo,

@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 class ZoneBase(BaseModel):
     name: str | None = None
     tag: str | None = None
-    parking_id: int | None = None
     parent_id: int | None = None
     floor_name: str | None = None
     floor_number: int | None = None
@@ -26,20 +25,14 @@ class ZoneUpdate(ZoneBase): ...
 
 
 class ZoneInDBBase(ZoneComplete):
-    id: int | None = None 
+    id: int | None = None
     created: datetime
     modified: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class Zone(ZoneInDBBase):
-    parent: str| None = Field(default=None, exclude=True)
-    class Config:
-        @staticmethod
-        def json_schema_extra(schema, model):
-            if "properties" in schema:
-                schema["properties"].pop("parent", None)
+class Zone(ZoneInDBBase): ...
 
 
 class ZoneInDB(ZoneInDBBase): ...
@@ -81,3 +74,19 @@ class SetZonePriceInput(BaseModel):
 
 class ZoneRule(ZoneBase):
     id: int | None = None
+
+
+class ZonePramsFilters(BaseModel):
+    input_name_zone: str | None = None
+    input_name_floor: str | None = None
+    input_number_floor: int | None = None
+    size: int | None = 100
+    page: int = 1
+    asc: bool = True
+
+    @property
+    def skip(self) -> int:
+        skip = 0
+        if self.size is not None:
+            skip = (self.page * self.size) - self.size
+        return skip

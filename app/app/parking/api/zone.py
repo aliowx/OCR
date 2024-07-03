@@ -7,7 +7,7 @@ from app.core.exceptions import ServiceFailure
 from app.parking.repo import zone_repo
 from app.parking.schemas import zone as schemas
 from app.parking.services import zone as zone_services
-from app.utils import APIResponse, APIResponseType, MessageCodes
+from app.utils import APIResponse, APIResponseType, MessageCodes, PaginatedContent
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
 
@@ -20,14 +20,14 @@ namespace = "zones"
 async def read_zones(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[list[schemas.Zone]]:
+    params: schemas.ZonePramsFilters = Depends(),
+    _: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[PaginatedContent[list[schemas.Zone]]]:
+# ):
     """
     Read parking zones.
     """
-    zones = await zone_repo.get_multi(db, limit=limit, skip=skip)
+    zones = await zone_services.read_zone(db, params=params)
     return APIResponse(zones)
 
 

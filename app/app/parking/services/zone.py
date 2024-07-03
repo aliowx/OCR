@@ -11,23 +11,26 @@ from app.pricing.repo import price_repo
 logger = logging.getLogger(__name__)
 
 
+async def read_zone(
+    db: AsyncSession,
+    params: parking_schemas.ZonePramsFilters,
+) -> utils.PaginatedContent[list[parking_schemas.Zone]]:
+    # ):
+    zones, total_count = await repo.zone_repo.get_multi_by_filter(
+        db, params=params
+    )
+    print(total_count)
+    return utils.PaginatedContent(
+        data=zones, total_count=total_count, size=params.size, page=params.page
+    )
+
+
 async def create_zone(
     db: AsyncSession,
     zone_input: parking_schemas.ZoneCreate,
 ) -> parking_schemas.Zone:
-    parking = await repo.parking_repo.get(db, id=zone_input.parking_id)
-    if not parking:
-        main_parking = await repo.parking_repo.get_main_parking(db)
-        if not main_parking:
-            raise exc.ServiceFailure(
-                detail="Parking Not Found",
-                msg_code=utils.MessageCodes.not_found,
-            )
-        zone_input.parking_id = main_parking.id
 
-    zone = await repo.zone_repo.get_by_name(
-        db, name=zone_input.name
-    )
+    zone = await repo.zone_repo.get_by_name(db, name=zone_input.name)
     if zone:
         raise exc.ServiceFailure(
             detail="zone with this name already exists",
@@ -36,18 +39,14 @@ async def create_zone(
 
     parent_zone = None
     if zone_input.parent_id is not None:
-        parent_zone = await repo.zone_repo.get(
-            db, id=zone_input.parent_id
-        )
+        parent_zone = await repo.zone_repo.get(db, id=zone_input.parent_id)
         if not parent_zone:
             raise exc.ServiceFailure(
                 detail="Parking Not Found",
                 msg_code=utils.MessageCodes.not_found,
             )
 
-    zone = await repo.zone_repo.create(
-        db, obj_in=zone_input
-    )
+    zone = await repo.zone_repo.create(db, obj_in=zone_input)
     return zone
 
 

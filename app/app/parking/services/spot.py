@@ -34,7 +34,7 @@ async def create_line(
         check_line_number.add(i["number_line"])
 
     # check camera exist
-    camera = await crud.camera_repo.get(db, id=spot_in.camera_id)
+    camera = await crud.equipment_repo.get(db, id=spot_in.camera_id)
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
@@ -95,7 +95,7 @@ async def create_line(
 async def update_status(
     db: AsyncSession, spot_in: schemas.SpotUpdateStatus
 ) -> schemas.SpotUpdateStatus:
-    camera = await crud.camera_repo.one_camera(
+    camera = await crud.equipment_repo.one_camera(
         db, input_camera_code=spot_in.camera_code
     )
 
@@ -168,7 +168,6 @@ async def get_status(
                         "number_line": spot.number_line,
                         "coordinates_rectangle_big": spot.coordinates_rectangle_big,
                         "coordinates_rectangle_small": spot.coordinates_rectangle_small,
-                        "price_model_id": spot.price_model_id,
                         "status": spot.status,
                         "plate": spot.plate,
                         "latest_time_modified": spot.latest_time_modified,
@@ -196,7 +195,7 @@ async def get_status(
 
 
 async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
-    camera = await crud.camera_repo.one_camera(
+    camera = await crud.equipment_repo.one_camera(
         db, input_camera_code=camera_code
     )
     if not camera:
@@ -266,11 +265,3 @@ async def get_details_spot_by_zone_id(db: AsyncSession, zone_id: int):
 
     return all_spots_zone
 
-
-async def update_price(
-    db: AsyncSession, data: schemas.PriceUpdateInSpot
-):
-
-    find_park = await crud.spot_repo.get(db, id=data.id_park)
-    find_park.price_model_id = data.price_model_id
-    return await crud.spot_repo.update(db, db_obj=find_park)

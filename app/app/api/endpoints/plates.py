@@ -10,7 +10,7 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from app.parking.repo import camera_repo
+from app.parking.repo import equipment_repo
 
 router = APIRouter()
 namespace = "plates"
@@ -27,7 +27,7 @@ async def read_plates(
     """
     camera_id = None
     if params.input_camera_code is not None:
-        camera_id = await camera_repo.one_camera(
+        camera_id = await equipment_repo.one_camera(
             db, input_camera_code=params.input_camera_code
         ).id
         params.input_camera_id = camera_id

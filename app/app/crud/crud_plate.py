@@ -8,19 +8,19 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
-from app.models.plate import PlateDetected
+from app.models.plate import Plate
 from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
 from cache.redis import redis_client
 
 
-class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
+class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
     def create(
         self,
         db: Session | AsyncSession,
         *,
         obj_in: PlateCreate | dict,
         commit: bool = True,
-    ) -> PlateDetected | Awaitable[PlateDetected]:
+    ) -> Plate | Awaitable[Plate]:
         # asyncpg raises DataError for str datetime fields
         # jsonable_encoder converts datetime fields to str
         # to avoid asyncpg error pass obj_in data as a dict
@@ -43,12 +43,12 @@ class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
         skip: int = 0,
         limit: int = 100,
         asc: bool = True,
-    ) -> list[PlateDetected] | Awaitable[list[PlateDetected]]:
+    ) -> list[Plate] | Awaitable[list[Plate]]:
         query = (
             select(self.model)
             .filter(
-                PlateDetected.record_id == record_id,
-                PlateDetected.is_deleted == False,
+                Plate.record_id == record_id,
+                Plate.is_deleted == False,
             )
             .order_by(self.model.id.asc() if asc else self.model.id.desc())
             .offset(skip)
@@ -59,23 +59,23 @@ class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
 
     async def find_plates(
         self, db: Session | AsyncSession, *, params: ParamsPlates
-    ) -> list[PlateDetected] | Awaitable[list[PlateDetected]]:
+    ) -> list[Plate] | Awaitable[list[Plate]]:
 
-        query = select(PlateDetected)
+        query = select(Plate)
 
-        filters = [PlateDetected.is_deleted == False]
+        filters = [Plate.is_deleted == False]
 
         if params.input_plate is not None:
-            filters.append(PlateDetected.plate == params.input_plate)
+            filters.append(Plate.plate == params.input_plate)
 
         if params.input_camera_id is not None:
-            filters.append(PlateDetected.camera_id == params.input_camera_id)
+            filters.append(Plate.camera_id == params.input_camera_id)
 
         if params.input_time_min is not None:
-            filters.append(PlateDetected.record_time >= params.input_time_min)
+            filters.append(Plate.record_time >= params.input_time_min)
 
         if params.input_time_max is not None:
-            filters.append(PlateDetected.record_time <= params.input_time_max)
+            filters.append(Plate.record_time <= params.input_time_max)
 
         if params.limit is None:
             return await self._all(
@@ -93,4 +93,4 @@ class CRUDPlate(CRUDBase[PlateDetected, PlateCreate, PlateUpdate]):
         return [items, all_items_count]
 
 
-plate = CRUDPlate(PlateDetected)
+plate = CRUDPlate(Plate)

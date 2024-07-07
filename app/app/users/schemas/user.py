@@ -35,6 +35,7 @@ class User(UserInDBBase):
 class ParamsUser(BaseModel):
     input_full_name: str | None = None
     input_username: str | None = None
+    input_is_active: bool | None = True
     size: int | None = 100
     page: int = 1
     asc: bool = True

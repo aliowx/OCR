@@ -7,12 +7,22 @@ from app.parking.schemas import equipment as schemas
 from app.utils import MessageCodes, PaginatedContent
 
 
+async def get_multi_quipments(
+    db: AsyncSession,
+    params: schemas.ReadEquipmentsParams | schemas.ReadEquipmentsFilter,
+):
+    if isinstance(params, schemas.ReadEquipmentsParams):
+        params = params.db_filters
+    equipments, total_count = await equipment_repo.get_multi_with_filters(
+        db, filters=params
+    )
+    return [equipments, total_count]
+
+
 async def read_equipments(
     db: AsyncSession, params: schemas.ReadEquipmentsParams
 ) -> PaginatedContent[list[schemas.Equipment]]:
-    equipments, total_count = await equipment_repo.get_multi_with_filters(
-        db, filters=params.db_filters
-    )
+    equipments, total_count = await get_multi_quipments(db, params)
     return PaginatedContent(
         data=equipments,
         total_count=total_count,
@@ -26,7 +36,6 @@ async def create_equipment(
     equipment_data: schemas.EquipmentCreate,
     commit: bool = True,
 ) -> Equipment:
-    
     parking = await parking_repo.get_main_parking(db)
     if not parking:
         raise ServiceFailure(
@@ -39,11 +48,11 @@ async def create_equipment(
             detail="Zone  Not Found",
             msg_code=MessageCodes.not_found,
         )
-    params = schemas.ReadEquipmentsParams(
-        ip_address=equipment_data.ip_address,
+    params = schemas.ReadEquipmentsFilter(
+        ip_address__eq=equipment_data.ip_address,
     )
-    ip_address_check = await read_equipments(db, params=params)
-    if ip_address_check.total_count:
+    ip_address_check, total_count_ip = await get_multi_quipments(db, params)
+    if total_count_ip:
         raise ServiceFailure(
             detail="Duplicate ip address",
             msg_code=MessageCodes.duplicate_ip_address,
@@ -55,8 +64,10 @@ async def create_equipment(
             "equipment_type": equipment_data.equipment_type,
         }
     )
-    serial_number_check = await read_equipments(db, params=params)
-    if serial_number_check.total_count:
+    serial_number_check, total_count_serial_number = await get_multi_quipments(
+        db, params
+    )
+    if total_count_serial_number:
         raise ServiceFailure(
             detail="Duplicate equipment serial number",
             msg_code=MessageCodes.duplicate_serial_number,
@@ -100,28 +111,29 @@ async def update_equipment(
             )
 
     if equipment_data.ip_address:
-        params = schemas.ReadEquipmentsParams(
-            ip_address=equipment_data.ip_address,
+        params = schemas.ReadEquipmentsFilter(
+            ip_address__eq=equipment_data.ip_address,
             size=1,
         )
-        ip_address_check = await read_equipments(db, params=params)
-        if ip_address_check.data and equipment != ip_address_check.data[0]:
+        ip_address_check, total_count = await get_multi_quipments(
+            db, params=params
+        )
+        if ip_address_check and equipment != ip_address_check:
             raise ServiceFailure(
                 detail="Duplicate ip address",
                 msg_code=MessageCodes.duplicate_ip_address,
             )
 
     if equipment_data.serial_number:
-        params = schemas.ReadEquipmentsParams(
-            serial_number=equipment_data.serial_number,
-            equipment_type=equipment_data.equipment_type.value,
+        params = schemas.ReadEquipmentsFilter(
+            serial_number__eq=equipment_data.serial_number,
+            equipment_type__eq=equipment_data.equipment_type.value,
             size=1,
         )
-        serial_number_check = await read_equipments(db, params=params)
-        if (
-            serial_number_check.data
-            and equipment != serial_number_check.data[0]
-        ):
+        serial_number_check, total_count = await get_multi_quipments(
+            db, params=params
+        )
+        if serial_number_check and equipment != serial_number_check:
             raise ServiceFailure(
                 detail="Duplicate equipment serial number",
                 msg_code=MessageCodes.duplicate_serial_number,

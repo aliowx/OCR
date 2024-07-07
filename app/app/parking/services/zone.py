@@ -15,11 +15,9 @@ async def read_zone(
     db: AsyncSession,
     params: parking_schemas.ZonePramsFilters,
 ) -> utils.PaginatedContent[list[parking_schemas.Zone]]:
-    # ):
     zones, total_count = await repo.zone_repo.get_multi_by_filter(
         db, params=params
     )
-    print(total_count)
     return utils.PaginatedContent(
         data=zones, total_count=total_count, size=params.size, page=params.page
     )

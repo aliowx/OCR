@@ -127,8 +127,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
         *,
         params: ZonePramsFilters,
     ) -> tuple[list[Zone], int]:
-        # ):
-        print("filter", params.skip)
         query = select(Zone)
 
         filters = [Zone.is_deleted == false()]
@@ -168,8 +166,8 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                     .order_by(order_by)
                 )
             ),
-            await total_count
-        )        
+            await total_count,
+        )
 
 
 class EquipmentRepository(
@@ -187,6 +185,8 @@ class EquipmentRepository(
             orm_filters.append(
                 self.model.equipment_status == filters.equipment_status__eq
             )
+        if filters.zone_id__eq:
+            orm_filters.append(self.model.zone_id == filters.zone_id__eq)
         if filters.ip_address__eq:
             orm_filters.append(self.model.ip_address == filters.ip_address__eq)
         if filters.serial_number__eq:
@@ -225,50 +225,6 @@ class EquipmentRepository(
             ),
             await total_count,
         )
-
-    # async def find_cameras(
-    #     self, db: Session | AsyncSession, *, params: ParamsCamera
-    # ) -> list[Equipment] | Awaitable[list[Equipment]]:
-
-    #     query = select(Equipment)
-
-    #     filters = [Equipment.is_deleted == false()]
-
-    #     if params.input_camera_code is not None:
-    #         filters.append(Equipment.serial_number == params.input_camera_code)
-
-    #     if params.input_camera_ip is not None:
-    #         filters.append(Equipment.ip_address == params.input_camera_ip)
-
-    #     if params.input_location is not None:
-    #         filters.append(Equipment.zone_id == params.input_location)
-
-    #     if params.limit is None:
-    #         return self._all(
-    #             db.scalars(query.filter(*filters).offset(params.skip))
-    #         )
-
-    #     return await self._all(
-    #         db.scalars(
-    #             query.filter(*filters).offset(params.skip).limit(params.limit)
-    #         )
-    #     )
-
-    # async def one_camera(
-    #     self,
-    #     db: Session | AsyncSession,
-    #     *,
-    #     input_camera_code: str = None,
-    # ) -> Equipment | Awaitable[Equipment]:
-
-    #     query = select(Equipment)
-
-    #     filters = [Equipment.is_deleted == false()]
-
-    #     if input_camera_code is not None:
-    #         filters.append(Equipment.serial_number == input_camera_code)
-
-    #     return await self._first(db.scalars(query.filter(*filters)))
 
 
 class ZonePriceRepository(

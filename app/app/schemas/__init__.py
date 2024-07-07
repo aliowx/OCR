@@ -23,6 +23,7 @@ from app.users.schemas.user import (
     UserInDB,
     UserInDBBase,
     UserUpdate,
+    ParamsUser,
 )
 
 from .image import (

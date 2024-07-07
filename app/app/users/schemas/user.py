@@ -32,6 +32,21 @@ class User(UserInDBBase):
     pass
 
 
+class ParamsUser(BaseModel):
+    input_full_name: str | None = None
+    input_username: str | None = None
+    size: int | None = 100
+    page: int = 1
+    asc: bool = True
+
+    @property
+    def skip(self) -> int:
+        skip = 0
+        if self.size is not None:
+            skip = (self.page * self.size) - self.size
+        return skip
+
+
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     hashed_password: str

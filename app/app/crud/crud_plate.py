@@ -35,27 +35,6 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         )
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
-    def get_by_record(
-        self,
-        db: Session | AsyncSession,
-        *,
-        record_id: int,
-        skip: int = 0,
-        limit: int = 100,
-        asc: bool = True,
-    ) -> list[Plate] | Awaitable[list[Plate]]:
-        query = (
-            select(self.model)
-            .filter(
-                Plate.record_id == record_id,
-                Plate.is_deleted == False,
-            )
-            .order_by(self.model.id.asc() if asc else self.model.id.desc())
-            .offset(skip)
-        )
-        if limit is None:
-            return self._all(db.scalars(query))
-        return self._all(db.scalars(query.limit(limit)))
 
     async def find_plates(
         self, db: Session | AsyncSession, *, params: ParamsPlates
@@ -74,10 +53,13 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         if params.input_time_min is not None:
             filters.append(Plate.record_time >= params.input_time_min)
 
+        if params.input_record_id is not None:
+            filters.append(Plate.record_id == params.input_record_id)
+
         if params.input_time_max is not None:
             filters.append(Plate.record_time <= params.input_time_max)
 
-        if params.limit is None:
+        if params.size is None:
             return await self._all(
                 db.scalars(query.filter(*filters).offset(params.skip))
             )
@@ -86,7 +68,7 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
 
         items = await self._all(
             db.scalars(
-                query.filter(*filters).offset(params.skip).limit(params.limit)
+                query.filter(*filters).offset(params.skip).limit(params.size)
             )
         )
 

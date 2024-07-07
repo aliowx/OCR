@@ -185,8 +185,6 @@ class EquipmentRepository(
             orm_filters.append(
                 self.model.equipment_status == filters.equipment_status__eq
             )
-        if filters.zone_id__eq:
-            orm_filters.append(self.model.zone_id == filters.zone_id__eq)
         if filters.ip_address__eq:
             orm_filters.append(self.model.ip_address == filters.ip_address__eq)
         if filters.serial_number__eq:

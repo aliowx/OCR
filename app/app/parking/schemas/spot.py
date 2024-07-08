@@ -177,11 +177,6 @@ class SpotUpdateStatus(BaseModel):
     status: Status = Status.empty
     latest_time_modified: Optional[datetime] = None
 
-    class Config:
-        @staticmethod
-        def json_schema_extra(schema, model):
-            if "properties" in schema:
-                schema["properties"].pop("latest_time_modified", None)
 
 
 class ParamsSpotStatus(BaseModel):

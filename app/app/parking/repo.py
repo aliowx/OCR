@@ -224,6 +224,19 @@ class EquipmentRepository(
             await total_count,
         )
 
+    async def one_equipment(
+        self, db: AsyncSession, *, serial_code: str
+    ) -> Equipment:
+
+        query = select(Equipment)
+
+        filters = [Equipment.is_deleted == false()]
+
+        if serial_code is not None:
+            filters.append(Equipment.serial_number == serial_code)
+
+        return await self._first(db.scalars(query.filter(*filters)))
+
 
 class ZonePriceRepository(
     CRUDBase[ZonePrice, ZonePriceCreate, ZonePriceUpdate]

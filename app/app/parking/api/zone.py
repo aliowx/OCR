@@ -23,7 +23,6 @@ async def read_zones(
     params: schemas.ZonePramsFilters = Depends(),
     _: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Zone]]]:
-# ):
     """
     Read parking zones.
     """

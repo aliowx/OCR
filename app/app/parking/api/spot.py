@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, schemas
 from app.api import deps
 from app.parking.services import spot as spot_services
-from app.utils import APIResponse, APIResponseType
+from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.parking.schemas import ParamsSpotStatus, SpotsByCamera
 
 router = APIRouter()
@@ -24,9 +24,7 @@ async def create_spot(
     """
     Create new line Spot.
     """
-    return APIResponse(
-        await spot_services.create_line(db, spot_in)
-    )
+    return APIResponse(await spot_services.create_line(db, spot_in))
 
 
 # this endpoint for update status
@@ -37,9 +35,7 @@ async def update_status_spot(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[dict]:
 
-    return APIResponse(
-        await spot_services.update_status(db, spot_in)
-    )
+    return APIResponse(await spot_services.update_status(db, spot_in))
 
 
 # get all status and detail spot
@@ -69,11 +65,16 @@ async def get_detail_line_by_camera(
 @router.get("/spot/{zone_id}")
 async def get_detail_line_by_zone(
     zone_id: int,
+    size: int = 100,
+    page: int = 1,
+    asc: bool = True,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[list[schemas.SpotCreate]]:
+) -> APIResponseType[PaginatedContent[Any]]:
 
     return APIResponse(
-        await spot_services.get_details_spot_by_zone_id(db, zone_id)
+        await spot_services.get_details_spot_by_zone_id(
+            db, zone_id, size, page, asc
+        )
     )
 

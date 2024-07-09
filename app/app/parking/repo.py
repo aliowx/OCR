@@ -47,12 +47,12 @@ logger = logging.getLogger(__name__)
 
 
 class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
-    async def find_lines(
+    async def get_multi_with_filters(
         self,
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
-        input_number_line: int = None,
+        input_number_spot: int = None,
         input_zone_id: int = None,
         skip: int = 0,
         limit: int | None = 100,
@@ -65,8 +65,8 @@ class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
         if input_camera_id is not None:
             filters.append(Spot.camera_id == input_camera_id)
 
-        if input_number_line is not None:
-            filters.append(Spot.number_line == input_number_line)
+        if input_number_spot is not None:
+            filters.append(Spot.number_spot == input_number_spot)
 
         if input_zone_id is not None:
             filters.append(Spot.zone_id == input_zone_id)
@@ -85,7 +85,7 @@ class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
-        input_number_line: int = None,
+        input_number_spot: int = None,
     ) -> Spot | Awaitable[Spot]:
 
         query = select(Spot)
@@ -95,8 +95,8 @@ class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
         if input_camera_id is not None:
             filters.append(Spot.camera_id == input_camera_id)
 
-        if input_number_line is not None:
-            filters.append(Spot.number_line == input_number_line)
+        if input_number_spot is not None:
+            filters.append(Spot.number_spot == input_number_spot)
 
         return await self._first(db.scalars(query.filter(*filters)))
 
@@ -225,15 +225,15 @@ class EquipmentRepository(
         )
 
     async def one_equipment(
-        self, db: AsyncSession, *, serial_code: str
+        self, db: AsyncSession, *, serial_number: str
     ) -> Equipment:
 
         query = select(Equipment)
 
         filters = [Equipment.is_deleted == false()]
 
-        if serial_code is not None:
-            filters.append(Equipment.serial_number == serial_code)
+        if serial_number is not None:
+            filters.append(Equipment.serial_number == serial_number)
 
         return await self._first(db.scalars(query.filter(*filters)))
 

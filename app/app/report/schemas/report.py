@@ -34,7 +34,7 @@ class ReadZoneLotsParams(BaseModel):
 
 
 class ParamsRecordMoment(BaseModel):
-    input_camera_code: str | None = None
+    input_camera_serial: str | None = None
     input_plate: str | None = None
     input_name_zone: str | None = None
     input_name_sub_zone: str | None = None

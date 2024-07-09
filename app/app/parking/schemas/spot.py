@@ -23,7 +23,7 @@ class SpotBase(BaseModel):
                 {
                     "percent_rotation_rectangle_small": 90,
                     "percent_rotation_rectangle_big": 90,
-                    "number_line": 1,
+                    "number_spot": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
                 }
@@ -41,27 +41,27 @@ class SpotBase(BaseModel):
 class SpotCreate(BaseModel):
     name_spot: str
     coordinates_rectangles: List[Dict] = Field(
-        ...,
+        None,
         examples=[
             [
                 {
                     "percent_rotation_rectangle_small": 90,
                     "percent_rotation_rectangle_big": 90,
-                    "number_line": 1,
+                    "number_spot": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
                 }
             ]
         ],
     )
-    camera_code: str 
+    camera_serial: str
     zone_id: int
 
 
 class CoordinateSpotsByCamera(BaseModel):
     percent_rotation_rectangle_small: Optional[int]
     percent_rotation_rectangle_big: Optional[int]
-    number_line: Optional[int]
+    number_spot: Optional[int]
     status: Optional[Status]
     lpr_image_id: Optional[int]
     plate_image_id: Optional[int]
@@ -72,7 +72,7 @@ class CoordinateSpotsByCamera(BaseModel):
 
 
 class ReverseCoordinatesRectangles(BaseModel):
-    number_line: Optional[int]
+    number_spot: Optional[int]
     coordinates_rectangle_big: Optional[list[list]]
     coordinates_rectangle_small: Optional[list[list]]
     percent_rotation_rectangle_small: Optional[int]
@@ -94,7 +94,7 @@ class SpotShowDetailByCamera(BaseModel):
                 {
                     "percent_rotation_rectangle_small": 90,
                     "percent_rotation_rectangle_big": 90,
-                    "number_line": 1,
+                    "number_spot": 1,
                     "coordinates_rectangle_big": [[0.25, 0], [1, 1]],
                     "coordinates_rectangle_small": [[1, 1], [0, 0]],
                 }
@@ -105,7 +105,7 @@ class SpotShowDetailByCamera(BaseModel):
 
 
 class SpotCreateLineInDB(BaseModel):
-    number_line: int = Field(None, ge=1)
+    number_spot: int = Field(None, ge=1)
     camera_id: int = Field(..., ge=1)
     name_spot: str = Field(...)
     percent_rotation_rectangle_big: int = Field(..., le=360, ge=0)
@@ -145,11 +145,10 @@ class GetSpot(BaseModel):
     all_items_count: int
 
 
-
 class SpotInfoCoordinate(BaseModel):
     percent_rotation_rectangle_small: int | None = None
     percent_rotation_rectangle_big: int | None = None
-    number_line: int | None = None
+    number_spot: int | None = None
     coordinates_rectangle_big: list | None = None
     coordinates_rectangle_small: list | None = None
     status: Status | None = None
@@ -165,18 +164,16 @@ class SpotInfo(BaseModel):
     name_spot: str | None = None
     zone_name: str | None = None
     coordinates_rectangles: SpotInfoCoordinate | None = None
-                
 
 
 class SpotUpdateStatus(BaseModel):
-    camera_code: str = Field(...)
-    number_line: int = Field(...)
+    camera_serial: str = Field(...)
+    number_spot: int = Field(...)
     lpr_image_id: Optional[int] = Field(None)
     plate_image_id: Optional[int] = Field(None)
     plate: Optional[str] = Field(None)
     status: Status = Status.empty
     latest_time_modified: Optional[datetime] = None
-
 
 
 class ParamsSpotStatus(BaseModel):

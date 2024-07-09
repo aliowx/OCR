@@ -10,9 +10,9 @@ from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.parking.repo import zone_repo
 from app.utils import PaginatedContent
+from app.models.base import EquipmentType
 
-
-async def create_line(
+async def create_spot(
     db: AsyncSession, spot_in: schemas.SpotCreate
 ) -> schemas.SpotInDBBase:
 
@@ -27,25 +27,33 @@ async def create_line(
     # check line number
     check_line_number = set()
     for i in spot_in.coordinates_rectangles:
-        if i["number_line"] in check_line_number:
+        if i["number_spot"] in check_line_number:
             raise exc.ServiceFailure(
-                detail="for this camera,s number line confilict.",
+                detail="for this camera,s number spot confilict.",
                 msg_code=utils.MessageCodes.operation_failed,
             )
-        check_line_number.add(i["number_line"])
+        check_line_number.add(i["number_spot"])
 
     # check camera exist
     camera = await crud.equipment_repo.one_equipment(
-        db, serial_code=spot_in.camera_code
+        db, serial_number=spot_in.camera_serial
     )
     if not camera:
         raise exc.ServiceFailure(
             detail="camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
-
+    
+    if camera.equipment_type != EquipmentType.CAMERA_SPOT:
+        raise exc.ServiceFailure(
+            detail="type camera not spot",
+            msg_code=utils.MessageCodes.operation_failed,
+        )
+    # TODO find number line after delete
     # update line's camera first step remove spot
-    find_spot = await crud.spot_repo.find_lines(db, input_camera_id=camera.id)
+    find_spot = await crud.spot_repo.get_multi_with_filters(
+        db, input_camera_id=camera.id
+    )
     if find_spot:
         for spot in find_spot:
             await crud.spot_repo._remove_async(db, id=spot.id)
@@ -63,7 +71,7 @@ async def create_line(
                 "percent_rotation_rectangle_big"
             ],
             name_spot=spot_in.name_spot,
-            number_line=coordinate["number_line"],
+            number_spot=coordinate["number_spot"],
             coordinates_rectangle_big=coordinate["coordinates_rectangle_big"],
             coordinates_rectangle_small=coordinate[
                 "coordinates_rectangle_small"
@@ -73,7 +81,7 @@ async def create_line(
         items = await crud.spot_repo.create(db, obj_in=new_spot)
         if items:
             reverse_coordinates_rectangles = schemas.ReverseCoordinatesRectangles(
-                number_line=new_spot.number_line,
+                number_spot=new_spot.number_spot,
                 coordinates_rectangle_big=new_spot.coordinates_rectangle_big,
                 coordinates_rectangle_small=new_spot.coordinates_rectangle_small,
                 percent_rotation_rectangle_small=new_spot.percent_rotation_rectangle_small,
@@ -98,7 +106,7 @@ async def update_status(
     db: AsyncSession, spot_in: schemas.SpotUpdateStatus
 ) -> schemas.SpotUpdateStatus:
     camera = await crud.equipment_repo.one_equipment(
-        db, serial_code=spot_in.camera_code
+        db, serial_number=spot_in.camera_serial
     )
     if not camera:
         raise exc.ServiceFailure(
@@ -109,7 +117,7 @@ async def update_status(
     check_spot = await crud.spot_repo.one_spot(
         db,
         input_camera_id=camera.id,
-        input_number_line=spot_in.number_line,
+        input_number_spot=spot_in.number_spot,
     )
     if not check_spot:
         raise exc.ServiceFailure(
@@ -168,7 +176,7 @@ async def get_status(
                 coordinates_rectangles=SpotInfoCoordinate(
                     percent_rotation_rectangle_big=spot.percent_rotation_rectangle_small,
                     percent_rotation_rectangle_small=spot.percent_rotation_rectangle_small,
-                    number_line=spot.number_line,
+                    number_spot=spot.number_spot,
                     coordinates_rectangle_big=spot.coordinates_rectangle_big,
                     coordinates_rectangle_small=spot.coordinates_rectangle_small,
                     status=spot.status,
@@ -196,9 +204,9 @@ async def get_status(
     )
 
 
-async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
+async def get_details_spot_by_camera(db: AsyncSession, camera_serial: str):
     camera = await crud.equipment_repo.one_equipment(
-        db, serial_code=camera_code
+        db, serial_number=camera_serial
     )
     if not camera:
         raise exc.ServiceFailure(
@@ -207,7 +215,9 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
         )
 
     # find line's camera
-    spot_lines = await crud.spot_repo.find_lines(db, input_camera_id=camera.id)
+    spot_lines = await crud.spot_repo.get_multi_with_filters(
+        db, input_camera_id=camera.id
+    )
 
     coordinate_details = []
     for line in spot_lines:
@@ -215,7 +225,7 @@ async def get_details_line_by_camera(db: AsyncSession, camera_code: str):
             spotsSchemas.CoordinateSpotsByCamera(
                 percent_rotation_rectangle_small=line.percent_rotation_rectangle_small,
                 percent_rotation_rectangle_big=line.percent_rotation_rectangle_big,
-                number_line=line.number_line,
+                number_spot=line.number_spot,
                 status=line.status,
                 lpr_image_id=line.lpr_image_id,
                 plate_image_id=line.plate_image_id,
@@ -238,11 +248,12 @@ async def get_details_spot_by_zone_id(
     asc: bool = True,
 ):
 
-    spots = await crud.spot_repo.find_lines(db, input_zone_id=zone_id)
+    spots = await crud.spot_repo.get_multi_with_filters(
+        db, input_zone_id=zone_id
+    )
     all_spots_zone = []
 
     for spot in spots:
-        print(dir(spot))
         camera_name = await crud.equipment_repo.get(db, id=spot.camera_id)
         zone_name = await crud.zone_repo.get(db, id=spot.zone_id)
         all_spots_zone.append(
@@ -254,7 +265,7 @@ async def get_details_spot_by_zone_id(
                 coordinates_rectangles=SpotInfoCoordinate(
                     percent_rotation_rectangle_big=spot.percent_rotation_rectangle_small,
                     percent_rotation_rectangle_small=spot.percent_rotation_rectangle_small,
-                    number_line=spot.number_line,
+                    number_spot=spot.number_spot,
                     coordinates_rectangle_big=spot.coordinates_rectangle_big,
                     coordinates_rectangle_small=spot.coordinates_rectangle_small,
                     status=spot.status,

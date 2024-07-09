@@ -24,7 +24,7 @@ async def create_spot(
     """
     Create new line Spot.
     """
-    return APIResponse(await spot_services.create_line(db, spot_in))
+    return APIResponse(await spot_services.create_spot(db, spot_in))
 
 
 # this endpoint for update status
@@ -50,15 +50,15 @@ async def checking_status_spot(
 
 
 # this endpoint get all line by camera code
-@router.get("/{camera_code}")
+@router.get("/{camera_serial}")
 async def get_detail_line_by_camera(
-    camera_code: str,
+    camera_serial: str,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[SpotsByCamera]:
 
     return APIResponse(
-        await spot_services.get_details_line_by_camera(db, camera_code)
+        await spot_services.get_details_spot_by_camera(db, camera_serial)
     )
 
 

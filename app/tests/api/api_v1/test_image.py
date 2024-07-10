@@ -26,16 +26,21 @@ class TestImage:
 
         assert response.status_code == 200
 
-    # async def test_get_by_id_image(self, db: AsyncSession):
-    #     image_in = ImageCreateBase64(
+    # async def test_get_image(self, client):
+    #     image_data = ImageCreateBase64(
     #         image="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjcBOp+A8AA0gB0kAdSDgAAAAASUVORK5CYII="
     #     )
-    #     image_create = await crud.image.create_base64(db=db, obj_in=image_in)
-    #     auth = (settings.FIRST_SUPERUSER, settings.FIRST_SUPERUSER_PASSWORD)
-    #     response = await client.get(
-    #         f"{settings.SUB_PATH}{settings.API_V1_STR}/images/{image_create.id}",
-    #         auth=auth,
-    #         headers={"Content-Type": "application/json"},
+    #     image_create = await client.post(
+    #         f"{settings.SUB_PATH}{settings.API_V1_STR}/images/",
+    #         json=image_data.model_dump(),
     #     )
+    #     assert image_create.status_code == 200
 
-    #     assert response
+    #     id = image_create.json()["content"]["id"]
+
+    #     image_get = await client.get(
+    #         f"{settings.SUB_PATH}{settings.API_V1_STR}/images/{id}",
+    #         headers={"accept": "application/json"},
+    #     )
+    #     print(image_get.json())
+    #     assert image_get.status_code == 200

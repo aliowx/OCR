@@ -16,6 +16,8 @@ from app.api.deps import get_db_async
 from app.core.config import settings
 from app.db import Base
 from app.main import app
+from app.users.schemas import UserCreate
+from app import crud
 
 engine = create_async_engine(
     str(settings.TEST_SQLALCHEMY_DATABASE_URI), pool_pre_ping=True
@@ -72,3 +74,19 @@ async def client() -> AsyncClient:
             except SQLAlchemyError as e:
                 await pool.rollback()  # Rollback the database transaction
                 raise e
+
+
+@pytest_asyncio.fixture(scope="session")
+async def create_super_user_test(db: AsyncSession):
+    username = settings.TEST_FIRST_SUPERUSER
+    password = settings.TEST_FIRST_SUPERUSER_PASSWORD
+    user_in = UserCreate(
+        username=username,
+        password=password,
+        is_superuser=True,
+        is_active=True,
+        full_name="test@user.com",
+    )
+    user = await crud.user.create(db, obj_in=user_in)
+
+    return user

@@ -114,6 +114,9 @@ class StorageSettings(SettingsBase):
     TEST_DSN_POSTGRES_PORT: str = None
     TEST_DSN_POSTGRES_DB_NAME: str = None
 
+    TEST_FIRST_SUPERUSER: str = None
+    TEST_FIRST_SUPERUSER_PASSWORD: str = None
+
     @property
     def async_database_url(self) -> str | None:
         return (

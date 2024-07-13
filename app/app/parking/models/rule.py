@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -14,10 +14,10 @@ class Rule(Base):
     rule_type: Mapped[RuleType] = mapped_column(Integer, nullable=True)
     weekdays: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=list)
     start_datetime = mapped_column(
-        DateTime(timezone=False), default=datetime.utcnow
+        DateTime(timezone=False), default=datetime.now(timezone.utc)
     )
     end_datetime = mapped_column(
-        DateTime(timezone=False), default=datetime.utcnow
+        DateTime(timezone=False), default=datetime.now(timezone.utc)
     )
     registeration_date = mapped_column(Date, default=date.today)
 

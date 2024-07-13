@@ -25,7 +25,7 @@ class Spot(Base):
         ARRAY(Float), nullable=True, index=True
     )
 
-    number_line: Mapped[int] = mapped_column(Integer, nullable=True)
+    number_spot: Mapped[int] = mapped_column(Integer, nullable=True)
 
     status: Mapped[str] = mapped_column(String, nullable=True)
 

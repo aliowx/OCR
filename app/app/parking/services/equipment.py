@@ -36,12 +36,6 @@ async def create_equipment(
     equipment_data: schemas.EquipmentCreate,
     commit: bool = True,
 ) -> Equipment:
-    parking = await parking_repo.get_main_parking(db)
-    if not parking:
-        raise ServiceFailure(
-            detail="Parking Not Found",
-            msg_code=MessageCodes.not_found,
-        )
     zone = await zone_repo.get(db, id=equipment_data.zone_id)
     if not zone:
         raise ServiceFailure(

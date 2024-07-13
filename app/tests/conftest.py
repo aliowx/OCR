@@ -4,13 +4,14 @@ from typing import AsyncGenerator, Generator
 import asyncpg
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.api.deps import get_db_async
 from app.core.config import settings
@@ -90,3 +91,43 @@ async def create_super_user_test(db: AsyncSession):
     user = await crud.user.create(db, obj_in=user_in)
 
     return user
+
+
+@pytest_asyncio.fixture(scope="session")
+async def login(db: AsyncSession):
+    username = settings.TEST_FIRST_SUPERUSER
+    password = settings.TEST_FIRST_SUPERUSER_PASSWORD
+
+    user_in = UserCreate(
+        username=username,
+        password=password,
+        is_superuser=True,
+        is_active=True,
+        full_name="test@user.com",
+    )
+
+    get_user = await crud.user.get_by_username(db, username=username)
+    if not get_user:
+        await crud.user.create(db, obj_in=user_in)
+
+    data_user = OAuth2PasswordRequestForm(
+        username=settings.FIRST_SUPERUSER,
+        password=settings.FIRST_SUPERUSER_PASSWORD,
+    )
+    form_data_user = {
+        "username": data_user.username,
+        "password": data_user.password,
+    }
+    # this config pytest
+    transport = ASGITransport(app=app)
+    client = AsyncClient(transport=transport, base_url="http://test")
+
+    user_login = await client.post(
+        f"{settings.SUB_PATH}{settings.API_V1_STR}/user/login",
+        data=form_data_user,
+    )
+
+    return {
+        "access_token": user_login.json()["access_token"],
+        "token_type": user_login.json()["token_type"],
+    }

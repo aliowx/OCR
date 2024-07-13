@@ -2,17 +2,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
-from app.parking.repo import equipment_repo, parking_repo, parkingzone_repo
+from app.parking.repo import equipment_repo, parking_repo, zone_repo
 from app.parking.schemas import equipment as schemas
 from app.utils import MessageCodes, PaginatedContent
+
+
+async def get_multi_quipments(
+    db: AsyncSession,
+    params: schemas.ReadEquipmentsParams | schemas.ReadEquipmentsFilter,
+):
+    if isinstance(params, schemas.ReadEquipmentsParams):
+        params = params.db_filters
+    equipments, total_count = await equipment_repo.get_multi_with_filters(
+        db, filters=params
+    )
+    return [equipments, total_count]
 
 
 async def read_equipments(
     db: AsyncSession, params: schemas.ReadEquipmentsParams
 ) -> PaginatedContent[list[schemas.Equipment]]:
-    equipments, total_count = await equipment_repo.get_multi_with_filters(
-        db, filters=params.db_filters
-    )
+    equipments, total_count = await get_multi_quipments(db, params)
     return PaginatedContent(
         data=equipments,
         total_count=total_count,
@@ -26,27 +36,17 @@ async def create_equipment(
     equipment_data: schemas.EquipmentCreate,
     commit: bool = True,
 ) -> Equipment:
-    if equipment_data.parking_id:
-        parking = await parking_repo.get(db, id=equipment_data.parking_id)
-    else:
-        parking = await parking_repo.get_main_parking(db)
-    if not parking:
+    zone = await zone_repo.get(db, id=equipment_data.zone_id)
+    if not zone:
         raise ServiceFailure(
-            detail="Parking Not Found",
+            detail="Zone  Not Found",
             msg_code=MessageCodes.not_found,
         )
-    parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
-    if not parkingzone:
-        raise ServiceFailure(
-            detail="ParkingZone  Not Found",
-            msg_code=MessageCodes.not_found,
-        )
-    params = schemas.ReadEquipmentsParams(
-        parking_id=equipment_data.parking_id,
-        ip_address=equipment_data.ip_address,
+    params = schemas.ReadEquipmentsFilter(
+        ip_address__eq=equipment_data.ip_address,
     )
-    ip_address_check = await read_equipments(db, params=params)
-    if ip_address_check.total_count:
+    ip_address_check, total_count_ip = await get_multi_quipments(db, params)
+    if total_count_ip:
         raise ServiceFailure(
             detail="Duplicate ip address",
             msg_code=MessageCodes.duplicate_ip_address,
@@ -58,8 +58,10 @@ async def create_equipment(
             "equipment_type": equipment_data.equipment_type,
         }
     )
-    serial_number_check = await read_equipments(db, params=params)
-    if serial_number_check.total_count:
+    serial_number_check, total_count_serial_number = await get_multi_quipments(
+        db, params
+    )
+    if total_count_serial_number:
         raise ServiceFailure(
             detail="Duplicate equipment serial number",
             msg_code=MessageCodes.duplicate_serial_number,
@@ -94,46 +96,38 @@ async def update_equipment(
             msg_code=MessageCodes.not_found,
         )
 
-    if equipment_data.parking_id is not None:
-        parking = await parking_repo.get(db, id=equipment_data.parking_id)
-        if not parking:
-            raise ServiceFailure(
-                detail="Parking Not Found",
-                msg_code=MessageCodes.not_found,
-            )
     if equipment_data.zone_id is not None:
-        parkingzone = await parkingzone_repo.get(db, id=equipment_data.zone_id)
-        if not parkingzone:
+        zone = await zone_repo.get(db, id=equipment_data.zone_id)
+        if not zone:
             raise ServiceFailure(
-                detail="ParkingZone Not Found",
+                detail="Zone Not Found",
                 msg_code=MessageCodes.not_found,
             )
 
     if equipment_data.ip_address:
-        params = schemas.ReadEquipmentsParams(
-            parking_id=equipment_data.parking_id,
-            ip_address=equipment_data.ip_address,
+        params = schemas.ReadEquipmentsFilter(
+            ip_address__eq=equipment_data.ip_address,
             size=1,
         )
-        ip_address_check = await read_equipments(db, params=params)
-        if ip_address_check.data and equipment != ip_address_check.data[0]:
+        ip_address_check, total_count = await get_multi_quipments(
+            db, params=params
+        )
+        if ip_address_check and equipment != ip_address_check:
             raise ServiceFailure(
                 detail="Duplicate ip address",
                 msg_code=MessageCodes.duplicate_ip_address,
             )
 
     if equipment_data.serial_number:
-        params = schemas.ReadEquipmentsParams(
-            parking_id=equipment_data.parking_id,
-            serial_number=equipment_data.serial_number,
-            equipment_type=equipment_data.equipment_type.value,
+        params = schemas.ReadEquipmentsFilter(
+            serial_number__eq=equipment_data.serial_number,
+            equipment_type__eq=equipment_data.equipment_type.value,
             size=1,
         )
-        serial_number_check = await read_equipments(db, params=params)
-        if (
-            serial_number_check.data
-            and equipment != serial_number_check.data[0]
-        ):
+        serial_number_check, total_count = await get_multi_quipments(
+            db, params=params
+        )
+        if serial_number_check and equipment != serial_number_check:
             raise ServiceFailure(
                 detail="Duplicate equipment serial number",
                 msg_code=MessageCodes.duplicate_serial_number,

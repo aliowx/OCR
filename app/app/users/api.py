@@ -11,7 +11,7 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.core import security
 from app.core.config import settings
-from app.utils import APIResponse, APIResponseType
+from app.utils import APIResponse, APIResponseType, PaginatedContent
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
 
@@ -59,22 +59,29 @@ async def login(
 
 
 @router.get("/")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_users(
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 100,
+    params: schemas.ParamsUser = Depends(),
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[list[schemas.User]]:
+) -> APIResponseType[PaginatedContent[list[schemas.User]]]:
     """
     Retrieve users.
     """
-    users = await crud.user.get_multi(db, skip=skip, limit=limit)
-    return APIResponse(users)
+    print(cache())
+    users, total_count = await crud.user.get_multi_by_filter(db, params=params)
+    return APIResponse(
+        PaginatedContent(
+            data=users,
+            total_count=total_count,
+            size=params.size,
+            page=params.page,
+        )
+    )
 
 
 @router.post("/")
-@invalidate(namespace=namespace)
+# @invalidate(namespace=namespace)
 async def create_user(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
@@ -95,7 +102,7 @@ async def create_user(
 
 
 @router.get("/{user_id}")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(deps.get_current_active_user),

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, DateTime, Integer, String
 from sqlalchemy.dialects.postgresql.json import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,10 +22,6 @@ class Price(Base):
         DateTime, default=datetime.now, index=True
     )
 
-    parking_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parking.id"), nullable=True
-    )
-    parking = relationship("Parking")
     pricings = relationship(
-        "ParkingZonePrice", back_populates="price", lazy="immediate"
+        "ZonePrice", back_populates="price", lazy="immediate"
     )

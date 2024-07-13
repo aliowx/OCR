@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
 from fastapi import Request, Response
@@ -174,7 +174,7 @@ class Cache(metaclass=MetaSingleton):
         ttl: int = None,
     ) -> None:
         response.headers[self.response_header] = "Hit" if cache_hit else "Miss"
-        expires_at = datetime.utcnow() + timedelta(seconds=ttl)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
         response.headers["Expires"] = expires_at.strftime(HTTP_TIME)
         response.headers["Cache-Control"] = f"max-age={ttl}"
         response.headers["ETag"] = self.get_etag(response_data)

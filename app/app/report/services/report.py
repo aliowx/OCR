@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
 from app.parking.schemas import Status, ParamsCamera
 from app.report.repo import (
-    parkingzonereportrepository,
-    parkinglotreportrepository,
+    zonereportrepository,
+    spotreportrepository,
 )
 from app.utils import PaginatedContent
 from app.report.schemas import (
@@ -19,14 +19,14 @@ from app import schemas, crud
 async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
 
     # list all zone
-    parkingzones = await parkingzonereportrepository.get_multi_by_filter(
+    zones = await zonereportrepository.get_multi_by_filter(
         db, params=params
     )
 
     list_lots_zone = []
-    for zone in parkingzones:
+    for zone in zones:
         # list lots zone
-        lots = await parkinglotreportrepository.find_lines(
+        lots = await spotreportrepository.find_lines(
             db, params=ReadZoneLotsParams(input_zone_id=zone.id)
         )
         if lots:
@@ -78,7 +78,7 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
         or params.input_floor_number
         or params.input_name_sub_zone
     ):
-        parkingzones = await parkingzonereportrepository.get_multi_by_filter(
+        zones = await zonereportrepository.get_multi_by_filter(
             db,
             params=ReadZoneLotsParams(
                 input_name_sub_zone=params.input_name_sub_zone,
@@ -87,8 +87,8 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             ),
         )
 
-        for zone in parkingzones:
-            lots = await parkinglotreportrepository.find_lines_moment(
+        for zone in zones:
+            lots = await spotreportrepository.find_lines_moment(
                 db,
                 params=ParamsRecordMomentFilters(
                     input_camera_id=camera, input_zone_id=zone.id
@@ -96,7 +96,7 @@ async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
             )
     # list all lots
     else:
-        lots = await parkinglotreportrepository.find_lines_moment(
+        lots = await spotreportrepository.find_lines_moment(
             db, params=ParamsRecordMomentFilters(input_camera_id=camera)
         )
     # set camera_code in dict lot

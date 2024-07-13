@@ -35,20 +35,20 @@ async def calculator_price(
         item_record = records[0][record]
         get_price = await price_repo.get(db, id=item_record.price_model_id)
 
-        # Calculation of parkinglot time
-        item_record.parkinglot_time = str(
+        # Calculation of spot time
+        item_record.spot_time = str(
             item_record.end_time - item_record.start_time
         )
         # Calculation hours, conversion minutes and seconds to hours
         hours, minutes, seconds = map(
-            float, item_record.parkinglot_time.split(":")
+            float, item_record.spot_time.split(":")
         )
         minutes = minutes / 60 if minutes > 0 else 0
         seconds = seconds / 3600 if seconds > 0 else 0
         total_hours = hours + minutes + seconds
 
         # TODO set daily_price and penalti_price
-        item_record.parkinglot_price = (
+        item_record.spot_price = (
             total_hours * get_price.hourly_fee + get_price.entrance_fee
         )
 

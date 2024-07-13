@@ -9,7 +9,7 @@ from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 
 from .models import User
-from .schemas import UserCreate, UserUpdate
+from .schemas import UserCreate, UserUpdate, ParamsUser
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -23,6 +23,46 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                     User.is_deleted == False,
                 )
             )
+        )
+
+    async def get_multi_by_filter(
+        self, db: Session | AsyncSession, *, params: ParamsUser
+    ) -> list[User] | Awaitable[list[User]]:
+
+        query = select(User)
+
+        filters = [User.is_deleted == False]
+
+        if params.input_username is not None:
+            filters.append(User.username == params.input_username)
+
+        if params.input_is_active is not None:
+            filters.append(User.is_active == params.input_is_active)
+
+        if params.input_full_name is not None:
+            filters.append(User.full_name == params.input_full_name)
+
+        total_count = self.count_by_filter(db, filters=filters)
+
+        order_by = User.id.asc() if params.asc else User.id.desc()
+
+        if params.size is None:
+            return (
+                await self._all(
+                    db.scalars(query.filter(*filters).order_by(order_by))
+                ),
+                await total_count,
+            )
+        return (
+            await self._all(
+                db.scalars(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .limit(params.size)
+                    .order_by(order_by)
+                )
+            ),
+            await total_count,
         )
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:

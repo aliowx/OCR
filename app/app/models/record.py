@@ -41,21 +41,21 @@ class Record(Base):
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("parkingzone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        ForeignKey("zone.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    zone = relationship("ParkingZone", foreign_keys=zone_id)
+    zone = relationship("Zone", foreign_keys=zone_id)
 
-    parkinglot_id: Mapped[int] = mapped_column(
+    spot_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("parkinglot.id", onupdate="CASCADE", ondelete="SET NULL"),
+        ForeignKey("spot.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    parking_lot = relationship("ParkingLot", foreign_keys=parkinglot_id)
+    spot = relationship("Spot", foreign_keys=spot_id)
 
-    plates = relationship("PlateDetected", back_populates="record")
+    plates = relationship("Plate", back_populates="record")
 
     price_model_id: Mapped[int] = mapped_column(
         Integer,

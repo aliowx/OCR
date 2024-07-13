@@ -10,7 +10,11 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from app.parking.repo import camera_repo
+from app.parking.repo import equipment_repo
+from app.utils import PaginatedContent
+from app.parking.schemas.equipment import (
+    ReadEquipmentsFilter,
+)
 
 router = APIRouter()
 namespace = "plates"
@@ -21,48 +25,28 @@ logger = logging.getLogger(__name__)
 async def read_plates(
     db: AsyncSession = Depends(deps.get_db_async),
     params: schemas.ParamsPlates = Depends(),
-) -> APIResponseType[schemas.GetPlates]:
+) -> APIResponseType[PaginatedContent[list[schemas.Plate]]]:
     """
     All plates.
     """
     camera_id = None
-    if params.input_camera_code is not None:
-        camera_id = await camera_repo.one_camera(
-            db, input_camera_code=params.input_camera_code
-        ).id
-        params.input_camera_id = camera_id
+    if params.input_camera_serial is not None:
+        camera_id, total_count = await equipment_repo.get_multi_with_filters(
+            db,
+            filters=ReadEquipmentsFilter(
+                serial_number__eq=params.input_camera_serial
+            ),
+        )
+        params.input_camera_id = camera_id.id
     plates = await crud.plate.find_plates(db, params=params)
-    for i in range(len(plates[0])):
-        plates[0][i].fancy = (
-            f"{plates[0][i].plate_image_id}/{plates[0][i].lpr_image_id}"
-        )
 
     return APIResponse(
-        schemas.GetPlates(items=plates[0], all_items_count=plates[1])
-    )
-
-
-@router.get("/by_record")
-async def read_plates_by_record(
-    *,
-    db: AsyncSession = Depends(deps.get_db_async),
-    record_id: int,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetPlates]:
-    """
-    all plates for one record.
-    """
-    plates = await crud.plate.get_by_record(
-        db, record_id=record_id, skip=skip, limit=limit
-    )
-    for i in range(len(plates)):
-        plates[i].fancy = (
-            f"{plates[i].plate_image_id}/{plates[i].lpr_image_id}"
+        PaginatedContent(
+            data=plates[0],
+            total_count=plates[1],
+            page=params.page,
+            size=params.size,
         )
-
-    return APIResponse(
-        schemas.GetPlates(items=plates, all_items_count=len(plates))
     )
 
 
@@ -99,5 +83,4 @@ async def read_plate(
             detail="not exist.",
             msg_code=utils.MessageCodes.not_found,
         )
-    plate.fancy = f"{plate.plate_image_id}/{plate.lpr_image_id}"
     return APIResponse(plate)

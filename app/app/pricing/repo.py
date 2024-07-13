@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.crud.base import CRUDBase
-from app.parking.models.parking import ParkingZonePrice
+from app.parking.models.parking import ZonePrice
 
 from .models import Price
 from .schemas import PriceCreate, PriceUpdate, ReadPricesParams
@@ -28,7 +28,7 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
 
         if filters.zone_id is not None:
             query.join(
-                ParkingZonePrice, self.model.id == ParkingZonePrice.price_id
+                ZonePrice, self.model.id == ZonePrice.price_id
             )
 
         orm_filters = [self.model.is_deleted == false()]
@@ -37,14 +37,12 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
             orm_filters.append(self.model.name.contains(filters.name))
         if filters.name_fa:
             orm_filters.append(self.model.name_fa.contains(filters.name_fa))
-        if filters.parking_id:
-            orm_filters.append(self.model.parking_id == filters.parking_id)
         if filters.zone_id:
             orm_filters.append(
                 and_(
-                    ParkingZonePrice.zone_id == filters.zone_id,
-                    ParkingZonePrice.is_deleted == false(),
-                    ParkingZonePrice.price_id == self.model.id,
+                    ZonePrice.zone_id == filters.zone_id,
+                    ZonePrice.is_deleted == false(),
+                    ZonePrice.price_id == self.model.id,
                 )
             )
         if filters.expiration_datetime_start:  # gte

@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import PlateUpdate, RecordUpdate
 
-namespace = "parkinglot"
+namespace = "spot"
 logger = logging.getLogger(__name__)
 
 
@@ -83,7 +83,7 @@ def update_record(self, plate_id) -> str:
                 best_lpr_image_id=plate.lpr_image_id,
                 best_plate_image_id=plate.plate_image_id,
                 price_model_id=plate.price_model_id,
-                parkinglot_id=plate.parkinglot_id,
+                spot_id=plate.spot_id,
                 zone_id=plate.zone_id,
             )
             record = crud.record.create(db=self.session, obj_in=record)

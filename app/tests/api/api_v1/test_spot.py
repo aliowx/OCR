@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from app.core.config import settings
 from app.main import app
-from app.parking.schemas.equipment import EquipmentCreate, EquipmentUpdate
+from app.parking.schemas.equipment import EquipmentCreate
 from app.parking.schemas.zone import ZoneCreate
 from app.parking.schemas.spot import SpotCreate
 from app.models.base import EquipmentType, EquipmentStatus
@@ -108,7 +108,5 @@ class TestSpot:
             json=spot_in.model_dump(),
             headers={"Authorization": f"{login["token_type"]} {login["access_token"]}"}
         )
-
         
-
         assert spot_create.status_code == 200

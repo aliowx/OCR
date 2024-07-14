@@ -68,7 +68,7 @@ def update_record(self, plate_id) -> str:
     try:
         # lock plates table to prevent multiple record insertion
         self.session.execute(
-            text("LOCK TABLE platedetected IN EXCLUSIVE MODE")
+            text("LOCK TABLE plate IN EXCLUSIVE MODE")
         )
         plate = crud.plate.get(self.session, plate_id)
         record = crud.record.get_by_plate(

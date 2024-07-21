@@ -107,22 +107,25 @@ async def get_current_user(
     return user
 
 
+CurrentUser = Annotated[models.User, Depends(get_current_user)]
+
+
 async def get_current_active_user(
-    current_user: models.User = Depends(get_current_user),
+    current_user: CurrentUser,
 ) -> models.User:
-    if not crud.user.is_active(current_user):
+    if not current_user.is_active:
         raise exc.InternalServiceError(
             status_code=401,
             detail="Inactive user",
-            msg_code=utils.MessageCodes.inactive_user,
+            msg_code=utils.MessageCodes.forbidden,
         )
     return current_user
 
 
 async def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
+    current_user: CurrentUser,
 ) -> models.User:
-    if not crud.user.is_superuser(current_user):
+    if not CurrentUser.is_superuser:
         raise exc.InternalServiceError(
             status_code=403,
             detail="The user doesn't have enough privileges",

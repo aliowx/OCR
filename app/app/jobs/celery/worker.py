@@ -1,7 +1,7 @@
 import logging
 import math
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
 
@@ -68,7 +68,7 @@ def update_record(self, plate_id) -> str:
     try:
         # lock plates table to prevent multiple record insertion
         self.session.execute(
-            text("LOCK TABLE platedetected IN EXCLUSIVE MODE")
+            text("LOCK TABLE plate IN EXCLUSIVE MODE")
         )
         plate = crud.plate.get(self.session, plate_id)
         record = crud.record.get_by_plate(
@@ -149,7 +149,7 @@ def setup_periodic_tasks(sender, **kwargs):
         )
         sender.add_periodic_task(
             settings.CLEANUP_PERIOD,
-            cleanup.s("platedetected"),
+            cleanup.s("plate"),
             name="cleanup plate task",
         )
         sender.add_periodic_task(
@@ -180,17 +180,17 @@ def cleanup(self, table_name: str = "image"):
     try:
         if table_name == "image":
             model_img = models.Image
-            img_ids = crud.camera_repo.get_multi(self.session)
+            img_ids = crud.image.get_multi(self.session)
             for img_id in img_ids:
                 subquery = (
                     self.session.query(model_img.id)
                     .filter(
                         model_img.modified
                         < (
-                            datetime.now()
+                            datetime.now(timezone.utc)
                             - timedelta(days=settings.CLEANUP_AGE)
                         ),
-                        model_img.id != img_id.image_id,
+                        model_img.id != img_id.id,
                     )
                     .limit(settings.CLEANUP_COUNT)
                     .subquery()
@@ -200,14 +200,14 @@ def cleanup(self, table_name: str = "image"):
                     .filter(model_img.id.in_(subquery))
                     .delete(synchronize_session="fetch")
                 )
-        elif table_name == "platedetected":
+        elif table_name == "plate":
             limit = datetime.now() - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )
-            filter = models.PlateDetected.record_time
-            model = models.PlateDetected
+            filter = models.Plate.record_time
+            model = models.Plate
         elif table_name == "record":
-            limit = datetime.now() - timedelta(
+            limit = datetime.now(timezone.utc) - timedelta(
                 days=settings.CLEANUP_RECORDS_AGE
             )
             filter = models.Record.end_time

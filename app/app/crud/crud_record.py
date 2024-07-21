@@ -95,7 +95,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.score >= input_score)
 
         if limit is None:
-            return await self._all(
+            items = await self._all(
                 db.scalars(query.filter(*filters).offset(skip))
             )
 

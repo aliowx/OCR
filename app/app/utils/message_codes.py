@@ -43,6 +43,7 @@ class MessageCodes:
     duplicate_serial_number = 10
     duplicate_zone_pricing = 11
     duplicate_name = 12
+    not_permission = 13
 
     english_messages_names = {
         0: "Successful Operation",
@@ -58,6 +59,7 @@ class MessageCodes:
         10: "Duplicate serial number",
         11: "Duplicate zone pricing",
         12: "Duplicate name",
+        13: "not access",
     }
 
     persian_message_names = {
@@ -74,4 +76,5 @@ class MessageCodes:
         10: "شماره سریال تکراری است",
         11: "قیمت‌گذاری وارد شده برای این منطقه تکراری است",
         12: "نام تکرایر است",
+        13: "دسترسی ندارید",
     }

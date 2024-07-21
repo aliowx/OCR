@@ -19,7 +19,7 @@ class Price(Base):
     daily_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     penalty_fee: Mapped[int] = mapped_column(BigInteger, nullable=True)
     expiration_datetime: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.now, index=True
+        DateTime, default=datetime.now, index=True, nullable=True
     )
 
     pricings = relationship(

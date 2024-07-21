@@ -26,40 +26,23 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
 
         query = select(Price)
 
-        if filters.zone_id is not None:
-            query.join(
-                ZonePrice, self.model.id == ZonePrice.price_id
-            )
+        # if filters.zone_id is not None:
+        #     query.join(ZonePrice, self.model.id == ZonePrice.price_id)
 
         orm_filters = [self.model.is_deleted == false()]
 
-        if filters.name:
-            orm_filters.append(self.model.name.contains(filters.name))
-        if filters.name_fa:
-            orm_filters.append(self.model.name_fa.contains(filters.name_fa))
-        if filters.zone_id:
-            orm_filters.append(
-                and_(
-                    ZonePrice.zone_id == filters.zone_id,
-                    ZonePrice.is_deleted == false(),
-                    ZonePrice.price_id == self.model.id,
-                )
-            )
-        if filters.expiration_datetime_start:  # gte
-            orm_filters.append(
-                self.model.expiration_datetime
-                >= filters.expiration_datetime_start
-            )
-        if filters.expiration_datetime_end:  # lte
-            orm_filters.append(
-                self.model.expiration_datetime
-                <= filters.expiration_datetime_end
-            )
-        if filters.start_date:
-            orm_filters.append(self.model.created >= filters.start_date)
-        if filters.end_date:
-            orm_filters.append(self.model.created <= filters.end_date)
-
+        # if filters.name:
+        #     orm_filters.append(self.model.name.contains(filters.name))
+        # if filters.name_fa:
+        #     orm_filters.append(self.model.name_fa.contains(filters.name_fa))
+        # if filters.zone_id:
+        #     orm_filters.append(
+        #         and_(
+        #             ZonePrice.zone_id == filters.zone_id,
+        #             ZonePrice.is_deleted == false(),
+        #             ZonePrice.price_id == self.model.id,
+        #         )
+        #     )
         query = query.filter(*orm_filters)
 
         q = query.with_only_columns(func.count())

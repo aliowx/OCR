@@ -12,7 +12,7 @@ from app.parking.repo import zone_repo
 from app.utils import PaginatedContent
 from app.models.base import EquipmentType
 from app.pricing.repo import price_repo
-from app.pricing.schemas import ReadPricesParams
+from app.pricing.services import get_main_price
 
 
 async def create_spot(
@@ -127,17 +127,18 @@ async def update_status(
             detail="line's camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
-    price_ids, total_count = await price_repo.get_multi_with_filters(
-        db, filters=ReadPricesParams(zone_id=check_spot.zone_id)
-    )
+    # price_ids, total_count = await price_repo.get_multi_with_filters(
+    #     db, filters=ReadPricesParams(zone_id=check_spot.zone_id)
+    # )
 
-    max_priority = float("inf")
-    max_priority_obj = None
-    for priority_price_ids in price_ids:
-        for check_priority in priority_price_ids.pricings:
-            if check_priority.priority < max_priority:
-                max_priority = check_priority.priority
-                max_priority_obj = priority_price_ids
+    # max_priority = float("inf")
+    # max_priority_obj = None
+    # for priority_price_ids in price_ids:
+    #     for check_priority in priority_price_ids.pricings:
+    #         if check_priority.priority < max_priority:
+    #             max_priority = check_priority.priority
+    #             max_priority_obj = priority_price_ids
+    price = await get_main_price(db)
     if (
         spot_in.status.value == spotsSchemas.Status.full.value
         or spot_in.status.value == spotsSchemas.Status.entranceDoor.value
@@ -157,7 +158,7 @@ async def update_status(
             zone_id=check_spot.zone_id,
             camera_id=camera.id,
             type_status_spot=spot_in.status,
-            price_model_id=max_priority_obj.id,
+            price_model_id=price.id,
         )
 
         celery_app.send_task(

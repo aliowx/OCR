@@ -1,5 +1,5 @@
 from typing import Optional
-
+from app.acl.role import UserRoles
 from pydantic import BaseModel, ConfigDict
 
 
@@ -9,12 +9,14 @@ class UserBase(BaseModel):
     is_active: Optional[bool] = True
     is_superuser: bool = False
     full_name: Optional[str] = None
+    role: UserRoles | None = UserRoles.READER_USER
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     username: str
     password: str
+    role: UserRoles | None = UserRoles.READER_USER
 
 
 # Properties to receive via API on update
@@ -35,7 +37,8 @@ class User(UserInDBBase):
 class ParamsUser(BaseModel):
     input_full_name: str | None = None
     input_username: str | None = None
-    input_is_active: bool | None = True
+    input_is_active: bool | None = None
+    input_role: UserRoles | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = True

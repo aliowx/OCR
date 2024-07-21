@@ -1,11 +1,9 @@
 import logging
 from datetime import timedelta
-
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
@@ -14,7 +12,6 @@ from app.core.config import settings
 from app.utils import APIResponse, APIResponseType, PaginatedContent
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
-
 router = APIRouter()
 namespace = "user"
 logger = logging.getLogger(__name__)
@@ -53,8 +50,6 @@ async def login(
             user.id, expires_delta=access_token_expires
         ),
         token_type="bearer",
-        # 'access_list' later used for user access control
-        access_list=[route.name for route in request.app.routes],
     )
 
 
@@ -68,7 +63,6 @@ async def read_users(
     """
     Retrieve users.
     """
-    print(cache())
     users, total_count = await crud.user.get_multi_by_filter(db, params=params)
     return APIResponse(
         PaginatedContent(
@@ -78,6 +72,17 @@ async def read_users(
             page=params.page,
         )
     )
+
+
+@router.get("/me")
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+async def user_me(
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[schemas.User]:
+    """
+    Retrieve users.
+    """
+    return APIResponse(current_user)
 
 
 @router.post("/")

@@ -39,6 +39,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if params.input_is_active is not None:
             filters.append(User.is_active == params.input_is_active)
 
+        if params.input_role is not None:
+            filters.append(User.role == params.input_role)
+
         if params.input_full_name is not None:
             filters.append(User.full_name == params.input_full_name)
 

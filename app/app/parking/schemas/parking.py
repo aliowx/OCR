@@ -17,7 +17,7 @@ class Beneficiary(BaseModel):
     company_sheba_number: str | None = None
     company_address: str | None = None
     beneficiary_type: UserType | None = None
-    beneficiary_type: ParkingPaymentType | None = None
+    
 
 
 class ParkingBase(BaseModel):
@@ -38,6 +38,7 @@ class ParkingBase(BaseModel):
     owner_sheba_number: str | None = None
     owner_address: str | None = None
     owner_type: UserType | None = None
+    payment_type: ParkingPaymentType | None = None
     beneficiary_data: Beneficiary | None = None
 
 

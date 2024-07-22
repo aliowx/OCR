@@ -17,18 +17,18 @@ class WeeklyDays(BaseModel):
 
 
 class PriceBase(BaseModel):
-    weekly_days: WeeklyDays | None = None
-    name: str | None = None
-    name_fa: str | None = None
+    # weekly_days: WeeklyDays | None = None
+    # name: str | None = None
+    # name_fa: str | None = None
     entrance_fee: int | None = None
-    hourly_fee: int | None = None
-    daily_fee: int | None = None
-    penalty_fee: int | None = None
-    expiration_datetime: datetime | None = None
+    # hourly_fee: int | None = None
+    # daily_fee: int | None = None
+    # penalty_fee: int | None = None
+    # expiration_datetime: datetime | None = None
 
 
-class PriceBaseComplete(PriceBase):
-    pricings: list[ZonePrice] = Field(default_factory=list)
+# class PriceBaseComplete(PriceBase):
+#     pricings: list[ZonePrice] = Field(default_factory=list)
 
 
 class PriceCreate(PriceBase):
@@ -54,7 +54,13 @@ class PriceUpdate(PriceBase):
     priority: int = Field(1, ge=1, le=100)
 
 
-class PriceInDBBase(PriceBaseComplete):
+# class PriceInDBBase(PriceBaseComplete):
+#     id: int
+#     created: datetime
+#     modified: datetime
+
+#     model_config = ConfigDict(from_attributes=True)
+class PriceInDBBase(PriceBase):
     id: int
     created: datetime
     modified: datetime
@@ -71,17 +77,18 @@ class CameraInDB(PriceInDBBase):
 
 
 
-    
+class PriceCreateSample(BaseModel):
+    entrance_fee: PositiveInt | None = None
 
 
 class ReadPricesParams(BaseModel):
-    name: str | None = None
-    name_fa: str | None = None
-    zone_id: int | None = None
-    expiration_datetime_start: datetime | None = None
-    expiration_datetime_end: datetime | None = None
-    start_date: datetime | None = None
-    end_date: datetime | None = None
+    # name: str | None = None
+    # name_fa: str | None = None
+    # zone_id: int | None = None
+    # expiration_datetime_start: datetime | None = None
+    # expiration_datetime_end: datetime | None = None
+    # start_date: datetime | None = None
+    # end_date: datetime | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = True
@@ -92,6 +99,3 @@ class ReadPricesParams(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
-
-
-

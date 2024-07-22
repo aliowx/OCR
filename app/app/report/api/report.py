@@ -25,7 +25,14 @@ async def zone_status(
     return APIResponse(await report_services.report_zone(db, params))
 
 
-@router.get("/record-moment")
+@router.get("/dashboard")
+async def dashboard(
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]: 
+    return APIResponse(await report_services.dashboard(db))
+
+# @router.get("/record-moment")
 async def zone_status(
     db: AsyncSession = Depends(deps.get_db_async),
     params: report_schemas.ParamsRecordMoment = Depends(),

@@ -35,6 +35,7 @@ async def create_price(
     return price
 
 
+
 async def read_prices(
     db: AsyncSession, params: price_schemas.ReadPricesParams
 ) -> PaginatedContent[list[price_schemas.Price]]:
@@ -47,3 +48,11 @@ async def read_prices(
         size=params.size,
         page=params.page,
     )
+
+async def get_main_price(
+        db: AsyncSession
+) -> price_schemas.Price:
+    price = await price_repo.get_multi(db)
+    if not price:
+        return None
+    return price[0]

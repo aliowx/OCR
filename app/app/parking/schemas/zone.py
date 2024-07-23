@@ -17,8 +17,15 @@ class ZoneComplete(ZoneBase):
     pricings: list["ZonePrice"] = Field(default_factory=list)
 
 
-class ZoneCreate(ZoneBase):
+class ZoneCreate(BaseModel):
     name: str
+    tag: str | None = None
+    floor_name: str | None = None
+    floor_number: int | None = None
+
+class SubZoneCreate(BaseModel):
+    parent_id: int
+    sub_zone: list[ZoneCreate]
 
 
 class ZoneUpdate(ZoneBase): ...

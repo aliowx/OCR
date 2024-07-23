@@ -22,16 +22,13 @@ async def read_main_parking(
     skip: int = 0,
     limit: int = 100,
     _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.Parking | None]:
+) -> APIResponseType[schemas.Parking | schemas.ParkingBase]:
     """
     Read main parking.
     """
     main_parking = await parking_repo.get_main_parking(db)
     if not main_parking:
-        raise exc.ServiceFailure(
-            detail="Parking not found.",
-            msg_code=MessageCodes.not_found,
-        )
+        return APIResponse(schemas.ParkingBase(beneficiary_data=schemas.Beneficiary()))
     return APIResponse(main_parking)
 
 

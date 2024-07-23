@@ -52,7 +52,7 @@ async def read_zone_by_id(
 
 @router.post("/")
 @invalidate(namespace=namespace)
-async def create_zone(
+async def create_parent_zone(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
     zone_input: schemas.ZoneCreate,
@@ -62,6 +62,23 @@ async def create_zone(
     Create a zone.
     """
     zone = await zone_services.create_zone(
+        db,
+        zone_input=zone_input,
+    )
+    return APIResponse(zone)
+
+@router.post("/bulk-sub-zone")
+@invalidate(namespace=namespace)
+async def create_sub_zone(
+    *,
+    db: AsyncSession = Depends(deps.get_db_async),
+    zone_input: schemas.SubZoneCreate,
+    _: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[list[schemas.Zone]]:
+    """
+    Create sub zone.
+    """
+    zone = await zone_services.create_sub_zone(
         db,
         zone_input=zone_input,
     )

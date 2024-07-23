@@ -35,6 +35,24 @@ async def create_zone(
             msg_code=utils.MessageCodes.duplicate_zone_name,
         )
 
+    zone = await repo.zone_repo.create(db, obj_in=zone_input)
+    return zone
+
+
+async def create_sub_zone(
+    db: AsyncSession,
+    zone_input: parking_schemas.SubZoneCreate,
+) -> list[parking_schemas.Zone]:
+
+    print(zone_input)
+    for sub in zone_input.sub_zone:
+        zone = await repo.zone_repo.get_by_name(db, name=sub.name)
+        if zone:
+            raise exc.ServiceFailure(
+                detail="zone with this name already exists",
+                msg_code=utils.MessageCodes.duplicate_zone_name,
+            )
+
     parent_zone = None
     if zone_input.parent_id is not None:
         parent_zone = await repo.zone_repo.get(db, id=zone_input.parent_id)
@@ -43,10 +61,17 @@ async def create_zone(
                 detail="Parking Not Found",
                 msg_code=utils.MessageCodes.not_found,
             )
-
-    zone = await repo.zone_repo.create(db, obj_in=zone_input)
-    return zone
-
+    sub_zone_list = [] 
+    for multi_sub in zone_input.sub_zone:
+        zone = await repo.zone_repo.create(db, obj_in=parking_schemas.ZoneBase(
+            name=multi_sub.name,
+            tag=multi_sub.tag,
+            parent_id=zone_input.parent_id,
+            floor_name=multi_sub.floor_name,
+            floor_number=multi_sub.floor_number
+        ))
+        sub_zone_list.append(zone)
+    return sub_zone_list
 
 async def set_price(
     db: AsyncSession,

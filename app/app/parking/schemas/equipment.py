@@ -11,6 +11,7 @@ class EquipmentBase(BaseModel):
     serial_number: str | None = None
     ip_address: str | None = None
     zone_id: int | None = None
+    zone_detail: dict | None = None
     image_id: int | None = None
     additional_data: dict | None = None
 

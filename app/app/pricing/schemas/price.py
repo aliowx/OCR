@@ -21,7 +21,7 @@ class PriceBase(BaseModel):
     # name: str | None = None
     # name_fa: str | None = None
     entrance_fee: int | None = None
-    # hourly_fee: int | None = None
+    hourly_fee: int | None = None
     # daily_fee: int | None = None
     # penalty_fee: int | None = None
     # expiration_datetime: datetime | None = None
@@ -79,6 +79,7 @@ class CameraInDB(PriceInDBBase):
 
 class PriceCreateSample(BaseModel):
     entrance_fee: PositiveInt | None = None
+    hourly_fee: PositiveInt | None = None
 
 
 class ReadPricesParams(BaseModel):

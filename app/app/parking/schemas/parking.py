@@ -28,7 +28,7 @@ class ParkingBase(BaseModel):
     location_lat: float | None = None
     location_lon: float | None = None
     parking_address: str | None = None
-    parking_logo_base64: str | None = None
+    parking_logo_image_id: int | None = None
     owner_first_name: str | None = None
     owner_last_name: str | None = None
     owner_national_id: str | None = None

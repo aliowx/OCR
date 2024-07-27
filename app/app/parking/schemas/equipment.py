@@ -17,7 +17,7 @@ class EquipmentBase(BaseModel):
 
 
 class EquipmentCreate(BaseModel):
-    equipment_type: EquipmentType 
+    equipment_type: EquipmentType
     equipment_status: EquipmentStatus
     serial_number: str = Field(None, max_length=50)
     ip_address: str | None = None
@@ -26,8 +26,8 @@ class EquipmentCreate(BaseModel):
     additional_data: dict | None = None
 
 
-class EquipmentUpdate(EquipmentBase):
-    equipment_type: EquipmentType 
+class EquipmentUpdate(BaseModel):
+    equipment_type: EquipmentType
     equipment_status: EquipmentStatus
     ip_address: str | None = None
     zone_id: int | None = None

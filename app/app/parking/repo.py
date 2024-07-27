@@ -19,7 +19,6 @@ from .models import (
     Rule,
     ZoneRule,
 )
-from .schemas.camera import CameraCreate, CameraUpdate, ParamsCamera
 from .schemas.equipment import (
     EquipmentCreate,
     EquipmentUpdate,

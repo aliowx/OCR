@@ -54,7 +54,7 @@ class SpotCreate(BaseModel):
             ]
         ],
     )
-    camera_serial: str
+    camera_serial: Optional[str] = None
     zone_id: int
 
 

@@ -16,7 +16,7 @@ namespace = "zones"
 
 
 @router.get("/")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zones(
     *,
     db: AsyncSession = Depends(deps.get_db_async),
@@ -31,7 +31,7 @@ async def read_zones(
 
 
 @router.get("/{zone_id}")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zone_by_id(
     *,
     db: AsyncSession = Depends(deps.get_db_async),

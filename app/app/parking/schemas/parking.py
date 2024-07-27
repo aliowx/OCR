@@ -37,6 +37,7 @@ class ParkingBase(BaseModel):
     owner_email: str | None = None
     owner_sheba_number: str | None = None
     owner_address: str | None = None
+    
     owner_type: UserType | None = None
     payment_type: ParkingPaymentType | None = None
     beneficiary_data: Beneficiary | None = None

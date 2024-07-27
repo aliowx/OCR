@@ -15,7 +15,16 @@ class Parking(Base):
     location_lat: Mapped[float] = mapped_column(NUMERIC(10, 7), nullable=True)
     location_lon: Mapped[float] = mapped_column(NUMERIC(10, 7), nullable=True)
     parking_address: Mapped[str] = mapped_column(String, nullable=True)
-    parking_logo_base64: Mapped[str] = mapped_column(String, nullable=True)
+    parking_logo_image_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "image.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+    )
+    image_logo = relationship("Image", foreign_keys=parking_logo_image_id)
     owner_first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     owner_last_name: Mapped[str] = mapped_column(String(50), nullable=True)
     owner_national_id: Mapped[str] = mapped_column(String(50), nullable=True)

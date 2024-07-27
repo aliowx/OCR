@@ -25,8 +25,9 @@ async def read_equipments(
     equipments, total_count = await get_multi_quipments(db, params)
     for zone in equipments:
         zone_detail = await zone_repo.get(db, id=zone.zone_id)
-        zone_detail.children.clear()
-        zone.zone_detail=jsonable_encoder(zone_detail)
+        if zone_detail.children:
+            zone_detail.children.clear()
+        zone.zone_detail = jsonable_encoder(zone_detail)
     return PaginatedContent(
         data=equipments,
         total_count=total_count,

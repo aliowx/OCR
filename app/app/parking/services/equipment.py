@@ -117,26 +117,34 @@ async def update_equipment(
         ip_address_check, total_count = await get_multi_quipments(
             db, params=params
         )
-        if ip_address_check and equipment != ip_address_check:
-            raise ServiceFailure(
-                detail="Duplicate ip address",
-                msg_code=MessageCodes.duplicate_ip_address,
-            )
+        if ip_address_check:
+            if (
+                ip_address_check[0].ip_address
+                and equipment.ip_address != ip_address_check[0].ip_address
+            ):
+                raise ServiceFailure(
+                    detail="Duplicate ip address",
+                    msg_code=MessageCodes.duplicate_ip_address,
+                )
 
     if equipment_data.serial_number:
         params = schemas.ReadEquipmentsFilter(
             serial_number__eq=equipment_data.serial_number,
-            equipment_type__eq=equipment_data.equipment_type.value,
             size=1,
         )
         serial_number_check, total_count = await get_multi_quipments(
             db, params=params
         )
-        if serial_number_check and equipment != serial_number_check:
-            raise ServiceFailure(
-                detail="Duplicate equipment serial number",
-                msg_code=MessageCodes.duplicate_serial_number,
-            )
+        if serial_number_check:
+            if (
+                serial_number_check[0].serial_number
+                and equipment.serial_number
+                != serial_number_check[0].serial_number
+            ):
+                raise ServiceFailure(
+                    detail="Duplicate equipment serial number",
+                    msg_code=MessageCodes.duplicate_serial_number,
+                )
     if equipment_data.additional_data:
         current_additional_data = equipment.additional_data.copy()
         current_additional_data.update(equipment_data.additional_data)

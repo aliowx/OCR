@@ -47,11 +47,11 @@ async def create_spot(
             msg_code=utils.MessageCodes.operation_failed,
         )
     
-    if camera.equipment_type != EquipmentType.CAMERA_SPOT:
-        raise exc.ServiceFailure(
-            detail="type camera not spot",
-            msg_code=utils.MessageCodes.operation_failed,
-        )
+    # if camera.equipment_type != EquipmentType.CAMERA_SPOT:
+    #     raise exc.ServiceFailure(
+    #         detail="type camera not spot",
+    #         msg_code=utils.MessageCodes.operation_failed,
+    #     )
     # TODO find number line after delete
     # update line's camera first step remove spot
     find_spot = await crud.spot_repo.get_multi_with_filters(

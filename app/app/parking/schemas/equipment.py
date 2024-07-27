@@ -16,14 +16,23 @@ class EquipmentBase(BaseModel):
     additional_data: dict | None = None
 
 
-class EquipmentCreate(EquipmentBase):
-    equipment_type: EquipmentType
+class EquipmentCreate(BaseModel):
+    equipment_type: EquipmentType 
+    equipment_status: EquipmentStatus
+    serial_number: str = Field(None, max_length=50)
+    ip_address: str | None = None
     zone_id: int
-    serial_number: str | None = Field(None, max_length=50)
-    ip_address: str | None = Field(None, max_length=15)
+    image_id: int | None = None
+    additional_data: dict | None = None
 
 
 class EquipmentUpdate(EquipmentBase):
+    equipment_type: EquipmentType 
+    equipment_status: EquipmentStatus
+    ip_address: str | None = None
+    zone_id: int | None = None
+    image_id: int | None = None
+    additional_data: dict | None = None
     serial_number: str | None = Field(None, max_length=50)
     ip_address: str | None = Field(None, max_length=15)
 

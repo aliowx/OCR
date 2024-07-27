@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.encoders import jsonable_encoder
 from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
-from app.parking.repo import equipment_repo, parking_repo, zone_repo
+from app.parking.repo import equipment_repo, zone_repo
 from app.parking.schemas import equipment as schemas
 from app.utils import MessageCodes, PaginatedContent
 
@@ -25,9 +25,9 @@ async def read_equipments(
     equipments, total_count = await get_multi_quipments(db, params)
     for zone in equipments:
         zone_detail = await zone_repo.get(db, id=zone.zone_id)
-        if zone_detail.children:
+        if zone_detail:
             zone_detail.children.clear()
-        zone.zone_detail = jsonable_encoder(zone_detail)
+            zone.zone_detail = jsonable_encoder(zone_detail)
     return PaginatedContent(
         data=equipments,
         total_count=total_count,

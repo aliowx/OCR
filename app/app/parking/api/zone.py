@@ -7,7 +7,12 @@ from app.core.exceptions import ServiceFailure
 from app.parking.repo import zone_repo
 from app.parking.schemas import zone as schemas
 from app.parking.services import zone as zone_services
-from app.utils import APIResponse, APIResponseType, MessageCodes, PaginatedContent
+from app.utils import (
+    APIResponse,
+    APIResponseType,
+    MessageCodes,
+    PaginatedContent,
+)
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
 
@@ -39,14 +44,21 @@ async def read_zone_by_id(
     _: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Zone]:
     """
-    Read zones.
+    Read zone.
     """
+    # this solution fixes maximum recursion depth exceeded error in jsonable_encoder 
+    # create model schema from orm object before sending it to jsonable_encoder
+    from pydantic import TypeAdapter
+    adapter = TypeAdapter(schemas.Zone)
+
     zone = await zone_repo.get(db, id=zone_id)
     if not zone:
         raise ServiceFailure(
             detail="Zone Not Found",
             msg_code=MessageCodes.not_found,
         )
+
+    zone = adapter.validate_python(zone, from_attributes=True)
     return APIResponse(zone)
 
 
@@ -66,6 +78,7 @@ async def create_parent_zone(
         zone_input=zone_input,
     )
     return APIResponse(zone)
+
 
 @router.post("/bulk-sub-zone")
 @invalidate(namespace=namespace)

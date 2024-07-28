@@ -18,6 +18,7 @@ from cache.util import ONE_DAY_IN_SECONDS
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
+from pydantic import TypeAdapter
 
 router = APIRouter()
 namespace = "zones"
@@ -75,8 +76,6 @@ async def read_zone_by_id(
     """
     # this solution fixes maximum recursion depth exceeded error in jsonable_encoder
     # create model schema from orm object before sending it to jsonable_encoder
-    from pydantic import TypeAdapter
-
     adapter = TypeAdapter(schemas.Zone)
 
     zone = await zone_repo.get(db, id=zone_id)

@@ -7,6 +7,9 @@ from app.core import exceptions as exc
 from app.parking import repo
 from app.parking import schemas as parking_schemas
 from app.pricing.repo import price_repo
+from fastapi.encoders import jsonable_encoder
+from pydantic import TypeAdapter
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,6 @@ async def create_sub_zone(
     zone_input: parking_schemas.SubZoneCreate,
 ) -> list[parking_schemas.Zone]:
 
-    print(zone_input)
     for sub in zone_input.sub_zone:
         zone = await repo.zone_repo.get_by_name(db, name=sub.name)
         if zone:
@@ -61,17 +63,27 @@ async def create_sub_zone(
                 detail="Parking Not Found",
                 msg_code=utils.MessageCodes.not_found,
             )
-    sub_zone_list = [] 
+    sub_zone_list = []
+    adapter = TypeAdapter(parking_schemas.Zone)
     for multi_sub in zone_input.sub_zone:
-        zone = await repo.zone_repo.create(db, obj_in=parking_schemas.ZoneBase(
-            name=multi_sub.name,
-            tag=multi_sub.tag,
-            parent_id=zone_input.parent_id,
-            floor_name=multi_sub.floor_name,
-            floor_number=multi_sub.floor_number
-        ))
-        sub_zone_list.append(zone)
+        zone = await repo.zone_repo.create(
+            db,
+            obj_in=parking_schemas.ZoneBase(
+                name=multi_sub.name,
+                tag=multi_sub.tag,
+                parent_id=zone_input.parent_id,
+                floor_name=multi_sub.floor_name,
+                floor_number=multi_sub.floor_number,
+            ),
+        )
+
+        sub_zone_list.append(
+            jsonable_encoder(
+                adapter.validate_python(zone, from_attributes=True)
+            )
+        )
     return sub_zone_list
+
 
 async def set_price(
     db: AsyncSession,

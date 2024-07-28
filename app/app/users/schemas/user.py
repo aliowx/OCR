@@ -9,14 +9,14 @@ class UserBase(BaseModel):
     is_active: Optional[bool] = True
     is_superuser: bool = False
     full_name: Optional[str] = None
-    role: UserRoles | None = UserRoles.READER_USER
+    role: UserRoles | None = UserRoles.PARKING_MANAGER
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     username: str
     password: str
-    role: UserRoles | None = UserRoles.READER_USER
+    role: UserRoles | None = UserRoles.PARKING_MANAGER
 
 
 # Properties to receive via API on update

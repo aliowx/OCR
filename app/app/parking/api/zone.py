@@ -15,6 +15,9 @@ from app.utils import (
 )
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "zones"
@@ -24,9 +27,21 @@ namespace = "zones"
 # @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zones(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.OPERATIONAL_STAFF,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: schemas.ZonePramsFilters = Depends(),
-    _: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Zone]]]:
     """
     Read parking zones.
@@ -39,16 +54,29 @@ async def read_zones(
 # @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zone_by_id(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.OPERATIONAL_STAFF,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     zone_id: int,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Zone]:
     """
     Read zone.
     """
-    # this solution fixes maximum recursion depth exceeded error in jsonable_encoder 
+    # this solution fixes maximum recursion depth exceeded error in jsonable_encoder
     # create model schema from orm object before sending it to jsonable_encoder
     from pydantic import TypeAdapter
+
     adapter = TypeAdapter(schemas.Zone)
 
     zone = await zone_repo.get(db, id=zone_id)
@@ -66,9 +94,20 @@ async def read_zone_by_id(
 @invalidate(namespace=namespace)
 async def create_parent_zone(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     zone_input: schemas.ZoneCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Zone]:
     """
     Create a zone.
@@ -84,9 +123,20 @@ async def create_parent_zone(
 @invalidate(namespace=namespace)
 async def create_sub_zone(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     zone_input: schemas.SubZoneCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[schemas.Zone]]:
     """
     Create sub zone.
@@ -102,10 +152,22 @@ async def create_sub_zone(
 @invalidate(namespace=namespace)
 async def set_price_on_parking_zone(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.OPERATIONAL_STAFF,
+                ]
+            )
+        ),
+    ],
     zone_id: int,
     zoneprice_data: schemas.SetZonePriceInput,
     db: AsyncSession = Depends(deps.get_db_async),
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.ZonePrice]:
     """
     Set price on a zone.

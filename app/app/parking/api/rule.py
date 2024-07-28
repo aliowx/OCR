@@ -15,6 +15,9 @@ from app.utils import (
     MessageCodes,
     PaginatedContent,
 )
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "rules"
@@ -23,9 +26,21 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_rules(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.SECURITY_STAFF
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: schemas.ReadRulesParams = Depends(),
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Rule]]]:
     """
     Read rules.
@@ -37,9 +52,21 @@ async def read_rules(
 @router.post("/")
 async def create_rule(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.SECURITY_STAFF
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     rule_in: schemas.RuleCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Rule]:
     """
     Create rule.
@@ -51,9 +78,21 @@ async def create_rule(
 @router.post("/zone/set")
 async def set_zone_rule(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.SECURITY_STAFF
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     rule_in: schemas.SetZoneRuleInput,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[schemas.ZoneRule]]:
     """
     Set zone rules.
@@ -65,9 +104,21 @@ async def set_zone_rule(
 @router.post("/plate/set")
 async def set_plate_rule(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.SECURITY_STAFF
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     rule_in: schemas.SetPlateRuleInput,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[schemas.PlateRule]]:
     """
     Set plate rules.
@@ -79,9 +130,21 @@ async def set_plate_rule(
 @router.delete("/{rule_id}")
 async def delete_rule(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.SECURITY_STAFF
+                ]
+            )
+        ),
+    ],
     rule_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Rule]:
     """
     Delete rule.

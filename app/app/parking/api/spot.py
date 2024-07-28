@@ -9,6 +9,9 @@ from app.api import deps
 from app.parking.services import spot as spot_services
 from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.parking.schemas import ParamsSpotStatus, SpotsByCamera
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "parkingspot"
@@ -17,9 +20,20 @@ logger = logging.getLogger(__name__)
 
 @router.post("/")
 async def create_spot(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     spot_in: schemas.SpotCreate,
     db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ):
     """
     Create new line Spot.
@@ -30,6 +44,17 @@ async def create_spot(
 # this endpoint for update status
 @router.post("/update_status")
 async def update_status_spot(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     spot_in: schemas.SpotUpdateStatus,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -41,6 +66,17 @@ async def update_status_spot(
 # get all status and detail spot
 @router.get("/check_status")
 async def checking_status_spot(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: ParamsSpotStatus = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -52,6 +88,17 @@ async def checking_status_spot(
 # this endpoint get all line by camera code
 @router.get("/{camera_serial}")
 async def get_detail_line_by_camera(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     camera_serial: str,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -64,6 +111,17 @@ async def get_detail_line_by_camera(
 
 @router.get("/spot/{zone_id}")
 async def get_detail_line_by_zone(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     zone_id: int,
     size: int = 100,
     page: int = 1,
@@ -77,4 +135,3 @@ async def get_detail_line_by_zone(
             db, zone_id, size, page, asc
         )
     )
-

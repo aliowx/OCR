@@ -68,7 +68,7 @@ async def internal_service_exceptions_handler(request: Request, exc: Any):
 
 
 async def internal_exceptions_handler(request: Request, exc: Any):
-    # raise exc
+    raise exc
     exception_type, traceback_str, traceback_full = get_traceback_info(exc)
     logger.error(
         f"Unhandled {exception_type} Exception Happened:\n{traceback_str}"

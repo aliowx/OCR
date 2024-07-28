@@ -23,7 +23,7 @@ class User(Base):
     # after migration add to file beacuse not found role
     # def upgrade() -> None:
     #   op.execute(
-    #    "CREATE TYPE userroles AS ENUM ('SUPERADMIN', 'ADMIN_EQUIPMENT', 'ADMIN_USER', 'ADMIN_PRICE', 'ADMIN_ZONE_SPOT', 'ADMIN_PLATE_RECORD', 'READER_EQUIPMENT', 'READER_USER', 'READER_PRICE', 'READER_ZONE_SPOT', 'READER_PLATE_RECORD');")
+    #    "CREATE TYPE userroles AS ENUM ('ADMINISTRATOR', 'PARKING_MANAGER', 'TECHNICAL_SUPPORT', 'OPERATIONAL_STAFF', 'REPORTING_ANALYSIS', 'SECURITY_STAFF');")
     # def downgrade():
     #   op.execute("DROP TYPE userroles;")
     role = mapped_column(

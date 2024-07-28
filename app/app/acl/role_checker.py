@@ -8,24 +8,6 @@ from app.api import deps
 from app.users.models import User
 from app.utils.message_codes import MessageCodes
 
-ALL_ROLES = [
-    UserRoles.SUPERADMIN,
-    UserRoles.ADMIN_EQUIPMENT,
-    UserRoles.ADMIN_PRICE,
-    UserRoles.ADMIN_PLATE_RECORD,
-    UserRoles.ADMIN_USER,
-    UserRoles.ADMIN_ZONE_SPOT,
-    UserRoles.READER_EQUIPMENT,
-    UserRoles.READER_PLATE_RECORD,
-    UserRoles.READER_PRICE,
-    UserRoles.READER_USER,
-    UserRoles.READER_ZONE_SPOT,
-]
-ADMIN_READER_EQUIPMENT_ROLES = [
-    UserRoles.ADMIN_EQUIPMENT,
-    UserRoles.READER_EQUIPMENT,
-]
-READER_USER = [UserRoles.READER_USER]
 
 
 class RoleChecker:

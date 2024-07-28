@@ -15,6 +15,10 @@ from app.utils import PaginatedContent
 from app.parking.schemas.equipment import (
     ReadEquipmentsFilter,
 )
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "plates"
@@ -23,6 +27,17 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_plates(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: schemas.ParamsPlates = Depends(),
 ) -> APIResponseType[PaginatedContent[list[schemas.Plate]]]:
@@ -53,6 +68,17 @@ async def read_plates(
 @router.post("/")
 async def create_plate(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     plate_in: schemas.PlateCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -71,6 +97,17 @@ async def create_plate(
 @router.get("/{id}")
 async def read_plate(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.Plate]:

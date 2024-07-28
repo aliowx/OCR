@@ -9,6 +9,10 @@ from app.api import deps
 from app.api.services import records_services
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 logger = logging.getLogger(__name__)
 namespace = "records"
@@ -17,6 +21,17 @@ router = APIRouter()
 
 @router.get("/")
 async def read_records(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     record_in: schemas.ParamsRecord = Depends(),
     asc: bool = False,
@@ -25,9 +40,7 @@ async def read_records(
     All record
     """
 
-    records = await records_services.calculator_price(
-        db, params=record_in
-    )
+    records = await records_services.calculator_price(db, params=record_in)
 
     return APIResponse(records)
 
@@ -35,6 +48,17 @@ async def read_records(
 @router.post("/")
 async def create_record(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     record_in: schemas.RecordCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -49,6 +73,17 @@ async def create_record(
 @router.get("/{id}")
 async def read_record(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.Record]:
@@ -61,5 +96,3 @@ async def read_record(
             detail="Record Not Found", msg_code=utils.MessageCodes.not_found
         )
     return APIResponse(record)
-
-

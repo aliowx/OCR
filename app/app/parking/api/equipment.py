@@ -15,6 +15,9 @@ from app.utils import (
     MessageCodes,
     PaginatedContent,
 )
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "equipments"
@@ -23,13 +26,26 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_equipments(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.TECHNICAL_SUPPORT,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: schemas.ReadEquipmentsParams = Depends(),
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Equipment]]]:
     """
     Read equipments.
     """
+
     equipments = await equipment_services.read_equipments(db, params=params)
     return APIResponse(equipments)
 
@@ -37,9 +53,21 @@ async def read_equipments(
 @router.post("/")
 async def create_equipment(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.TECHNICAL_SUPPORT,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     equipment_in: schemas.EquipmentCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Equipment]:
     """
     Create equipment.
@@ -53,9 +81,21 @@ async def create_equipment(
 @router.post("/bulk")
 async def create_equipment_bulk(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.TECHNICAL_SUPPORT,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     equipments: list[schemas.EquipmentCreate],
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[schemas.Equipment]]:
     """
     Bulk create equipments.
@@ -69,10 +109,22 @@ async def create_equipment_bulk(
 @router.put("/{equipment_id}")
 async def update_equipment(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.TECHNICAL_SUPPORT,
+                ]
+            )
+        ),
+    ],
     equipment_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
     equipment_data: schemas.EquipmentUpdate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Equipment]:
     """
     Update equipment.
@@ -86,9 +138,21 @@ async def update_equipment(
 @router.delete("/{equipment_id}")
 async def delete_equipment(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.TECHNICAL_SUPPORT,
+                ]
+            )
+        ),
+    ],
     equipment_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Equipment]:
     """
     Delete equipment.

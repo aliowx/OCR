@@ -11,6 +11,9 @@ from app import crud, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "images"
@@ -20,6 +23,16 @@ logger = logging.getLogger(__name__)
 @router.post("/")
 async def create_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     image_in: schemas.ImageCreateBase64,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
@@ -53,6 +66,16 @@ async def create_image(
 @router.get("/{id}")
 async def read_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
@@ -71,6 +94,16 @@ async def read_image(
 @router.get("/binary/{id}")
 async def read_image_binary(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[Any]:
@@ -89,6 +122,16 @@ async def read_image_binary(
 @router.delete("/{id}")
 def delete_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: Session = Depends(deps.get_db),
     id: int,
 ) -> APIResponseType[schemas.ImageBase64InDB]:

@@ -10,6 +10,10 @@ from app.core import exceptions as exc
 from app.parking.repo import parking_repo
 from app.parking.schemas import parking as schemas
 from app.utils import APIResponse, APIResponseType, MessageCodes
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "parkings"
@@ -18,10 +22,21 @@ logger = logging.getLogger(__name__)
 
 @router.get("/main")
 async def read_main_parking(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     skip: int = 0,
     limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Parking | schemas.ParkingBase]:
     """
     Read main parking.
@@ -35,9 +50,20 @@ async def read_main_parking(
 @router.post("/main")
 async def create_main_parking(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     parking_in: schemas.ParkingCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     Create main parking.

@@ -4,7 +4,7 @@ from typing import Awaitable, List, TypeVar
 from sqlalchemy import exists, false, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
@@ -119,6 +119,17 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
             )
         )
         return zone
+
+    async def get(
+        self, db: Session | AsyncSession, id: int
+    ) -> ModelType | Awaitable[ModelType] | None:
+        query = (
+            select(self.model)
+            .options(selectinload(self.model.parent))
+            .filter(self.model.id == id, self.model.is_deleted == False)
+        )
+
+        return await self._first(db.scalars(query))
 
     async def get_multi_by_filter(
         self,

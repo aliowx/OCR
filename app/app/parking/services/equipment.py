@@ -4,8 +4,9 @@ from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
 from app.parking.repo import equipment_repo, zone_repo
 from app.parking.schemas import equipment as schemas
+from app.parking.schemas import Zone as schemasZone
 from app.utils import MessageCodes, PaginatedContent
-
+from pydantic import TypeAdapter
 
 async def get_multi_quipments(
     db: AsyncSession,
@@ -23,11 +24,11 @@ async def read_equipments(
     db: AsyncSession, params: schemas.ReadEquipmentsParams
 ) -> PaginatedContent[list[schemas.Equipment]]:
     equipments, total_count = await get_multi_quipments(db, params)
+    adapter = TypeAdapter(schemasZone)
     for zone in equipments:
         zone_detail = await zone_repo.get(db, id=zone.zone_id)
         if zone_detail:
-            zone_detail.children.clear()
-            zone.zone_detail = jsonable_encoder(zone_detail)
+            zone.zone_detail = jsonable_encoder(adapter.validate_python(zone_detail, from_attributes=True))
     return PaginatedContent(
         data=equipments,
         total_count=total_count,

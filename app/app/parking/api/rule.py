@@ -33,7 +33,7 @@ async def read_rules(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
-                    UserRoles.SECURITY_STAFF
+                    UserRoles.SECURITY_STAFF,
                 ]
             )
         ),
@@ -44,6 +44,8 @@ async def read_rules(
 ) -> APIResponseType[PaginatedContent[list[schemas.Rule]]]:
     """
     Read rules.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , SECURITY_STAFF ]
     """
     rules = await rule_services.read_rules(db, params=params)
     return APIResponse(rules)
@@ -59,7 +61,7 @@ async def create_rule(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
-                    UserRoles.SECURITY_STAFF
+                    UserRoles.SECURITY_STAFF,
                 ]
             )
         ),
@@ -70,6 +72,8 @@ async def create_rule(
 ) -> APIResponseType[schemas.Rule]:
     """
     Create rule.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , SECURITY_STAFF ]
     """
     rule = await rule_services.create_rule(db, rule_data=rule_in)
     return APIResponse(rule)
@@ -85,7 +89,7 @@ async def set_zone_rule(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
-                    UserRoles.SECURITY_STAFF
+                    UserRoles.SECURITY_STAFF,
                 ]
             )
         ),
@@ -96,6 +100,8 @@ async def set_zone_rule(
 ) -> APIResponseType[list[schemas.ZoneRule]]:
     """
     Set zone rules.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , SECURITY_STAFF ]
     """
     rule = await rule_services.set_zone_rule(db, rules=rule_in)
     return APIResponse(rule)
@@ -111,7 +117,7 @@ async def set_plate_rule(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
-                    UserRoles.SECURITY_STAFF
+                    UserRoles.SECURITY_STAFF,
                 ]
             )
         ),
@@ -122,6 +128,8 @@ async def set_plate_rule(
 ) -> APIResponseType[list[schemas.PlateRule]]:
     """
     Set plate rules.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , SECURITY_STAFF ]
     """
     rule = await rule_services.set_plate_rule(db, rules=rule_in)
     return APIResponse(rule)
@@ -137,7 +145,7 @@ async def delete_rule(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
-                    UserRoles.SECURITY_STAFF
+                    UserRoles.SECURITY_STAFF,
                 ]
             )
         ),
@@ -148,6 +156,8 @@ async def delete_rule(
 ) -> APIResponseType[schemas.Rule]:
     """
     Delete rule.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , SECURITY_STAFF ]
     """
     rule = await rule_repo.get(db, id=rule_id)
     if not rule:

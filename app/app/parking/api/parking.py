@@ -6,10 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models
 from app.api import deps
-from app.core import exceptions as exc
 from app.parking.repo import parking_repo
 from app.parking.schemas import parking as schemas
-from app.utils import APIResponse, APIResponseType, MessageCodes
+from app.utils import APIResponse, APIResponseType
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
@@ -40,6 +39,9 @@ async def read_main_parking(
 ) -> APIResponseType[schemas.Parking | schemas.ParkingBase]:
     """
     Read main parking.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+
     """
     main_parking = await parking_repo.get_main_parking(db)
     if not main_parking:
@@ -67,6 +69,8 @@ async def create_main_parking(
 ) -> APIResponseType[Any]:
     """
     Create main parking.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     # FIXME: add input validations
     main_parking = await parking_repo.get_main_parking(db)

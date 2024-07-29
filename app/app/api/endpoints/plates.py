@@ -43,6 +43,7 @@ async def read_plates(
 ) -> APIResponseType[PaginatedContent[list[schemas.Plate]]]:
     """
     All plates.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     camera_id = None
     if params.input_camera_serial is not None:
@@ -85,6 +86,7 @@ async def create_plate(
 ) -> APIResponseType[Any]:
     """
     Create new item.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     result = celery_app.send_task(
         "add_plates",
@@ -113,6 +115,7 @@ async def read_plate(
 ) -> APIResponseType[schemas.Plate]:
     """
     Get plate by ID.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     plate = await crud.plate.get(db=db, id=id)
     if not plate:

@@ -38,6 +38,7 @@ async def read_records(
 ) -> APIResponseType[schemas.GetRecords]:
     """
     All record
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
     records = await records_services.calculator_price(db, params=record_in)
@@ -65,6 +66,7 @@ async def create_record(
 ) -> APIResponseType[schemas.RecordCreate]:
     """
     Create new item.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     record = await crud.record.create(db=db, obj_in=record_in)
     return APIResponse(record)
@@ -89,6 +91,7 @@ async def read_record(
 ) -> APIResponseType[schemas.Record]:
     """
     Get record by ID.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     record = await crud.record.get(db=db, id=id)
     if not record:

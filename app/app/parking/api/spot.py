@@ -37,12 +37,14 @@ async def create_spot(
 ):
     """
     Create new line Spot.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     return APIResponse(await spot_services.create_spot(db, spot_in))
 
 
 # this endpoint for update status
-@router.post("/update_status")
+@router.post("/update-status")
 async def update_status_spot(
     _: Annotated[
         bool,
@@ -64,7 +66,7 @@ async def update_status_spot(
 
 
 # get all status and detail spot
-@router.get("/check_status")
+@router.get("/check-status")
 async def checking_status_spot(
     _: Annotated[
         bool,
@@ -81,8 +83,36 @@ async def checking_status_spot(
     params: ParamsSpotStatus = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+
+    """
 
     return APIResponse(await spot_services.get_status(db, params))
+
+
+@router.get("/find-plate-in-spot")
+async def checking_status_spot(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    plate: str = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+
+    return APIResponse(await spot_services.get_plate_in_spot(db, plate))
 
 
 # this endpoint get all line by camera code
@@ -103,7 +133,9 @@ async def get_detail_line_by_camera(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[SpotsByCamera]:
-
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
     return APIResponse(
         await spot_services.get_details_spot_by_camera(db, camera_serial)
     )
@@ -129,6 +161,9 @@ async def get_detail_line_by_zone(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[Any]]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
 
     return APIResponse(
         await spot_services.get_details_spot_by_zone_id(

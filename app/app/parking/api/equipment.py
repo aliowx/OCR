@@ -44,6 +44,8 @@ async def read_equipments(
 ) -> APIResponseType[PaginatedContent[list[schemas.Equipment]]]:
     """
     Read equipments.
+    
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
     """
 
     equipments = await equipment_services.read_equipments(db, params=params)
@@ -71,6 +73,9 @@ async def create_equipment(
 ) -> APIResponseType[schemas.Equipment]:
     """
     Create equipment.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
     """
     equipment = await equipment_services.create_equipment(
         db, equipment_data=equipment_in
@@ -99,6 +104,9 @@ async def create_equipment_bulk(
 ) -> APIResponseType[list[schemas.Equipment]]:
     """
     Bulk create equipments.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
     """
     equipments = await equipment_services.create_equipment_bulk(
         db, equipments=equipments
@@ -128,6 +136,9 @@ async def update_equipment(
 ) -> APIResponseType[schemas.Equipment]:
     """
     Update equipment.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
     """
     equipment = await equipment_services.update_equipment(
         db, equipment_id=equipment_id, equipment_data=equipment_data
@@ -156,6 +167,9 @@ async def delete_equipment(
 ) -> APIResponseType[schemas.Equipment]:
     """
     Delete equipment.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
     """
     equipment = await equipment_repo.get(db, id=equipment_id)
     if not equipment:

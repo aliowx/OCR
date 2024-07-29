@@ -46,8 +46,13 @@ async def read_zones(
 ) -> APIResponseType[PaginatedContent[list[schemas.Zone]]]:
     """
     Read parking zones.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
+
     """
+    adapter = TypeAdapter(schemas.Zone)
     zones = await zone_services.read_zone(db, params=params)
+    zones1 = adapter.validate_python(zones.data, from_attributes=True)
     return APIResponse(zones)
 
 
@@ -73,6 +78,9 @@ async def read_zone_by_id(
 ) -> APIResponseType[schemas.Zone]:
     """
     Read zone.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
+
     """
     # this solution fixes maximum recursion depth exceeded error in jsonable_encoder
     # create model schema from orm object before sending it to jsonable_encoder
@@ -110,6 +118,8 @@ async def create_parent_zone(
 ) -> APIResponseType[schemas.Zone]:
     """
     Create a zone.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
+
     """
     zone = await zone_services.create_zone(
         db,
@@ -139,6 +149,8 @@ async def create_sub_zone(
 ) -> APIResponseType[list[schemas.Zone]]:
     """
     Create sub zone.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
+
     """
     zone = await zone_services.create_sub_zone(
         db,
@@ -170,6 +182,7 @@ async def set_price_on_parking_zone(
 ) -> APIResponseType[schemas.ZonePrice]:
     """
     Set price on a zone.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
     """
     zone = await zone_services.set_price(
         db,

@@ -38,6 +38,8 @@ async def create_image(
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Create new image.
+
+    user access to this [ ADMINISTRATOR ]
     """
     image = await crud.image.create_base64(db=db, obj_in=image_in)
     return APIResponse(image)
@@ -81,6 +83,9 @@ async def read_image(
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Get image by ID.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = await crud.image.get_base64(db=db, id=id)
     if not image:
@@ -109,6 +114,9 @@ async def read_image_binary(
 ) -> APIResponseType[Any]:
     """
     Get binary image by ID.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = await crud.image.get(db=db, id=id)
     if not image:
@@ -137,6 +145,9 @@ def delete_image(
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Delete an image.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = crud.image.get(db=db, id=id)
     if not image:

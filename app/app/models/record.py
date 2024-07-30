@@ -64,3 +64,5 @@ class Record(Base):
         nullable=True,
     )
     price_model = relationship("Price", foreign_keys=price_model_id)
+
+    latest_status: Mapped[str] = mapped_column(String, nullable=True)

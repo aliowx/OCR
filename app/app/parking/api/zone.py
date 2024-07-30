@@ -50,9 +50,9 @@ async def read_zones(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
 
     """
-    adapter = TypeAdapter(schemas.Zone)
+    # adapter = TypeAdapter(schemas.Zone)
     zones = await zone_services.read_zone(db, params=params)
-    zones1 = adapter.validate_python(zones.data, from_attributes=True)
+    # zones1 = adapter.validate_python(zones.data, from_attributes=True)
     return APIResponse(zones)
 
 
@@ -84,7 +84,7 @@ async def read_zone_by_id(
     """
     # this solution fixes maximum recursion depth exceeded error in jsonable_encoder
     # create model schema from orm object before sending it to jsonable_encoder
-    adapter = TypeAdapter(schemas.Zone)
+    # adapter = TypeAdapter(schemas.Zone)
 
     zone = await zone_repo.get(db, id=zone_id)
     if not zone:
@@ -93,7 +93,7 @@ async def read_zone_by_id(
             msg_code=MessageCodes.not_found,
         )
 
-    zone = adapter.validate_python(zone, from_attributes=True)
+    # zone = adapter.validate_python(zone, from_attributes=True)
     return APIResponse(zone)
 
 

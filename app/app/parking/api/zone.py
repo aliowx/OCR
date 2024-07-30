@@ -56,6 +56,44 @@ async def read_zones(
     return APIResponse(zones)
 
 
+@router.put("/")
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+async def update_zone(
+    *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.OPERATIONAL_STAFF,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    zone_id: int,
+    params: schemas.ZoneUpdate = Depends(),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[schemas.Zone]:
+    """
+    update parking zones.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
+
+    """
+    zone = await zone_repo.get(db, id=zone_id)
+    if not zone:
+        raise ServiceFailure(
+            detail="Zone Not Found",
+            msg_code=MessageCodes.not_found,
+        )
+    zone_update = await zone_repo.update(db, db_obj=zone, obj_in=params)
+
+    return APIResponse(zone_update)
+
+
 @router.get("/{zone_id}")
 # @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zone_by_id(

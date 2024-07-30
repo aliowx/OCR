@@ -36,8 +36,8 @@ class RecordCreate(RecordBase):
 
 
 # Properties to receive on item update
-class RecordUpdate(RecordBase):
-    pass
+class RecordUpdate(BaseModel):
+    latest_status: StatusRecord
 
 
 # Properties shared by models stored in DB

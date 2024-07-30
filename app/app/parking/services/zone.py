@@ -25,8 +25,12 @@ async def read_zone(
         record, total_count_record = await curdRecord.find_records(
             db, input_zone_id=zone.id, input_status_record="unfinished"
         )
-        zone.empty = zone.capacity - total_count_record
-        zone.full = total_count_record
+        zone.empty = (
+            (zone.capacity - total_count_record)
+            if total_count_record
+            else zone.capacity
+        )
+        zone.full = total_count_record if total_count_record else 0
 
     return utils.PaginatedContent(
         data=zones, total_count=total_count, size=params.size, page=params.page

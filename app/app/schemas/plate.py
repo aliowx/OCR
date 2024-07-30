@@ -5,8 +5,8 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class Status(str, Enum):
-    full = "full"
+class TypeCamera(str, Enum):
+    sensor = "sensor"
     entranceDoor = "entranceDoor"
     exitDoor = "exitDoor"
 
@@ -27,20 +27,19 @@ class PlateBase(BaseModel):
     zone_id: Optional[int] = None
 
     price_model_id: Optional[int] = Field(None)
-
-    type_status_spot: Optional[Status] = Field(None)
+    type_camera: TypeCamera | None = None
 
 
 class PlateCreate(PlateBase):
     plate: str
     record_time: datetime
-    spot_id: int
+    spot_id: int | None = None
     zone_id: int
     camera_id: int
     lpr_image_id: int
     plate_image_id: int
-    price_model_id: int
-    type_status_spot: Status
+    price_model_id: int | None = None
+    type_camera: TypeCamera
 
 
 # Properties to receive on item update

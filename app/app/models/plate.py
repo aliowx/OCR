@@ -15,7 +15,7 @@ class Plate(Base):
         DateTime(timezone=True), default=datetime.now, index=True
     )
 
-    type_status_spot: Mapped[str] = mapped_column(String, nullable=True)
+    type_camera: Mapped[str] = mapped_column(String, nullable=True)
 
     zone_id: Mapped[int] = mapped_column(
         Integer,

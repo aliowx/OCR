@@ -7,6 +7,7 @@ from app.pricing.services import get_main_price
 async def calculator_price(db: AsyncSession, *, params: schemas.ParamsRecord):
     records = await crud.record.find_records(
         db=db,
+        input_status_record=params.input_status_record,
         input_score=params.input_score,
         input_plate=params.input_plate,
         input_end_time_max=params.input_end_time_max,

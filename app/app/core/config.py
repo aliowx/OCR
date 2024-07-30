@@ -85,7 +85,7 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
-    FREE_TIME_BETWEEN_RECORDS: int | None
+    FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None
 
     CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
     CLEANUP_PERIOD: Optional[int] = 30  # every 30 seconds

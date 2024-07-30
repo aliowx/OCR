@@ -51,13 +51,14 @@ class Zone(Base):
         ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
-    parent = relationship(
-        "Zone",
-        remote_side=[id],
-        lazy="selectin",
-        back_populates="children",
-    )
-    children = relationship("Zone", back_populates="parent", lazy="immediate")
+    capacity: Mapped[int] = mapped_column(Integer, nullable=True)
+    # parent = relationship(
+    #     "Zone",
+    #     remote_side=[id],
+    #     lazy="selectin",
+    #     back_populates="children",
+    # )
+    # children = relationship("Zone", back_populates="parent", lazy="immediate")
     pricings = relationship(
         "ZonePrice", back_populates="zone_price", lazy="immediate"
     )

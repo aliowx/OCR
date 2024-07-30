@@ -2,16 +2,15 @@ import logging
 import math
 import random
 from datetime import datetime, timedelta, timezone
-
 from sqlalchemy import text
 
 from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.schemas import PlateUpdate, RecordUpdate
+from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
-namespace = "spot"
+namespace = "job worker"
 logger = logging.getLogger(__name__)
 
 
@@ -67,14 +66,15 @@ def update_record(self, plate_id) -> str:
 
     try:
         # lock plates table to prevent multiple record insertion
-        self.session.execute(
-            text("LOCK TABLE plate IN EXCLUSIVE MODE")
-        )
+        self.session.execute(text("LOCK TABLE plate IN EXCLUSIVE MODE"))
         plate = crud.plate.get(self.session, plate_id)
         record = crud.record.get_by_plate(
-            db=self.session, plate=plate, for_update=True
+            db=self.session,
+            plate=plate,
+            status=StatusRecord.unfinished,
+            for_update=True,
         )
-        if record is None:
+        if record is None and plate.type_camera != TypeCamera.exitDoor.value:
             record = schemas.RecordCreate(
                 plate=plate.plate,
                 start_time=plate.record_time,
@@ -85,13 +85,19 @@ def update_record(self, plate_id) -> str:
                 price_model_id=plate.price_model_id,
                 spot_id=plate.spot_id,
                 zone_id=plate.zone_id,
+                latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-        else:
+        elif record:
             if record.start_time > plate.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     start_time=plate.record_time,
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
             elif record.end_time < plate.record_time:
                 record_update = RecordUpdate(
@@ -99,34 +105,44 @@ def update_record(self, plate_id) -> str:
                     end_time=plate.record_time,
                     best_lpr_image_id=plate.lpr_image_id,
                     best_plate_image_id=plate.plate_image_id,
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
             else:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
 
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
             )
 
-        update_plate = PlateUpdate(record_id=record.id)
-        # this refresh for update plate with out this not working ==> solution 1
-        self.session.refresh(plate)
-        # or solution 2
-        # logger.info(f"latest value plate.record_id ===> {plate.record_id}")
-        # or solution 3
-        # plate.record_id = record.id
-        # plate_update = crud.plate.update(
-        #     self.session, db_obj=plate
-        # )
+            update_plate = PlateUpdate(record_id=record.id)
+            # this refresh for update plate with out this not working ==> solution 1
+            self.session.refresh(plate)
+            # or solution 2
+            # logger.info(f"latest value plate.record_id ===> {plate.record_id}")
+            # or solution 3
+            # plate.record_id = record.id
+            # plate_update = crud.plate.update(
+            #     self.session, db_obj=plate
+            # )
 
-        plate_update = crud.plate.update(
-            self.session, db_obj=plate, obj_in=update_plate
-        )
-        if plate_update:
-            logger.info(
-                f"new value plate.record_id ===> {plate_update.record_id}"
+            plate_update = crud.plate.update(
+                self.session, db_obj=plate, obj_in=update_plate
             )
+            if plate_update:
+                logger.info(
+                    f"new value plate.record_id ===> {plate_update.record_id}"
+                )
 
     except Exception as exc:
         countdown = int(random.uniform(2, 4) ** self.request.retries)
@@ -137,6 +153,13 @@ def update_record(self, plate_id) -> str:
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+
+    sender.add_periodic_task(
+        settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
+        set_status_record.s(),
+        name="set status unknown for record after 24 hours becuse not exit",
+    )
+
     logger.info(
         f"cleanup {settings.CLEANUP_COUNT} images every {settings.CLEANUP_PERIOD} seconds "
         f"which are older than {settings.CLEANUP_AGE} days"
@@ -157,6 +180,38 @@ def setup_periodic_tasks(sender, **kwargs):
             cleanup.s("record"),
             name="cleanup record task",
         )
+
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
+    name="set_status_record",
+)
+def set_status_record(self):
+
+    try:
+        records = crud.record.get_multi_record(
+            self.session,
+            input_status_record=StatusRecord.unfinished.value,
+            input_create_time=datetime.now()
+            - timedelta(
+                seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
+            ),
+        )
+        if records:
+            for record in records:
+                logger.info(
+                    f"this plate {record.plate} after {timedelta(seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR)} hour not exieted"
+                )
+                record.latest_status = StatusRecord.unknown.value
+                crud.record.update(self.session, db_obj=record)
+    except:
+        print("Not found")
+        print("func set status")
 
 
 @celery_app.task(

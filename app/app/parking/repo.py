@@ -125,7 +125,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
     ) -> ModelType | Awaitable[ModelType] | None:
         query = (
             select(self.model)
-            .options(selectinload(self.model.parent))
             .filter(self.model.id == id, self.model.is_deleted == False)
         )
 

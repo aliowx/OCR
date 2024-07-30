@@ -35,5 +35,19 @@ from .image import (
     ImageUpdateBase64,
 )
 from .msg import Msg
-from .plate import GetPlates, Plate, PlateCreate, PlateUpdate, ParamsPlates
-from .record import GetRecords, Record, RecordCreate, RecordUpdate, ParamsRecord
+from .plate import (
+    GetPlates,
+    Plate,
+    PlateCreate,
+    PlateUpdate,
+    ParamsPlates,
+    TypeCamera,
+)
+from .record import (
+    GetRecords,
+    Record,
+    RecordCreate,
+    RecordUpdate,
+    ParamsRecord,
+    StatusRecord,
+)

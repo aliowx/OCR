@@ -9,11 +9,14 @@ class ZoneBase(BaseModel):
     parent_id: int | None = None
     floor_name: str | None = None
     floor_number: int | None = None
+    capacity: int | None = None
 
 
 class ZoneComplete(ZoneBase):
-    parent: ZoneBase | None = None
-    children: list["Zone"] = Field(default_factory=list)
+    empty: int | None = None
+    full: int | None = None
+    # parent: ZoneBase | None = None
+    # children: list["Zone"] = Field(default_factory=list)
     pricings: list["ZonePrice"] = Field(default_factory=list)
 
 
@@ -22,6 +25,8 @@ class ZoneCreate(BaseModel):
     tag: str | None = None
     floor_name: str | None = None
     floor_number: int | None = None
+    capacity: int | None = None
+
 
 class SubZoneCreate(BaseModel):
     parent_id: int

@@ -9,7 +9,7 @@ from app.parking import schemas as parking_schemas
 from app.pricing.repo import price_repo
 from fastapi.encoders import jsonable_encoder
 from pydantic import TypeAdapter
-
+from app.crud.crud_record import record as curdRecord
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,13 @@ async def read_zone(
     zones, total_count = await repo.zone_repo.get_multi_by_filter(
         db, params=params
     )
+    for zone in zones:
+        record, total_count_record = await curdRecord.find_records(
+            db, input_zone_id=zone.id, input_status_record="unfinished"
+        )
+        zone.empty = zone.capacity - total_count_record
+        zone.full = total_count_record
+
     return utils.PaginatedContent(
         data=zones, total_count=total_count, size=params.size, page=params.page
     )

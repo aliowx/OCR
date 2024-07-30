@@ -91,30 +91,6 @@ async def checking_status_spot(
     return APIResponse(await spot_services.get_status(db, params))
 
 
-@router.get("/find-plate-in-spot")
-async def checking_status_spot(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    plate: str = None,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[Any]:
-    """
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
-    """
-
-    return APIResponse(await spot_services.get_plate_in_spot(db, plate))
-
-
 # this endpoint get all line by camera code
 @router.get("/{camera_serial}")
 async def get_detail_line_by_camera(

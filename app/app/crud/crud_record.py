@@ -13,6 +13,7 @@ from app.crud.base import CRUDBase
 from app.models.record import Record
 from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
+from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -36,8 +37,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         db: Session,
         *,
         plate: schemas.Plate,
+        status: StatusRecord,
         offset: timedelta = timedelta(
-            seconds=settings.FREE_TIME_BETWEEN_RECORDS
+            seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
         ),
         for_update: bool = False,
     ) -> Optional[Record]:
@@ -48,6 +50,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 (Record.plate == plate.plate)
                 & (Record.end_time >= plate.record_time - offset)
                 & (Record.start_time <= plate.record_time + offset)
+                & (Record.latest_status == status.value)
             )
             .order_by(Record.end_time.desc())
         )
@@ -62,13 +65,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         db: Session | AsyncSession,
         *,
         input_plate: str = None,
+        input_zone_id: int = None,
         input_start_time_min: datetime = None,
         input_start_time_max: datetime = None,
         input_end_time_min: datetime = None,
         input_end_time_max: datetime = None,
+        input_status_record: StatusRecord = None,
         input_score: float = None,
         skip: int = 0,
-        limit: int = 100,
+        limit: int = None,
         asc: bool = False,
     ) -> list[Record] | Awaitable[list[Record]]:
 
@@ -78,6 +83,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if input_plate is not None:
             filters.append(Record.plate == input_plate)
+
+        if input_zone_id is not None:
+            filters.append(Record.zone_id == input_zone_id)
+
+        if input_status_record is not None:
+            filters.append(Record.latest_status == input_status_record)
 
         if input_start_time_min is not None:
             filters.append(Record.start_time >= input_start_time_min)
@@ -94,12 +105,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_score is not None:
             filters.append(Record.score >= input_score)
 
-        if limit is None:
-            items = await self._all(
-                db.scalars(query.filter(*filters).offset(skip))
-            )
-
         all_items_count = await self.count_by_filter(db, filters=filters)
+
+        if limit is None:
+            return [
+                await self._all(
+                    db.scalars(query.filter(*filters).offset(skip))
+                ),
+                all_items_count,
+            ]
 
         items = await self._all(
             db.scalars(
@@ -110,6 +124,27 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             )
         )
         return [items, all_items_count]
+
+    # for worker need func sync
+    def get_multi_record(
+        self,
+        db: Session,
+        *,
+        input_create_time: datetime = None,
+        input_status_record: StatusRecord = None,
+    ) -> list[Record]:
+
+        query = select(Record)
+
+        filters = [Record.is_deleted == False]
+
+        if input_create_time is not None:
+            filters.append(Record.created <= input_create_time.isoformat())
+
+        if input_status_record is not None:
+            filters.append(Record.latest_status == input_status_record)
+
+        return self._all(db.scalars(query.filter(*filters)))
 
 
 record = CRUDRecord(Record)

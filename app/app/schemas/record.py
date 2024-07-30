@@ -1,7 +1,13 @@
 from datetime import datetime
 from typing import List
-
+from enum import Enum
 from pydantic import BaseModel, ConfigDict
+
+
+class StatusRecord(str, Enum):
+    finished = "finished"
+    unfinished = "unfinished"
+    unknown = "unknown"
 
 
 # Shared properties
@@ -15,6 +21,7 @@ class RecordBase(BaseModel):
     score: float | None = None
     spot_id: int | None = None
     zone_id: int | None = None
+    latest_status: StatusRecord | None = None
 
 
 # Properties to receive on item creation
@@ -22,9 +29,10 @@ class RecordCreate(RecordBase):
     plate: str
     start_time: datetime
     end_time: datetime
-    price_model_id: int
-    spot_id: int
+    price_model_id: int | None = None
+    spot_id: int | None = None
     zone_id: int
+    latest_status: StatusRecord
 
 
 # Properties to receive on item update
@@ -59,6 +67,7 @@ class ParamsRecord(BaseModel):
     input_end_time_min: datetime | None = None
     input_end_time_max: datetime | None = None
     input_score: float | None = None
+    input_status_record: StatusRecord | None = None
     skip: int | None = 0
     limit: int | None = 100
     asc: bool | None = False

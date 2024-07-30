@@ -99,3 +99,34 @@ async def read_record(
             detail="Record Not Found", msg_code=utils.MessageCodes.not_found
         )
     return APIResponse(record)
+
+
+@router.put("/")
+async def update_record(
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    id_record: int,
+    params: schemas.RecordUpdate = Depends(),
+) -> APIResponseType[schemas.Record]:
+    """
+    update status record .
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    record = await crud.record.get(db=db, id=id_record)
+    if not record:
+        exc.ServiceFailure(
+            detail="Record Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    record_update = await crud.record.update(db, db_obj=record, obj_in=params)
+    return APIResponse(record_update)

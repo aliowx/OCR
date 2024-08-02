@@ -66,6 +66,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         input_plate: str = None,
         input_zone_id: int = None,
+        input_create_time: datetime = None,
         input_start_time_min: datetime = None,
         input_start_time_max: datetime = None,
         input_end_time_min: datetime = None,
@@ -86,6 +87,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if input_zone_id is not None:
             filters.append(Record.zone_id == input_zone_id)
+
+        if input_create_time is not None:
+            filters.append(Record.created <= input_create_time)
 
         if input_status_record is not None:
             filters.append(Record.latest_status == input_status_record)

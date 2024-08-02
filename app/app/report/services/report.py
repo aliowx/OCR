@@ -14,8 +14,9 @@ from app.report.schemas import (
 )
 from app.api.services import records_services
 from app import schemas, crud
-from app.parking.repo import equipment_repo
+from app.parking.repo import equipment_repo, zone_repo
 from app.parking.schemas.equipment import ReadEquipmentsFilter
+from datetime import datetime, timedelta
 
 
 async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
@@ -65,42 +66,107 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
 
 
 async def dashboard(db: AsyncSession):
-    # list all zone
-    zones = await zonereportrepository.get_multi_by_filter(
-        db, params=ReadZoneLotsParams()
-    )
-
     result = []
-    capacity = 0
+    zones = await zone_repo.get_multi(db)
+    records, total_count_record = await crud.record.find_records(
+        db, input_status_record=schemas.StatusRecord.unfinished
+    )
+    print(total_count_record)
+    capacity_total = 0
     capacity_empty = 0
-    for zone in zones:
-        # list lots zone
-        lots = await spotreportrepository.find_lines(
-            db, params=ReadZoneLotsParams(input_zone_id=zone.id)
-        )
-        if lots:
-            capacity += len(lots)
-            capacity_empty += len(lots)
-            for lot in lots:
-                if lot.status == Status.full.value:
-                    capacity_empty = capacity - 1
+    if zones:
+        for zone in zones:
+            capacity_total += zone.capacity
 
     result.append(
-        {"full_empty_moment": {"full": capacity, "empty": capacity_empty}}
+        {
+            "report-capacity": {
+                "capacity_total": capacity_total,
+                "capacity_empty": (
+                    capacity_total - total_count_record
+                    if total_count_record
+                    else capacity_empty
+                ),
+                "capacity_full": total_count_record,
+            }
+        }
     )
+    one_day_ago = datetime.now() - timedelta(days=1)
+    one_week_ago = datetime.now() - timedelta(days=7)
+    one_month_ago = datetime.now() - timedelta(days=30)
+    six_month_ago = datetime.now() - timedelta(days=180)
+    one_year_ago = datetime.now() - timedelta(days=365)
 
-    records = await records_services.calculator_price(
-        db, params=schemas.ParamsRecord()
+    timing = [
+        one_day_ago,
+        one_week_ago,
+        one_month_ago,
+        six_month_ago,
+        one_year_ago,
+    ]
+    avrage_one_day_ago = 0
+    avrage_one_week_ago = 0
+    avrage_one_month_ago = 0
+    avrage_six_month_ago = 0
+    avrage_one_year_ago = 0
+    for time in timing:
+        print(datetime.now())
+        print("hello", time)
+        records, total_count_record_timing = await crud.record.find_records(
+            db,
+            input_status_record=schemas.StatusRecord.finished,
+            input_create_time=time,
+        )
+        if records:
+            for record in records:
+                # Calculation of spot time
+                time_park_record = str(record.end_time - record.start_time)
+                # Calculation hours, conversion minutes and seconds to hours
+                hours, minutes, seconds = map(
+                    float, time_park_record.split(":")
+                )
+                minutes = minutes / 60 if minutes > 0 else 0
+                seconds = seconds / 3600 if seconds > 0 else 0
+                total_time_park = hours + minutes + seconds
+                print(total_time_park)
+                if time == one_day_ago:
+                    print("one",record)
+                    avrage_one_day_ago += (
+                        total_time_park / total_count_record_timing
+                    )
+                if time == one_week_ago:
+                    print("week",record)
+                    avrage_one_week_ago += (
+                        total_time_park / total_count_record_timing
+                    )
+                if time == one_month_ago:
+                    print("month",record)
+                    avrage_one_month_ago += (
+                        total_time_park / total_count_record_timing
+                    )
+                if time == six_month_ago:
+                    print("six",record)
+                    avrage_six_month_ago += (
+                        total_time_park / total_count_record_timing
+                    )
+                if time == one_year_ago:
+                    print("plate",record)
+                    avrage_one_year_ago += (
+                        total_time_park / total_count_record_timing
+                    )
+
+    result.append(
+        {
+            "report_avrage_time": {
+                "avrage_one_day_ago": avrage_one_day_ago,
+                "avrage_one_week_ago": avrage_one_week_ago,
+                "avrage_one_month_ago": avrage_one_month_ago,
+                "avrage_six_month_ago": avrage_six_month_ago,
+                "avrage_one_year_ago": avrage_one_year_ago,
+            }
+        }
     )
-
-    result.append({"percent_use_"})
-
-    return PaginatedContent(
-        data=result,
-        total_count=0,
-        size=0,
-        page=0,
-    )
+    return PaginatedContent(data=result)
 
 
 async def report_moment(db: AsyncSession, params: ParamsRecordMoment):

@@ -55,7 +55,6 @@ async def create_price(
     if not main_price:
         price = await price_repo.create(db, obj_in=price_in)
     price = await price_repo.update(db, db_obj=main_price, obj_in=price_in)
-    print(dir(price))
     return APIResponse(price)
 
 

@@ -74,7 +74,7 @@ async def update_zone(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     zone_id: int,
-    params: schemas.ZoneUpdate = Depends(),
+    params: schemas.ZoneUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Zone]:
     """

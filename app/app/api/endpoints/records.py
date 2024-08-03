@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas, utils
@@ -12,6 +12,7 @@ from app.utils import APIResponse, APIResponseType
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
+from cache.redis import redis_connect_async
 
 
 logger = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ async def update_record(
         ),
     ],
     id_record: int,
-    params: schemas.RecordUpdate = Depends(),
+    params: schemas.RecordUpdate,
 ) -> APIResponseType[schemas.Record]:
     """
     update status record .
@@ -130,3 +131,22 @@ async def update_record(
         )
     record_update = await crud.record.update(db, db_obj=record, obj_in=params)
     return APIResponse(record_update)
+
+
+@router.websocket("/records")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection = await redis_connect_async(240)  # 3 mins
+    async with connection.pubsub() as channel:
+        await channel.subscribe("records:1")
+        try:
+            while True:
+                data = await channel.get_message(
+                    ignore_subscribe_messages=True, timeout=240
+                )
+                # data = await websocket.receive_text()
+                if data and "data" in data:
+                    print(data["data"])
+                    await websocket.send_text(data["data"])
+        except:
+            channel.unsubscribe("records:1")

@@ -50,7 +50,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 (Record.plate == plate.plate)
                 & (Record.end_time >= plate.record_time - offset)
                 & (Record.start_time <= plate.record_time + offset)
-                & (Record.latest_status == status.value)
+                & (Record.latest_status == status)
             )
             .order_by(Record.end_time.desc())
         )

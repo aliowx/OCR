@@ -71,7 +71,7 @@ def update_record(self, plate_id) -> str:
         record = crud.record.get_by_plate(
             db=self.session,
             plate=plate,
-            status=StatusRecord.unfinished,
+            status=StatusRecord.unfinished.value,
             for_update=True,
         )
         if record is None and plate.type_camera != TypeCamera.exitDoor.value:

@@ -270,61 +270,18 @@ async def dashboard(db: AsyncSession):
     return PaginatedContent(data=result)
 
 
-async def report_moment(db: AsyncSession, params: ParamsRecordMoment):
-    camera = None
-    result_moment = []
-    # search by camera
-    if params.input_camera_serial is not None:
-        camera = await equipment_repo.one_equipment(
-            db, serial_number=params.input_camera_serial
+async def report_moment(db: AsyncSession):
+    result = []
+
+    plate_group = await crud.plate.count_entrance_exit_door(db)
+    for count, type_camera, zone_id in plate_group:
+        result.append(
+            {"count": count, "type_camera": type_camera, "zone_id": zone_id}
         )
-    # search in zone
-    if (
-        params.input_name_zone
-        or params.input_floor_number
-        or params.input_name_sub_zone
-    ):
-        zones = await zonereportrepository.get_multi_by_filter(
-            db,
-            params=ReadZoneLotsParams(
-                input_name_sub_zone=params.input_name_sub_zone,
-                input_floor_number=params.input_floor_number,
-                input_name_zone=params.input_name_zone,
-            ),
-        )
-
-        for zone in zones:
-            lots = await spotreportrepository.find_lines_moment(
-                db,
-                params=ParamsRecordMomentFilters(
-                    input_camera_id=camera, input_zone_id=zone.id
-                ),
-            )
-    # list all lots
-    else:
-        lots = await spotreportrepository.find_lines_moment(
-            db, params=ParamsRecordMomentFilters(input_camera_id=camera)
-        )
-    # set camera_code in dict lot
-    if lots:
-        for lot in lots:
-            camera_code = await equipment_repo.get(db, id=lot.camera_id)
-            lot = jsonable_encoder(lot)
-            lot.update({"camera_code": camera_code.camera_code})
-            result_moment.append(lot)
-
-    if params.size is not None:  # limit
-        result_moment = result_moment[: params.size]
-
-    if params.page is not None:  # skip
-        result_moment = result_moment[:: params.page]
-
-    if params.asc:
-        result_moment.reverse()
 
     return PaginatedContent(
-        data=result_moment,
-        total_count=len(result_moment),
-        size=params.size,
-        page=params.page,
+        data=result,
+        total_count=0,
+        size=0,
+        page=0,
     )

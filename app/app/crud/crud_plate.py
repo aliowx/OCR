@@ -11,6 +11,7 @@ from app.crud.base import CRUDBase
 from app.models.plate import Plate
 from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
 from cache.redis import redis_client
+from sqlalchemy import func
 
 
 class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
@@ -34,7 +35,6 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
             "plates:1", rapidjson.dumps(jsonable_encoder(db_obj))
         )
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
-
 
     async def find_plates(
         self, db: Session | AsyncSession, *, params: ParamsPlates
@@ -73,6 +73,23 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         )
 
         return [items, all_items_count]
+
+    async def count_entrance_exit_door(self, db: AsyncSession):
+        query = select(
+            func.count(Plate.id).label("count"),
+            Plate.type_camera,
+            Plate.zone_id,
+        ).group_by(Plate.type_camera, Plate.zone_id)
+
+        # Execute the query
+        result = await db.execute(query)
+        # Fetch all results
+        rows = result.fetchall()  # Use `fetchall()` to get all rows
+        # Format results
+        formatted_results = [
+            (row.count, row.type_camera, row.zone_id) for row in rows
+        ]
+        return formatted_results
 
 
 plate = CRUDPlate(Plate)

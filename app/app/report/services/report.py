@@ -202,7 +202,7 @@ async def dashboard(db: AsyncSession):
     ]
 
     report_referred = {
-        "name": "report_capacity",
+        "name": "report_time_referred",
         "data": {
             "one_week_ago": [],
             "one_month_ago": [],

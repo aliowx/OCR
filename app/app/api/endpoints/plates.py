@@ -1,9 +1,11 @@
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,WebSocket
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from cache.redis import redis_connect_async
 
 from app import crud, models, schemas, utils
 from app.api import deps
@@ -64,6 +66,25 @@ async def read_plates(
             size=params.size,
         )
     )
+
+
+
+@router.websocket("/plates")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection = await redis_connect_async(240)  # 3 mins
+    async with connection.pubsub() as channel:
+        await channel.subscribe("plates:1")
+        try:
+            while True:
+                data = await channel.get_message(
+                    ignore_subscribe_messages=True, timeout=240
+                )
+                if data and "data" in data:
+                    print(data["data"])
+                    await websocket.send_text(data["data"])
+        finally:
+            channel.unsubscribe("plates:1")
 
 
 @router.post("/")

@@ -19,7 +19,7 @@ namespace = "report"
 logger = logging.getLogger(__name__)
 
 
-@router.get("/status-parking-by-zone")
+# @router.get("/status-parking-by-zone")
 async def zone_status(
     _: Annotated[
         bool,

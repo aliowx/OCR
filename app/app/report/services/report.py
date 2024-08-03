@@ -17,6 +17,7 @@ from app import schemas, crud
 from app.parking.repo import equipment_repo, zone_repo
 from app.parking.schemas.equipment import ReadEquipmentsFilter
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
@@ -48,6 +49,7 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
                 capacity_empty=capacity_empty,
             )
             list_lots_zone.append(jsonable_encoder(zone_lots))
+
     if params.size is not None:  # limit
         list_lots_zone = list_lots_zone[: params.size]
 
@@ -65,13 +67,29 @@ async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
     )
 
 
+def get_month_dates(reference_date, months_ago):
+    month_dates = []
+
+    for i in range(1, months_ago + 1):
+        # Calculate the start date of the month `i` months ago
+        start_date = (reference_date - relativedelta(months=i)).replace(day=1)
+
+        # Calculate the end date of that month
+        end_date = (start_date + relativedelta(months=1)).replace(
+            day=1
+        ) - timedelta(days=1)
+
+        month_dates.append((start_date, end_date))
+
+    return month_dates
+
+
 async def dashboard(db: AsyncSession):
     result = []
     zones = await zone_repo.get_multi(db)
     records, total_count_record = await crud.record.find_records(
         db, input_status_record=schemas.StatusRecord.unfinished
     )
-    print(total_count_record)
     capacity_total = 0
     capacity_empty = 0
     if zones:
@@ -80,7 +98,8 @@ async def dashboard(db: AsyncSession):
 
     result.append(
         {
-            "report-capacity": {
+            "name": "report_capacity",
+            "data": {
                 "capacity_total": capacity_total,
                 "capacity_empty": (
                     capacity_total - total_count_record
@@ -88,9 +107,10 @@ async def dashboard(db: AsyncSession):
                     else capacity_empty
                 ),
                 "capacity_full": total_count_record,
-            }
+            },
         }
     )
+
     one_day_ago = datetime.now() - timedelta(days=1)
     one_week_ago = datetime.now() - timedelta(days=7)
     one_month_ago = datetime.now() - timedelta(days=30)
@@ -104,14 +124,13 @@ async def dashboard(db: AsyncSession):
         six_month_ago,
         one_year_ago,
     ]
+
     avrage_one_day_ago = 0
     avrage_one_week_ago = 0
     avrage_one_month_ago = 0
     avrage_six_month_ago = 0
     avrage_one_year_ago = 0
     for time in timing:
-        print(datetime.now())
-        print("hello", time)
         records, total_count_record_timing = await crud.record.find_records(
             db,
             input_status_record=schemas.StatusRecord.finished,
@@ -125,47 +144,129 @@ async def dashboard(db: AsyncSession):
                 hours, minutes, seconds = map(
                     float, time_park_record.split(":")
                 )
-                minutes = minutes / 60 if minutes > 0 else 0
-                seconds = seconds / 3600 if seconds > 0 else 0
+                hours = hours * 60 if hours > 0 else 0
+                minutes = minutes if minutes > 0 else 0
+                seconds = seconds / 60 if seconds > 0 else 0
                 total_time_park = hours + minutes + seconds
-                print(total_time_park)
                 if time == one_day_ago:
-                    print("one",record)
                     avrage_one_day_ago += (
                         total_time_park / total_count_record_timing
                     )
                 if time == one_week_ago:
-                    print("week",record)
                     avrage_one_week_ago += (
                         total_time_park / total_count_record_timing
                     )
                 if time == one_month_ago:
-                    print("month",record)
                     avrage_one_month_ago += (
                         total_time_park / total_count_record_timing
                     )
                 if time == six_month_ago:
-                    print("six",record)
                     avrage_six_month_ago += (
                         total_time_park / total_count_record_timing
                     )
                 if time == one_year_ago:
-                    print("plate",record)
                     avrage_one_year_ago += (
                         total_time_park / total_count_record_timing
                     )
 
     result.append(
         {
-            "report_avrage_time": {
-                "avrage_one_day_ago": avrage_one_day_ago,
-                "avrage_one_week_ago": avrage_one_week_ago,
-                "avrage_one_month_ago": avrage_one_month_ago,
-                "avrage_six_month_ago": avrage_six_month_ago,
-                "avrage_one_year_ago": avrage_one_year_ago,
-            }
+            "name": "report_avrage_time",
+            "data": {
+                "avrage_one_day_ago": round(avrage_one_day_ago, 4),
+                "avrage_one_week_ago": round(avrage_one_week_ago, 4),
+                "avrage_one_month_ago": round(avrage_one_month_ago, 4),
+                "avrage_six_month_ago": round(avrage_six_month_ago, 4),
+                "avrage_one_year_ago": round(avrage_one_year_ago, 4),
+            },
         }
     )
+
+    time_weekly_referred = [
+        datetime.now() - timedelta(days=i) for i in range(1, 8)
+    ]
+
+    time_month_referred = [
+        datetime.now() - timedelta(days=i) for i in range(1, 30)
+    ]
+
+    time_six_month_referred = get_month_dates(datetime.now(), 6)
+
+    time_one_year_referred = get_month_dates(datetime.now(), 12)
+
+    timing_referred = [
+        (time_weekly_referred, "one_week_ago"),
+        (time_month_referred, "one_month_ago"),
+        (time_six_month_referred, "six_month_ago"),
+        (time_one_year_referred, "one_year_ago"),
+    ]
+
+    report_referred = {
+        "name": "report_capacity",
+        "data": {
+            "one_week_ago": [],
+            "one_month_ago": [],
+            "six_month_ago": [],
+            "one_year_ago": [],
+        },
+    }
+    for referred_time, key in timing_referred:
+
+        if key in ["one_week_ago", "one_month_ago"]:
+            for referred_timeing in referred_time:
+                start_time = referred_timeing.date()
+                end_time = (referred_timeing + timedelta(days=1)).date()
+                records, total_count_record_timing = (
+                    await crud.record.find_records(
+                        db,
+                        input_status_record=schemas.StatusRecord.finished,
+                        input_start_create_time=start_time,
+                        input_end_create_time=end_time,
+                    )
+                )
+                report_referred["data"][key].append(
+                    {
+                        "strat_date": start_time,
+                        "end_date": end_time,
+                        "count_referred": total_count_record_timing,
+                    },
+                )
+        elif key == "six_month_ago":
+            for start_time, end_time in time_six_month_referred:
+                records, total_count_record_timing = (
+                    await crud.record.find_records(
+                        db,
+                        input_status_record=schemas.StatusRecord.finished,
+                        input_start_create_time=start_time,
+                        input_end_create_time=end_time,
+                    )
+                )
+                report_referred["data"][key].append(
+                    {
+                        "strat_date": start_time.date(),
+                        "end_date": end_time.date(),
+                        "count_referred": total_count_record_timing,
+                    },
+                )
+        elif key == "one_year_ago":
+            for start_time, end_time in time_one_year_referred:
+                records, total_count_record_timing = (
+                    await crud.record.find_records(
+                        db,
+                        input_status_record=schemas.StatusRecord.finished,
+                        input_start_create_time=start_time,
+                        input_end_create_time=end_time,
+                    )
+                )
+                report_referred["data"][key].append(
+                    {
+                        "strat_date": start_time.date(),
+                        "end_date": end_time.date(),
+                        "count_referred": total_count_record_timing,
+                    },
+                )
+    result.append(report_referred)
+
     return PaginatedContent(data=result)
 
 

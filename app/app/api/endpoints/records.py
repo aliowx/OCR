@@ -118,7 +118,7 @@ async def update_record(
         ),
     ],
     id_record: int,
-    params: schemas.RecordUpdate = Depends(),
+    params: schemas.RecordUpdate,
 ) -> APIResponseType[schemas.Record]:
     """
     update status record .

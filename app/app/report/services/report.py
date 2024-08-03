@@ -94,7 +94,7 @@ async def dashboard(db: AsyncSession):
     capacity_empty = 0
     if zones:
         for zone in zones:
-            capacity_total += zone.capacity
+            capacity_total += zone.capacity if zone.capacity else 0
 
     result.append(
         {

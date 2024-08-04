@@ -104,7 +104,7 @@ def calculate_percentage(start_time, end_time):
 
 
 async def dashboard(db: AsyncSession):
-    result = []
+    result = {}
     zones = await zone_repo.get_multi(db)
     records, total_count_record = await crud.record.find_records(
         db, input_status_record=schemas.StatusRecord.unfinished
@@ -115,19 +115,15 @@ async def dashboard(db: AsyncSession):
         for zone in zones:
             capacity_total += zone.capacity if zone.capacity else 0
 
-    result.append(
-        {
-            "report_capacity": {
-                "capacity_total": capacity_total,
-                "capacity_empty": (
-                    capacity_total - total_count_record
-                    if total_count_record
-                    else capacity_empty
-                ),
-                "capacity_full": total_count_record,
-            },
-        }
-    )
+    result["report_capacity"] = {
+        "capacity_total": capacity_total,
+        "capacity_empty": (
+            capacity_total - total_count_record
+            if total_count_record
+            else capacity_empty
+        ),
+        "capacity_full": total_count_record,
+    }
 
     one_day_ago = datetime.now() - timedelta(days=1)
     one_week_ago = datetime.now() - timedelta(days=7)
@@ -258,46 +254,42 @@ async def dashboard(db: AsyncSession):
                         total_time_park / total_count_record_timing
                     )
 
-    result.append(
-        {
-            "report_avrage_time": {
-                "avrage_one_day_ago": {
-                    "time": round(avrage_one_day_ago, 4),
-                    "compare_percentage_with_pervious_day": (
-                        calculate_percentage(
-                            compare_avrage_one_day_ago, avrage_one_day_ago
-                        )
-                    ),
-                },
-                "avrage_one_week_ago": {
-                    "time": round(avrage_one_week_ago, 4),
-                    "compare_percentage_with_pervious_week": calculate_percentage(
-                        compare_avrage_one_week_ago, avrage_one_week_ago
-                    ),
-                },
-                "avrage_one_month_ago": {
-                    "time": round(avrage_one_month_ago, 4),
-                    "compare_percentage_with_pervious_month": calculate_percentage(
-                        compare_avrage_one_month_ago, avrage_one_month_ago
-                    ),
-                },
-                "avrage_six_month_ago": {
-                    "time": round(avrage_six_month_ago, 4),
-                    "compare_percentage_with_pervious_six_month": calculate_percentage(
-                        compare_avrage_six_month_ago, avrage_six_month_ago
-                    ),
-                },
-                "avrage_one_year_ago": {
-                    "time": round(avrage_one_year_ago, 4),
-                    "compare_percentage_with_pervious_year": calculate_percentage(
-                        compare_avrage_one_year_ago, avrage_one_year_ago
-                    ),
-                },
-            },
-        }
-    )
+    result["report_avrage_time"] = {
+        "avrage_one_day_ago": {
+            "time": round(avrage_one_day_ago, 4),
+            "compare_percentage_with_pervious_day": (
+                calculate_percentage(
+                    compare_avrage_one_day_ago, avrage_one_day_ago
+                )
+            ),
+        },
+        "avrage_one_week_ago": {
+            "time": round(avrage_one_week_ago, 4),
+            "compare_percentage_with_pervious_week": calculate_percentage(
+                compare_avrage_one_week_ago, avrage_one_week_ago
+            ),
+        },
+        "avrage_one_month_ago": {
+            "time": round(avrage_one_month_ago, 4),
+            "compare_percentage_with_pervious_month": calculate_percentage(
+                compare_avrage_one_month_ago, avrage_one_month_ago
+            ),
+        },
+        "avrage_six_month_ago": {
+            "time": round(avrage_six_month_ago, 4),
+            "compare_percentage_with_pervious_six_month": calculate_percentage(
+                compare_avrage_six_month_ago, avrage_six_month_ago
+            ),
+        },
+        "avrage_one_year_ago": {
+            "time": round(avrage_one_year_ago, 4),
+            "compare_percentage_with_pervious_year": calculate_percentage(
+                compare_avrage_one_year_ago, avrage_one_year_ago
+            ),
+        },
+    }
 
-    list_comapre_referred = []
+    list_referred = {}
     time_weekly_referred = [
         datetime.now() - timedelta(days=i) for i in range(1, 8)
     ]
@@ -311,10 +303,10 @@ async def dashboard(db: AsyncSession):
     time_one_year_referred = get_month_dates(datetime.now(), 12)
 
     timing_referred = [
-        (time_weekly_referred, "one_week_ago"),
-        (time_month_referred, "one_month_ago"),
-        (time_six_month_referred, "six_month_ago"),
-        (time_one_year_referred, "one_year_ago"),
+        (time_weekly_referred, "week"),
+        (time_month_referred, "month"),
+        (time_six_month_referred, "six_month"),
+        (time_one_year_referred, "year"),
     ]
 
     compare_time_weekly_referred = [
@@ -334,26 +326,24 @@ async def dashboard(db: AsyncSession):
     )
 
     timing_referred_compare = [
-        (compare_time_weekly_referred, "compare_time_weekly_referred"),
-        (compare_time_month_referred, "compare_time_month_referred"),
-        (compare_time_six_month_referred, "compare_time_six_month_referred"),
-        (compare_time_one_year_referred, "compare_time_one_year_referred"),
+        (compare_time_weekly_referred, "week"),
+        (compare_time_month_referred, "month"),
+        (compare_time_six_month_referred, "six_month"),
+        (compare_time_one_year_referred, "year"),
     ]
 
     report_referred_compare = {
-        "report_time_referred_compare": {
-            "compare_time_weekly_referred": [],
-            "compare_time_month_referred": [],
-            "compare_time_six_month_referred": [],
-            "compare_time_one_year_referred": [],
-        },
+        "week": [],
+        "month": [],
+        "six_month": [],
+        "year": [],
     }
 
     for referred_time_compare, key_compare in timing_referred_compare:
 
         if key_compare in [
-            "compare_time_weekly_referred",
-            "compare_time_month_referred",
+            "week",
+            "month",
         ]:
             for referred_timeing in referred_time_compare:
                 start_time = referred_timeing.date()
@@ -366,7 +356,7 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare["report_time_referred_compare"][
+                report_referred_compare[
                     key_compare
                 ].append(
                     {
@@ -375,7 +365,7 @@ async def dashboard(db: AsyncSession):
                         "count_referred": total_count_record_timing,
                     },
                 )
-        elif key_compare == "compare_time_six_month_referred":
+        elif key_compare == "six_month":
             for start_time, end_time in compare_time_six_month_referred:
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -385,7 +375,7 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare["report_time_referred_compare"][
+                report_referred_compare[
                     key_compare
                 ].append(
                     {
@@ -394,7 +384,7 @@ async def dashboard(db: AsyncSession):
                         "count_referred": total_count_record_timing,
                     },
                 )
-        elif key_compare == "compare_time_one_year_referred":
+        elif key_compare == "year":
             for start_time, end_time in compare_time_one_year_referred:
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -404,7 +394,7 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare["report_time_referred_compare"][
+                report_referred_compare[
                     key_compare
                 ].append(
                     {
@@ -413,20 +403,18 @@ async def dashboard(db: AsyncSession):
                         "count_referred": total_count_record_timing,
                     },
                 )
-
-    list_comapre_referred.append(report_referred_compare)
+    list_referred["report_referred_compare"] = report_referred_compare
+    # result[""] = list_referred
 
     report_referred = {
-        "report_time_referred": {
-            "one_week_ago": [],
-            "one_month_ago": [],
-            "six_month_ago": [],
-            "one_year_ago": [],
-        },
+        "week": [],
+        "month": [],
+        "six_month": [],
+        "year": [],
     }
     for referred_time, key in timing_referred:
 
-        if key in ["one_week_ago", "one_month_ago"]:
+        if key in ["week", "month"]:
             for referred_timeing in referred_time:
                 start_time = referred_timeing.date()
                 end_time = (referred_timeing + timedelta(days=1)).date()
@@ -438,14 +426,14 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred["report_time_referred"][key].append(
+                report_referred[key].append(
                     {
                         "strat_date": start_time,
                         "end_date": end_time,
                         "count_referred": total_count_record_timing,
                     },
                 )
-        elif key == "six_month_ago":
+        elif key == "six_month":
             for start_time, end_time in time_six_month_referred:
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -455,14 +443,14 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred["report_time_referred"][key].append(
+                report_referred[key].append(
                     {
                         "strat_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
                 )
-        elif key == "one_year_ago":
+        elif key == "year":
             for start_time, end_time in time_one_year_referred:
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -472,16 +460,16 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred["report_time_referred"][key].append(
+                report_referred[key].append(
                     {
                         "strat_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
                 )
+    list_referred["report_referred"] = report_referred
 
-    list_comapre_referred.append(report_referred)
-    result.append(list_comapre_referred)
+    result["list_referred"] = list_referred
 
     return PaginatedContent(data=result)
 

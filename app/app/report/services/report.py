@@ -356,11 +356,9 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare[
-                    key_compare
-                ].append(
+                report_referred_compare[key_compare].append(
                     {
-                        "strat_date": start_time,
+                        "start_date": start_time,
                         "end_date": end_time,
                         "count_referred": total_count_record_timing,
                     },
@@ -375,11 +373,9 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare[
-                    key_compare
-                ].append(
+                report_referred_compare[key_compare].append(
                     {
-                        "strat_date": start_time.date(),
+                        "start_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
@@ -394,17 +390,14 @@ async def dashboard(db: AsyncSession):
                         input_end_create_time=end_time,
                     )
                 )
-                report_referred_compare[
-                    key_compare
-                ].append(
+                report_referred_compare[key_compare].append(
                     {
-                        "strat_date": start_time.date(),
+                        "start_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
                 )
     list_referred["report_referred_compare"] = report_referred_compare
-    # result[""] = list_referred
 
     report_referred = {
         "week": [],
@@ -428,7 +421,7 @@ async def dashboard(db: AsyncSession):
                 )
                 report_referred[key].append(
                     {
-                        "strat_date": start_time,
+                        "start_date": start_time,
                         "end_date": end_time,
                         "count_referred": total_count_record_timing,
                     },
@@ -445,7 +438,7 @@ async def dashboard(db: AsyncSession):
                 )
                 report_referred[key].append(
                     {
-                        "strat_date": start_time.date(),
+                        "start_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
@@ -462,7 +455,7 @@ async def dashboard(db: AsyncSession):
                 )
                 report_referred[key].append(
                     {
-                        "strat_date": start_time.date(),
+                        "start_date": start_time.date(),
                         "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },

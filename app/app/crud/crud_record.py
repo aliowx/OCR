@@ -99,7 +99,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_status_record is not None:
             filters.append(Record.latest_status == input_status_record)
 
-
         if input_score is not None:
             filters.append(Record.score >= input_score)
 
@@ -162,6 +161,27 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         ]
 
         return result_records
+
+    async def get_count_capacity(
+        self,
+        db: Session | AsyncSession,
+        zone: schemas.Zone,
+        status_in: StatusRecord,
+    ):
+        # add id zone and id subzone
+        # when have list to add set use update
+        # when have int to add set use add
+        zone_ids = {zone.id}
+        zone_ids.update(zone.children)
+
+        query = (
+            select(func.count())
+            .select_from(Record)
+            .where(Record.zone_id.in_(zone_ids))
+            .filter(*[Record.latest_status == status_in])
+        )
+
+        return await db.scalar(query)
 
     # for worker need func sync
     def get_multi_record(

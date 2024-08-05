@@ -62,10 +62,9 @@ class RecordInDB(RecordInDBBase):
 
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
-    input_start_time_min: datetime | None = None
-    input_start_time_max: datetime | None = None
-    input_end_time_min: datetime | None = None
-    input_end_time_max: datetime | None = None
+    input_create_time: datetime | None = None
+    input_start_time: datetime | None = None
+    input_end_time: datetime | None = None
     input_score: float | None = None
     input_status_record: StatusRecord | None = None
     skip: int | None = 0

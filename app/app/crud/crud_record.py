@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -67,10 +67,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         input_plate: str = None,
         input_zone_id: int = None,
         input_create_time: datetime = None,
-        input_start_time_min: datetime = None,
-        input_start_time_max: datetime = None,
-        input_end_time_min: datetime = None,
-        input_end_time_max: datetime = None,
         input_status_record: StatusRecord = None,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
@@ -103,18 +99,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_status_record is not None:
             filters.append(Record.latest_status == input_status_record)
 
-        if input_start_time_min is not None:
-            filters.append(Record.start_time >= input_start_time_min)
-
-        if input_start_time_max is not None:
-            filters.append(Record.start_time <= input_start_time_max)
-
-        if input_end_time_min is not None:
-            filters.append(Record.end_time >= input_end_time_min)
-
-        if input_end_time_max is not None:
-            filters.append(Record.end_time <= input_end_time_max)
-
         if input_score is not None:
             filters.append(Record.score >= input_score)
 
@@ -137,6 +121,67 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             )
         )
         return [items, all_items_count]
+
+    async def max_time_record(
+        self, db: Session | AsyncSession, *, date: datetime = None
+    ) -> list[Record]:
+
+        sub_query = select(
+            func.max(Record.end_time - Record.start_time)
+        ).scalar_subquery()
+
+        query = (
+            select(
+                ((Record.end_time) - (Record.start_time)).label("time_park"),
+                Record.plate,
+                Record.created,
+            )
+            .where((Record.end_time - Record.start_time) == sub_query)
+            .group_by(
+                Record.plate,
+                Record.created,
+                ((Record.end_time) - (Record.start_time)).label("time_park"),
+            )
+        )
+
+        filters = [Record.is_deleted == False]
+
+        if date:
+            filters.append(Record.created <= date)
+
+        records_execute = await db.execute(query)
+        records = records_execute.fetchall()
+        result_records = [
+            (
+                record.plate,
+                record.created,
+                str(timedelta(seconds=record.time_park.seconds)),
+            )
+            for record in records
+        ]
+
+        return result_records
+
+    async def get_count_capacity(
+        self,
+        db: Session | AsyncSession,
+        zone: schemas.Zone,
+        status_in: StatusRecord,
+    ):
+        # add id zone and id subzone
+        # when have list to add set use update
+        # when have int to add set use add
+        zone_ids = {zone.id}
+        zone_ids.update(zone.children)
+
+        query = (
+            select(func.count())
+            .select_from(Record)
+            .where(Record.zone_id.in_(zone_ids))
+            .filter(*[Record.latest_status == status_in])
+        )
+
+        return await db.scalar(query)
 
     # for worker need func sync
     def get_multi_record(

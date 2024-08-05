@@ -15,9 +15,8 @@ class ZoneBase(BaseModel):
 class ZoneComplete(ZoneBase):
     empty: int | None = None
     full: int | None = None
-    # parent: ZoneBase | None = None
-    # children: list["Zone"] = Field(default_factory=list)
-    pricings: list["ZonePrice"] = Field(default_factory=list)
+    unknown: int | None = None
+    #  pricings: list["ZonePrice"] = Field(default_factory=list)
 
 
 class ZoneCreate(BaseModel):
@@ -44,7 +43,9 @@ class ZoneInDBBase(ZoneComplete):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Zone(ZoneInDBBase): ...
+class Zone(ZoneInDBBase):
+    children: list[int] = []
+    ancestors: list[int] = []
 
 
 class ZoneInDB(ZoneInDBBase): ...

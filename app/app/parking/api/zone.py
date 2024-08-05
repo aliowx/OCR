@@ -50,9 +50,8 @@ async def read_zones(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
 
     """
-    # adapter = TypeAdapter(schemas.Zone)
     zones = await zone_services.read_zone(db, params=params)
-    # zones1 = adapter.validate_python(zones.data, from_attributes=True)
+
     return APIResponse(zones)
 
 

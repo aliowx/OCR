@@ -81,11 +81,9 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
             Plate.zone_id,
         ).group_by(Plate.type_camera, Plate.zone_id)
 
-        # Execute the query
         result = await db.execute(query)
-        # Fetch all results
-        rows = result.fetchall()  # Use `fetchall()` to get all rows
-        # Format results
+        rows = result.fetchall()
+
         formatted_results = [
             (row.count, row.type_camera, row.zone_id) for row in rows
         ]

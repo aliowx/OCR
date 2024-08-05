@@ -44,7 +44,10 @@ class ZoneInDBBase(ZoneComplete):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Zone(ZoneInDBBase): ...
+class Zone(ZoneInDBBase):
+    parent: "Zone" = None
+    children: list[int] = []
+    ancesstors: list[int] = []
 
 
 class ZoneInDB(ZoneInDBBase): ...

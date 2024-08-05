@@ -51,9 +51,6 @@ async def read_zones(
 
     """
     zones = await zone_services.read_zone(db, params=params)
-    for zone in zones.data:
-        zone.children = await zone_services.get_children(db, zone)
-        zone.ancesstors = await zone_services.get_ancestors(db, zone)
 
     return APIResponse(zones)
 

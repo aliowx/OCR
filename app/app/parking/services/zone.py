@@ -10,6 +10,7 @@ from app.pricing.repo import price_repo
 from fastapi.encoders import jsonable_encoder
 from pydantic import TypeAdapter
 from app.crud.crud_record import record as curdRecord
+from app.schemas.record import StatusRecord
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +23,21 @@ async def read_zone(
         db, params=params
     )
     for zone in zones:
-        record, total_count_record = await curdRecord.find_records(
-            db, input_zone_id=zone.id, input_status_record="unfinished"
+        zone.children = await get_children(db, zone)
+        zone.ancestors = await get_ancestors(db, zone)
+
+        total_count_full = await curdRecord.get_count_capacity(
+            db, zone=zone, status_in=StatusRecord.unfinished.value
         )
+        zone.full = total_count_full
         zone.empty = (
-            (zone.capacity - total_count_record)
-            if total_count_record
+            (zone.capacity - total_count_full)
+            if total_count_full
             else zone.capacity
         )
-        zone.full = total_count_record if total_count_record else 0
+        zone.unknown = await curdRecord.get_count_capacity(
+            db, zone=zone, status_in=StatusRecord.unknown.value
+        )
 
     return utils.PaginatedContent(
         data=zones, total_count=total_count, size=params.size, page=params.page
@@ -51,6 +58,7 @@ async def create_zone(
 
     zone = await repo.zone_repo.create(db, obj_in=zone_input)
     return zone
+
 
 async def get_children(
     db: AsyncSession, zone: parking_schemas.Zone, max_depth: int = 8
@@ -76,28 +84,24 @@ async def get_ancestors(
 ):
     if zone.parent_id is None:
         return []
-    all_ancesstors = {zone.parent_id}
+    all_ancestors = {zone.parent_id}
 
     to_search = {zone.parent_id}
 
     for _ in range(max_depth):
-        ancesstors = await repo.zone_repo.get_multi_ancesstor(
-            db, ids=to_search
-        )
-        if all(
-            ancesstor.parent_id in all_ancesstors for ancesstor in ancesstors
-        ):
+        ancestors = await repo.zone_repo.get_multi_ancestor(db, ids=to_search)
+        if all(ancestor.parent_id in all_ancestors for ancestor in ancestors):
 
             break
         to_search = set()
-        for ancesstor in ancesstors:
+        for ancestor in ancestors:
             if (
-                ancesstor.parent_id not in all_ancesstors
-                and ancesstor.parent_id is not None
+                ancestor.parent_id not in all_ancestors
+                and ancestor.parent_id is not None
             ):
-                to_search.add(ancesstor.parent_id)
-                all_ancesstors.add(ancesstor.parent_id)
-    return all_ancesstors
+                to_search.add(ancestor.parent_id)
+                all_ancestors.add(ancestor.parent_id)
+    return all_ancestors
 
 
 async def create_sub_zone(

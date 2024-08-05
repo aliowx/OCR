@@ -52,6 +52,53 @@ async def create_zone(
     zone = await repo.zone_repo.create(db, obj_in=zone_input)
     return zone
 
+async def get_children(
+    db: AsyncSession, zone: parking_schemas.Zone, max_depth: int = 8
+):
+    all_children = {zone.id}
+
+    to_search = {zone.id}
+
+    for _ in range(max_depth):
+        children = await repo.zone_repo.get_multi_child(db, ids=to_search)
+        if all(child.id in all_children for child in children):
+            break
+        to_search = set()
+        for child in children:
+            if child.id not in all_children:
+                to_search.add(child.id)
+                all_children.add(child.id)
+    return all_children - {zone.id}
+
+
+async def get_ancestors(
+    db: AsyncSession, zone: parking_schemas.Zone, max_depth: int = 8
+):
+    if zone.parent_id is None:
+        return []
+    all_ancesstors = {zone.parent_id}
+
+    to_search = {zone.parent_id}
+
+    for _ in range(max_depth):
+        ancesstors = await repo.zone_repo.get_multi_ancesstor(
+            db, ids=to_search
+        )
+        if all(
+            ancesstor.parent_id in all_ancesstors for ancesstor in ancesstors
+        ):
+
+            break
+        to_search = set()
+        for ancesstor in ancesstors:
+            if (
+                ancesstor.parent_id not in all_ancesstors
+                and ancesstor.parent_id is not None
+            ):
+                to_search.add(ancesstor.parent_id)
+                all_ancesstors.add(ancesstor.parent_id)
+    return all_ancesstors
+
 
 async def create_sub_zone(
     db: AsyncSession,

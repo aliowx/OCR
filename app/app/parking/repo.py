@@ -120,12 +120,31 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
         )
         return zone
 
+    async def get_multi_child(self, db: Session | AsyncSession, ids: int):
+        if ids is not None:
+            return await self._all(
+                db.scalars(
+                    select(Zone).filter(
+                        *[Zone.parent_id.in_(ids), Zone.is_deleted == false()]
+                    )
+                )
+            )
+
+    async def get_multi_ancesstor(self, db: Session | AsyncSession, ids: int):
+        if ids is not None:
+            return await self._all(
+                db.scalars(
+                    select(Zone).filter(
+                        *[Zone.id.in_(ids), Zone.is_deleted == false()]
+                    )
+                )
+            )
+
     async def get(
         self, db: Session | AsyncSession, id: int
     ) -> ModelType | Awaitable[ModelType] | None:
-        query = (
-            select(self.model)
-            .filter(self.model.id == id, self.model.is_deleted == False)
+        query = select(self.model).filter(
+            self.model.id == id, self.model.is_deleted == False
         )
 
         return await self._first(db.scalars(query))

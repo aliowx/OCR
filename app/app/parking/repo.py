@@ -130,7 +130,7 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                 )
             )
 
-    async def get_multi_ancesstor(self, db: Session | AsyncSession, ids: int):
+    async def get_multi_ancestor(self, db: Session | AsyncSession, ids: int):
         if ids is not None:
             return await self._all(
                 db.scalars(

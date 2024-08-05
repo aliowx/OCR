@@ -105,6 +105,15 @@ def calculate_percentage(start_time, end_time):
 
 async def dashboard(db: AsyncSession):
     result = {}
+
+    date_today = datetime.now().date()
+
+    records, total_count_record = await crud.record.find_records(
+        db, input_create_time=date_today
+    )
+
+    result["total_park_today"] = total_count_record
+
     zones = await zone_repo.get_multi(db)
     records, total_count_record = await crud.record.find_records(
         db, input_status_record=schemas.StatusRecord.unfinished
@@ -463,6 +472,8 @@ async def dashboard(db: AsyncSession):
     list_referred["report_referred"] = report_referred
 
     result["list_referred"] = list_referred
+
+    result["list_max_time_park"] = await crud.record.max_time_record(db)
 
     return PaginatedContent(data=result)
 

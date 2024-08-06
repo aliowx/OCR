@@ -175,8 +175,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         zone_ids.update(zone.children)
 
         query = (
-            select(func.count())
-            .select_from(Record)
+            select(func.count(Record.id))
             .where(Record.zone_id.in_(zone_ids))
             .filter(*[Record.latest_status == status_in])
         )

@@ -81,7 +81,11 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
             Plate.zone_id,
         ).group_by(Plate.type_camera, Plate.zone_id)
 
-        result = await db.execute(query)
+        filters = [
+            Plate.is_deleted == False,
+            Plate.created <= datetime.now().date(),
+        ]
+        result = await db.execute(query.filter(*filters))
         rows = result.fetchall()
 
         formatted_results = [

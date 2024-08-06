@@ -75,15 +75,17 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         return [items, all_items_count]
 
     async def count_entrance_exit_door(self, db: AsyncSession):
+
         query = select(
-            func.count(Plate.id).label("count"),
+            # func.distinact return unique value
+            func.count(func.distinct(Plate.plate)).label("count"),
             Plate.type_camera,
             Plate.zone_id,
-        ).group_by(Plate.type_camera, Plate.zone_id)
+        ).group_by(Plate.plate, Plate.type_camera, Plate.zone_id)
 
         filters = [
             Plate.is_deleted == False,
-            Plate.created <= datetime.now().date(),
+            Plate.created >= datetime.now().date(),
         ]
         result = await db.execute(query.filter(*filters))
         rows = result.fetchall()

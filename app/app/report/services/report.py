@@ -471,25 +471,30 @@ async def dashboard(db: AsyncSession):
                 )
     list_referred["report_referred"] = report_referred
 
+    list_referred["avarage_all_time_referred"] = (
+        await crud.record.avarage_time_referred(db)
+    )
+
     result["list_referred"] = list_referred
 
-    result["list_max_time_park"] = await crud.record.max_time_record(db)
+    max_time_park = await crud.record.max_time_record(db)
+
+    result["list_max_time_park"] = [
+        {"plate": plate, "created": created, "timr_park": time_park}
+        for plate, created, time_park in max_time_park
+    ]
 
     return PaginatedContent(data=result)
 
 
 async def report_moment(db: AsyncSession):
-    result = []
-
+    result = {}
     plate_group = await crud.plate.count_entrance_exit_door(db)
     for count, type_camera, zone_id in plate_group:
-        result.append(
-            {"count": count, "type_camera": type_camera, "zone_id": zone_id}
-        )
+        result["count_entrance_exit_door"] = {
+            "count": count,
+            "type_camera": type_camera,
+            "zone_id": zone_id,
+        }
 
-    return PaginatedContent(
-        data=result,
-        total_count=0,
-        size=0,
-        page=0,
-    )
+    return PaginatedContent(data=result)

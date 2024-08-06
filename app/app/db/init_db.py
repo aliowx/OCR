@@ -24,6 +24,7 @@ def create_super_admin(db: Session) -> None:
                 config.settings.FIRST_SUPERUSER_PASSWORD
             ),
             is_superuser=True,
+            role="ADMINISTRATOR",
         )
         db.add(user)
         db.commit()

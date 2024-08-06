@@ -182,6 +182,18 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return await db.scalar(query)
 
+    async def avarage_time_referred(self, db: Session | AsyncSession):
+
+        query = select(
+            func.avg(
+                ((Record.end_time) - (Record.start_time)).label("time_park")
+            )
+        )
+        avg_time_park = await db.scalar(query)
+        avg_time_park_convert = str(timedelta(seconds=avg_time_park.seconds))
+
+        return avg_time_park_convert
+
     # for worker need func sync
     def get_multi_record(
         self,

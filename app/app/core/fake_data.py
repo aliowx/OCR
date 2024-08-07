@@ -90,9 +90,7 @@ class FakeData(BaseSettings):
 
     PLATE1: ClassVar = models.Plate(
         plate="plate1" + generate_random_string(3),
-        record_time=(
-            datetime.now() - timedelta(hours=i) for i in range(1, 24)
-        ),
+        record_time=(datetime.now() + timedelta(hours=random.randint(1, 24))),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
@@ -119,9 +117,7 @@ class FakeData(BaseSettings):
 
     PLATE2: ClassVar = models.Plate(
         plate="plate2" + generate_random_string(3),
-        record_time=(
-            datetime.now() - timedelta(hours=i) for i in range(1, 24)
-        ),
+        record_time=(datetime.now() - timedelta(hours=random.randint(1, 24))),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,

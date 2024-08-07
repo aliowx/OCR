@@ -90,13 +90,17 @@ class FakeData(BaseSettings):
 
     PLATE1: ClassVar = models.Plate(
         plate="plate1" + generate_random_string(3),
-        record_time=datetime.now(),
+        record_time=(
+            datetime.now() - timedelta(hours=i) for i in range(1, 24)
+        ),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
-        created=random.choice([datetime.now() - timedelta(days=i) for i in range(1,8)]),
+        created=random.choice(
+            [datetime.now() - timedelta(days=i) for i in range(1, 8)]
+        ),
     )
 
     RECORD2: ClassVar = models.Record(
@@ -108,19 +112,24 @@ class FakeData(BaseSettings):
         score=0.01,
         zone_id=None,
         latest_status=MainSchema.StatusRecord.finished.value,
-        created=random.choice([datetime.now() - timedelta(days=i) for i in range(1,8)])
+        created=random.choice(
+            [datetime.now() - timedelta(days=i) for i in range(1, 8)]
+        ),
     )
 
     PLATE2: ClassVar = models.Plate(
         plate="plate2" + generate_random_string(3),
-        record_time=datetime.now(),
+        record_time=(
+            datetime.now() - timedelta(hours=i) for i in range(1, 24)
+        ),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
-        created=random.choice([datetime.now() - timedelta(days=i) for i in range(0,8)])
-
+        created=random.choice(
+            [datetime.now() - timedelta(days=i) for i in range(0, 8)]
+        ),
     )
 
     RECORD_PAST: ClassVar = models.Record(

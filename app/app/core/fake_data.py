@@ -55,7 +55,7 @@ class FakeData(BaseSettings):
         equipment_status=ParkingSchema.equipment.EquipmentStatus.HEALTHY,
         serial_number="abc123",
         ip_address="127.0.0.1",
-        zone_id=1,
+        zone_id=None,
     )
 
     IMAGE: ClassVar = models.Image()

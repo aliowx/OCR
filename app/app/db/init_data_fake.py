@@ -52,6 +52,7 @@ def create_equipment(db: Session):
     )
     if not equipment:
         equipment = fake_data.EQUIPMENT
+        equipment.zone_id = create_zone(db).id
         commit_to_db(db, data=equipment, name="equipment")
     return equipment
 

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.plate import Plate
+from app.parking.models.parking import Zone
 from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
 from cache.redis import redis_client
 from sqlalchemy import func
@@ -76,12 +77,17 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
 
     async def count_entrance_exit_door(self, db: AsyncSession):
 
-        query = select(
-            # func.distinact return unique value
-            func.count(func.distinct(Plate.plate)).label("count"),
-            Plate.type_camera,
-            Plate.zone_id,
-        ).group_by(Plate.plate, Plate.type_camera, Plate.zone_id)
+        query = (
+            select(
+                # func.distinact return unique value
+                func.count(func.distinct(Plate.plate)).label("count"),
+                Plate.type_camera,
+                Plate.zone_id,
+                Zone.name.label("zone_name"),
+            )
+            .join(Zone, Zone.id == Plate.zone_id)
+            .group_by(Plate.plate, Plate.type_camera, Plate.zone_id, Zone.name)
+        )
 
         filters = [
             Plate.is_deleted == False,
@@ -91,7 +97,7 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         rows = result.fetchall()
 
         formatted_results = [
-            (row.count, row.type_camera, row.zone_id) for row in rows
+            (row.count, row.type_camera, row.zone_id, row.zone_name) for row in rows
         ]
         return formatted_results
 

@@ -10,7 +10,6 @@ async def calculator_price(db: AsyncSession, *, params: schemas.ParamsRecord):
         input_status_record=params.input_status_record,
         input_score=params.input_score,
         input_plate=params.input_plate,
-        input_create_time=params.input_create_time,
         input_start_create_time=params.input_start_time,
         input_end_create_time=params.input_end_time,
         skip=params.skip,

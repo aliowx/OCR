@@ -109,7 +109,7 @@ async def dashboard(db: AsyncSession):
     date_today = datetime.now().date()
 
     records, total_count_record = await crud.record.find_records(
-        db, input_create_time=date_today
+        db, input_start_create_time=date_today
     )
 
     result["total_park_today"] = total_count_record
@@ -228,7 +228,7 @@ async def dashboard(db: AsyncSession):
         records, total_count_record_timing = await crud.record.find_records(
             db,
             input_status_record=schemas.StatusRecord.finished,
-            input_create_time=time,
+            input_start_create_time=time,
         )
         if records:
             for record in records:
@@ -473,6 +473,51 @@ async def dashboard(db: AsyncSession):
 
     list_referred["avarage_all_time_referred"] = (
         await crud.record.avarage_time_referred(db)
+    )
+
+    time_eghit_day_referred = [
+        datetime.now() - timedelta(days=i) for i in range(0, 9)
+    ]
+    date_refferd = []
+    for day in time_eghit_day_referred:
+        start_date = day.replace(hour=0, minute=0, second=1)
+        end_date = day.replace(hour=23, minute=59, second=59)
+
+        records, total_count_record = await crud.record.find_records(
+            db,
+            input_status_record=schemas.StatusRecord.finished,
+            input_start_create_time=start_date,
+            input_end_create_time=end_date,
+        )
+        date_refferd.append(
+            {"date": start_date.date(), "count_refferd": total_count_record}
+        )
+    date_refferd_cahnge = []
+
+    date_refferd.reverse()
+    for refferd in range(len(date_refferd)):
+
+        today = date_refferd[refferd]["count_refferd"]
+
+        yesterday = date_refferd[refferd - 1]["count_refferd"]
+
+        # for division zero
+        if yesterday != 0 and today != 0:
+            percent_comparing = ((today + yesterday) / today) * 100
+        else:
+            percent_comparing = 0
+
+        date_refferd_cahnge.append(
+            {
+                "date": date_refferd[refferd]["date"],
+                "count": date_refferd[refferd]["count_refferd"],
+                "percent": round(percent_comparing),
+            }
+        )
+    date_refferd_cahnge.remove(date_refferd_cahnge[0])
+
+    list_referred["comparing_today_with_yesterday_one_week"] = (
+        date_refferd_cahnge
     )
 
     result["list_referred"] = list_referred

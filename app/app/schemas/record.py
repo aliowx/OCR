@@ -62,7 +62,6 @@ class RecordInDB(RecordInDBBase):
 
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
-    input_create_time: datetime | None = None
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
     input_score: float | None = None

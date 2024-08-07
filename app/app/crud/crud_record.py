@@ -66,7 +66,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         input_plate: str = None,
         input_zone_id: int = None,
-        input_create_time: datetime = None,
         input_status_record: StatusRecord = None,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
@@ -86,15 +85,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_zone_id is not None:
             filters.append(Record.zone_id == input_zone_id)
 
-        if input_create_time is not None:
-            filters.append(Record.created >= input_create_time)
+        if input_start_create_time is not None:
+            filters.append(Record.created >= input_start_create_time)
 
-        if input_start_create_time and input_end_create_time is not None:
-            filters.append(
-                Record.created.between(
-                    input_start_create_time, input_end_create_time
-                )
-            )
+        if input_end_create_time is not None:
+            filters.append(Record.created <= input_end_create_time)
 
         if input_status_record is not None:
             filters.append(Record.latest_status == input_status_record)
@@ -182,7 +177,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return await db.scalar(query)
 
-    async def avarage_time_referred(self, db: Session | AsyncSession):
+    async def avarage_time_referred(self, db: AsyncSession):
 
         query = select(
             func.avg(

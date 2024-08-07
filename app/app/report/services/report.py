@@ -536,11 +536,13 @@ async def report_moment(db: AsyncSession):
     result = {}
     data = []
     plate_group = await crud.plate.count_entrance_exit_door(db)
-    for count, type_camera, zone_id in plate_group:
-        data.append({
-            "count": count,
-            "type_camera": type_camera,
-            "zone_id": zone_id,
-        })
+    for count, type_camera, zone_id, zone_name in plate_group:
+        data.append(
+            {
+                "count": count,
+                "type_camera": type_camera,
+                "zone_name": zone_name,
+            }
+        )
     result["count_entrance_exit_door"] = data
     return PaginatedContent(data=result)

@@ -509,8 +509,8 @@ async def dashboard(db: AsyncSession):
 
         date_refferd_cahnge.append(
             {
-                "date": date_refferd[refferd]["date"],
-                "count": date_refferd[refferd]["count_refferd"],
+                "start_date": date_refferd[refferd]["date"],
+                "count_refferd": date_refferd[refferd]["count_refferd"],
                 "percent": round(percent_comparing),
             }
         )

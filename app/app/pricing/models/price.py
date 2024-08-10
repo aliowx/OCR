@@ -14,7 +14,7 @@ class Price(Base):
 
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     name_fa: Mapped[str] = mapped_column(String(50), nullable=True)
-    model_price: Mapped[dict] = mapped_column(
+    price_model: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB), nullable=True
     )
 

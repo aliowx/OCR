@@ -59,7 +59,7 @@ class ModelPrice(BaseModel):
 class PriceBase(BaseModel):
     name: str | None = None
     name_fa: str | None = None
-    model_price: ModelPrice | None = None
+    price_model: ModelPrice | None = None
 
 
 class PriceBaseComplete(PriceBase):

@@ -16,6 +16,24 @@ logger = logging.getLogger(__name__)
 
 class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
 
+    async def remove(self, db: AsyncSession, id_in: int):
+
+        get_price = await self.get(db, id=id_in)
+
+        await self.update(db, db_obj=get_price, obj_in={"is_deleted": True})
+
+        zones_prices = await self._all(
+            db.scalars(
+                select(ZonePrice).where(ZonePrice.price_id.in_({id_in}))
+            )
+        )
+        for zone_price in zones_prices:
+            await self.update(
+                db, db_obj=zone_price, obj_in={"is_deleted": True}
+            )
+        await db.commit()
+        return get_price
+
     async def get_multi_with_filters(
         self,
         db: AsyncSession,

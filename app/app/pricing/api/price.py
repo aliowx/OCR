@@ -83,3 +83,23 @@ async def update_price(
     return APIResponse(
         await crud.price_repo.update(db, db_obj=price, obj_in=price_in)
     )
+
+
+@router.delete("/{id}")
+async def delete_price(
+    *,
+    db: AsyncSession = Depends(deps.get_db_async),
+    id: int,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[schemas.Price]:
+    """
+    Update Price.
+    """
+    price = await crud.price_repo.get(db, id=id)
+    if not price:
+        raise exc.ServiceFailure(
+            detail="The price not exist in the system.",
+            msg_code=utils.MessageCodes.not_found,
+        )
+
+    return APIResponse(await crud.price_repo.remove(db, id_in=price.id))

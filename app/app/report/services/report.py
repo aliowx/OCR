@@ -119,19 +119,18 @@ async def dashboard(db: AsyncSession):
         db, input_status_record=schemas.StatusRecord.unfinished
     )
     capacity_total = 0
-    capacity_empty = 0
     if zones:
         for zone in zones:
             capacity_total += zone.capacity if zone.capacity else 0
 
     result["report_capacity"] = {
-        "capacity_total": capacity_total,
-        "capacity_empty": (
+        "total": capacity_total,
+        "empty": (
             capacity_total - total_count_record
             if total_count_record
-            else capacity_empty
+            else capacity_total
         ),
-        "capacity_full": total_count_record,
+        "full": total_count_record,
     }
 
     one_day_ago = datetime.now() - timedelta(days=1)
@@ -265,7 +264,7 @@ async def dashboard(db: AsyncSession):
 
     result["report_avrage_time"] = {
         "avrage_one_day_ago": {
-            "time": round(avrage_one_day_ago, 4),
+            "time": round(avrage_one_day_ago),
             "compare_percentage_with_pervious_day": (
                 calculate_percentage(
                     compare_avrage_one_day_ago, avrage_one_day_ago
@@ -273,25 +272,25 @@ async def dashboard(db: AsyncSession):
             ),
         },
         "avrage_one_week_ago": {
-            "time": round(avrage_one_week_ago, 4),
+            "time": round(avrage_one_week_ago),
             "compare_percentage_with_pervious_week": calculate_percentage(
                 compare_avrage_one_week_ago, avrage_one_week_ago
             ),
         },
         "avrage_one_month_ago": {
-            "time": round(avrage_one_month_ago, 4),
+            "time": round(avrage_one_month_ago),
             "compare_percentage_with_pervious_month": calculate_percentage(
                 compare_avrage_one_month_ago, avrage_one_month_ago
             ),
         },
         "avrage_six_month_ago": {
-            "time": round(avrage_six_month_ago, 4),
+            "time": round(avrage_six_month_ago),
             "compare_percentage_with_pervious_six_month": calculate_percentage(
                 compare_avrage_six_month_ago, avrage_six_month_ago
             ),
         },
         "avrage_one_year_ago": {
-            "time": round(avrage_one_year_ago, 4),
+            "time": round(avrage_one_year_ago),
             "compare_percentage_with_pervious_year": calculate_percentage(
                 compare_avrage_one_year_ago, avrage_one_year_ago
             ),
@@ -529,7 +528,7 @@ async def dashboard(db: AsyncSession):
         for plate, created, time_park in max_time_park
     ]
 
-    return PaginatedContent(data=result)
+    return result
 
 
 async def report_moment(db: AsyncSession):
@@ -545,4 +544,5 @@ async def report_moment(db: AsyncSession):
             }
         )
     result["count_entrance_exit_door"] = data
-    return PaginatedContent(data=result)
+
+    return result

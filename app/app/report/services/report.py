@@ -478,7 +478,7 @@ async def dashboard(db: AsyncSession):
     time_eghit_day_referred = [
         datetime.now() - timedelta(days=i) for i in range(0, 9)
     ]
-    date_refferd = []
+    date_referred = []
     for day in time_eghit_day_referred:
         start_date = day.replace(hour=0, minute=0, second=1)
         end_date = day.replace(hour=23, minute=59, second=59)
@@ -489,17 +489,17 @@ async def dashboard(db: AsyncSession):
             input_start_create_time=start_date,
             input_end_create_time=end_date,
         )
-        date_refferd.append(
-            {"date": start_date.date(), "count_refferd": total_count_record}
+        date_referred.append(
+            {"date": start_date.date(), "count_referred": total_count_record}
         )
-    date_refferd_cahnge = []
+    date_referred_cahnge = []
 
-    date_refferd.reverse()
-    for refferd in range(len(date_refferd)):
+    date_referred.reverse()
+    for referred in range(len(date_referred)):
 
-        today = date_refferd[refferd]["count_refferd"]
+        today = date_referred[referred]["count_referred"]
 
-        yesterday = date_refferd[refferd - 1]["count_refferd"]
+        yesterday = date_referred[referred - 1]["count_referred"]
 
         # for division zero
         if yesterday != 0 and today != 0:
@@ -507,17 +507,17 @@ async def dashboard(db: AsyncSession):
         else:
             percent_comparing = 0
 
-        date_refferd_cahnge.append(
+        date_referred_cahnge.append(
             {
-                "start_date": date_refferd[refferd]["date"],
-                "count_refferd": date_refferd[refferd]["count_refferd"],
+                "start_date": date_referred[referred]["date"],
+                "count_referred": date_referred[referred]["count_referred"],
                 "percent": round(percent_comparing),
             }
         )
-    date_refferd_cahnge.remove(date_refferd_cahnge[0])
+    date_referred_cahnge.remove(date_referred_cahnge[0])
 
     list_referred["comparing_today_with_yesterday_one_week"] = (
-        date_refferd_cahnge
+        date_referred_cahnge
     )
 
     result["list_referred"] = list_referred

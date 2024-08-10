@@ -2,64 +2,83 @@ from datetime import datetime
 
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
-
+from enum import Enum, IntEnum
 from app.parking.schemas import ZonePrice
 
 
+class FreeFeeTiming(IntEnum):
+    thirty_minutes = 30
+    one_hour = 60
+    one_hour_thirty_minutes = 90
+
+
 class WeeklyDays(BaseModel):
-    saturday: Optional[bool] = None
-    sunday: Optional[bool] = None
-    monday: Optional[bool] = None
-    tuesday: Optional[bool] = None
-    wednesday: Optional[bool] = None
-    thursday: Optional[bool] = None
-    friday: Optional[bool] = None
+    saturday: int | None = None
+    sunday: int | None = None
+    monday: int | None = None
+    tuesday: int | None = None
+    wednesday: int | None = None
+    thursday: int | None = None
+    friday: int | None = None
+
+
+class Weekly(BaseModel):
+    week_fixed: WeeklyDays | None = None
+    week_days: WeeklyDays | None = None
+
+
+class DurtionTime(BaseModel):
+    start_time: int | None = None
+    end_time: int | None = None
+    price: int | None = None
+
+
+class Staircase(BaseModel):
+    hour_durtion: list[DurtionTime] | None = None
+    minutes_durtion: list[DurtionTime] | None = None
+    one_day_price: int | None = None
+
+
+class Proven(BaseModel):
+    weekly: Weekly
+    free_fee_timing: FreeFeeTiming = FreeFeeTiming.thirty_minutes
+    free_fee_first_park: bool | None = None
+    one_day_price: int | None = None
+
+
+class Hourly(BaseModel):
+    staircase: Staircase | None = None
+    proven: Proven | None = None
+
+
+class ModelPrice(BaseModel):
+    entrance: Weekly | None = None
+    hourly: Hourly | None = None
 
 
 class PriceBase(BaseModel):
-    # weekly_days: WeeklyDays | None = None
-    # name: str | None = None
-    # name_fa: str | None = None
-    entrance_fee: int | None = None
-    hourly_fee: int | None = None
-    # daily_fee: int | None = None
-    # penalty_fee: int | None = None
-    # expiration_datetime: datetime | None = None
+    name: str | None = None
+    name_fa: str | None = None
+    model_price: ModelPrice | None = None
 
 
-# class PriceBaseComplete(PriceBase):
-#     pricings: list[ZonePrice] = Field(default_factory=list)
+class PriceBaseComplete(PriceBase):
+    pricings: list[ZonePrice] = Field(default_factory=list)
 
 
 class PriceCreate(PriceBase):
-    weekly_days: WeeklyDays | None = None
     name: str
     name_fa: str
-    entrance_fee: PositiveInt | None = None
-    hourly_fee: PositiveInt | None = None
-    daily_fee: PositiveInt | None = None
-    penalty_fee: PositiveInt | None = None
-    expiration_datetime: datetime | None = None
+
     zone_ids: list[int] = Field(default_factory=list)
     priority: int = Field(1, ge=1, le=100)
 
 
 class PriceUpdate(PriceBase):
-    entrance_fee: PositiveInt | None = None
-    hourly_fee: PositiveInt | None = None
-    daily_fee: PositiveInt | None = None
-    penalty_fee: PositiveInt | None = None
-    expiration_datetime: datetime | None = None
     zone_ids: list[int] = Field(default_factory=list)
     priority: int = Field(1, ge=1, le=100)
 
 
-# class PriceInDBBase(PriceBaseComplete):
-#     id: int
-#     created: datetime
-#     modified: datetime
-
-#     model_config = ConfigDict(from_attributes=True)
 class PriceInDBBase(PriceBase):
     id: int
     created: datetime
@@ -76,20 +95,11 @@ class CameraInDB(PriceInDBBase):
     pass
 
 
-
-class PriceCreateSample(BaseModel):
-    entrance_fee: PositiveInt | None = None
-    hourly_fee: PositiveInt | None = None
-
-
 class ReadPricesParams(BaseModel):
-    # name: str | None = None
-    # name_fa: str | None = None
-    # zone_id: int | None = None
-    # expiration_datetime_start: datetime | None = None
-    # expiration_datetime_end: datetime | None = None
-    # start_date: datetime | None = None
-    # end_date: datetime | None = None
+    name: str | None = None
+    name_fa: str | None = None
+    zone_id: int | None = None
+
     size: int | None = 100
     page: int = 1
     asc: bool = True

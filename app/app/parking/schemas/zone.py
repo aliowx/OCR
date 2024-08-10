@@ -16,7 +16,7 @@ class ZoneComplete(ZoneBase):
     empty: int | None = None
     full: int | None = None
     unknown: int | None = None
-    #  pricings: list["ZonePrice"] = Field(default_factory=list)
+    pricings: list["ZonePrice"] = Field(default_factory=list)
 
 
 class ZoneCreate(BaseModel):

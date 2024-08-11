@@ -23,25 +23,32 @@ async def read_zone(
         db, params=params
     )
     for zone in zones:
-        zone.children = await get_children(db, zone)
-        zone.ancestors = await get_ancestors(db, zone)
-
-        total_count_full = await curdRecord.get_count_capacity(
-            db, zone=zone, status_in=StatusRecord.unfinished.value
-        )
-        zone.full = total_count_full
-        zone.empty = (
-            (zone.capacity - total_count_full)
-            if total_count_full
-            else zone.capacity
-        )
-        zone.unknown = await curdRecord.get_count_capacity(
-            db, zone=zone, status_in=StatusRecord.unknown.value
-        )
+        await set_children_ancestors_capacity(db, zone)
 
     return utils.PaginatedContent(
         data=zones, total_count=total_count, size=params.size, page=params.page
     )
+
+
+async def set_children_ancestors_capacity(
+    db: AsyncSession, zone: parking_schemas.Zone
+):
+    zone.children = await get_children(db, zone)
+    zone.ancestors = await get_ancestors(db, zone)
+
+    total_count_full = await curdRecord.get_count_capacity(
+        db, zone=zone, status_in=StatusRecord.unfinished.value
+    )
+    zone.full = total_count_full
+    zone.empty = (
+        (zone.capacity - total_count_full)
+        if total_count_full
+        else zone.capacity
+    )
+    zone.unknown = await curdRecord.get_count_capacity(
+        db, zone=zone, status_in=StatusRecord.unknown.value
+    )
+    return zone
 
 
 async def create_zone(

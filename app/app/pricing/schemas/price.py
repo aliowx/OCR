@@ -7,6 +7,7 @@ from app.parking.schemas import ZonePrice
 
 
 class FreeFeeTiming(IntEnum):
+    fifteen = 15
     thirty_minutes = 30
     one_hour = 60
     one_hour_thirty_minutes = 90
@@ -46,13 +47,17 @@ class Proven(BaseModel):
     one_day_price: int | None = None
 
 
+class Entrance(Weekly):
+    free_fee_timing: FreeFeeTiming = FreeFeeTiming.fifteen
+
+
 class Hourly(BaseModel):
     staircase: Staircase | None = None
     proven: Proven | None = None
 
 
 class ModelPrice(BaseModel):
-    entrance: Weekly | None = None
+    entrance: Entrance | None = None
     hourly: Hourly | None = None
 
 

@@ -92,11 +92,11 @@ def calculate_percentage(start_time, end_time):
     # Calculate the absolute difference in seconds
     difference = end_time - start_time
     # Calculate the percentage difference, capped at 100%
-    if difference > 0:
+    if 0 < difference > 0:
         percentage_difference = (difference / start_time) * 100
 
         # Cap the percentage difference to 100%
-        if percentage_difference > 100:
+        if 0 < percentage_difference > 100:
             percentage_difference = 100
 
     return percentage_difference

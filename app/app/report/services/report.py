@@ -86,21 +86,20 @@ def get_month_dates(reference_date, months_ago):
 
 def calculate_percentage(start_time, end_time):
     """Calculate the normalized percentage difference between start_time and end_time."""
-
+    percentage_difference = 0
+    if start_time == 0:
+        return percentage_difference
     # Calculate the absolute difference in seconds
     difference = end_time - start_time
-
     # Calculate the percentage difference, capped at 100%
-    try:
+    if difference > 0:
         percentage_difference = (difference / start_time) * 100
 
         # Cap the percentage difference to 100%
         if percentage_difference > 100:
             percentage_difference = 100
 
-        return percentage_difference
-    except ZeroDivisionError:
-        return 0
+    return percentage_difference
 
 
 async def dashboard(db: AsyncSession):
@@ -133,11 +132,11 @@ async def dashboard(db: AsyncSession):
         "full": total_count_record,
     }
 
-    one_day_ago = datetime.now() - timedelta(days=1)
-    one_week_ago = datetime.now() - timedelta(days=7)
-    one_month_ago = datetime.now() - timedelta(days=30)
-    six_month_ago = datetime.now() - timedelta(days=180)
-    one_year_ago = datetime.now() - timedelta(days=365)
+    one_day_ago = datetime.now().date()
+    one_week_ago = (datetime.now() - timedelta(days=7)).date()
+    one_month_ago = (datetime.now() - timedelta(days=30)).date()
+    six_month_ago = (datetime.now() - timedelta(days=180)).date()
+    one_year_ago = (datetime.now() - timedelta(days=365)).date()
 
     timing_park = [
         one_day_ago,
@@ -180,6 +179,7 @@ async def dashboard(db: AsyncSession):
         )
         if records_compare:
             for record in records_compare:
+                # print(record)
                 # Calculation of spot time
                 time_park_record_compare = str(
                     record.end_time - record.start_time
@@ -192,27 +192,28 @@ async def dashboard(db: AsyncSession):
                 minutes = minutes if minutes > 0 else 0
                 seconds = seconds / 60 if seconds > 0 else 0
                 compare_total_time_park = hours + minutes + seconds
+                if compare_time == comparing_one_day_ago_pervious_day:
 
-                if comparing_time == comparing_one_day_ago_pervious_day:
                     compare_avrage_one_day_ago += (
                         compare_total_time_park / total_count_record_compare
                     )
-                if comparing_time == comparing_one_week_ago_pervious_week:
+                if compare_time == comparing_one_week_ago_pervious_week:
+
                     compare_avrage_one_week_ago += (
                         compare_total_time_park / total_count_record_compare
                     )
-                if comparing_time == comparing_one_month_ago_pervious_month:
+                if compare_time == comparing_one_month_ago_pervious_month:
+
                     compare_avrage_one_month_ago += (
                         compare_total_time_park / total_count_record_compare
                     )
-                if (
-                    comparing_time
-                    == comparing_six_month_ago_pervious_six_month
-                ):
+                if compare_time == comparing_six_month_ago_pervious_six_month:
+
                     compare_avrage_six_month_ago += (
                         compare_total_time_park / total_count_record_compare
                     )
-                if comparing_time == comparing_one_year_ago_pervious_year:
+                if compare_time == comparing_one_year_ago_pervious_year:
+
                     compare_avrage_one_year_ago += (
                         compare_total_time_park / total_count_record_compare
                     )
@@ -535,12 +536,12 @@ async def report_moment(db: AsyncSession):
     result = {}
     data = []
     plate_group = await crud.plate.count_entrance_exit_door(db)
-    for count, type_camera, zone_id, zone_name in plate_group:
+    for count, type_camera, camera_id, camera_name in plate_group:
         data.append(
             {
                 "count": count,
                 "type_camera": type_camera,
-                "zone_name": zone_name,
+                "camera_name": camera_name,
             }
         )
     result["count_entrance_exit_door"] = data

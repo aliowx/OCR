@@ -71,7 +71,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         input_end_create_time: datetime = None,
         input_score: float = None,
         skip: int = 0,
-        limit: int = None,
+        limit: int | None = None,
         asc: bool = False,
     ) -> list[Record] | Awaitable[list[Record]]:
 
@@ -107,15 +107,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 all_items_count,
             ]
 
-        items = await self._all(
+        return await self._all(
             db.scalars(
                 query.filter(*filters)
                 .offset(skip)
                 .limit(limit)
                 .order_by(Record.id.asc() if asc else Record.id.desc())
-            )
+            ),
+            all_items_count,
         )
-        return [items, all_items_count]
 
     async def max_time_record(
         self, db: Session | AsyncSession, *, date: datetime = None

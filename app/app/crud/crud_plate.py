@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.plate import Plate
-from app.parking.models.parking import Zone
+from app.parking.models.equipment import Equipment
 from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
 from cache.redis import redis_client
 from sqlalchemy import func
@@ -80,24 +80,29 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         query = (
             select(
                 # func.distinact return unique value
-                func.count(func.distinct(Plate.plate)).label("count"),
+                func.count(Plate.id).label("count"),
                 Plate.type_camera,
-                Plate.zone_id,
-                Zone.name.label("zone_name"),
+                Plate.camera_id,
+                Equipment.serial_number.label("camera_name"),
             )
-            .join(Zone, Zone.id == Plate.zone_id)
-            .group_by(Plate.plate, Plate.type_camera, Plate.zone_id, Zone.name)
+            .join(Equipment, Equipment.id == Plate.camera_id)
+            .group_by(
+                Plate.camera_id,
+                Plate.type_camera,
+                Equipment.serial_number,
+            )
         )
 
         filters = [
             Plate.is_deleted == False,
             Plate.created >= datetime.now().date(),
         ]
-        result = await db.execute(query.filter(*filters))
-        rows = result.fetchall()
+        execute_query = await db.execute(query.filter(*filters))
+        rows = execute_query.fetchall()
 
         formatted_results = [
-            (row.count, row.type_camera, row.zone_id, row.zone_name) for row in rows
+            (row.count, row.type_camera, row.camera_id, row.camera_name)
+            for row in rows
         ]
         return formatted_results
 

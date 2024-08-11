@@ -10,6 +10,10 @@ from app.pricing import schemas as price_schemas
 from app.pricing import services as pricing_services
 from app.pricing.repo import price_repo
 from app.utils import APIResponse, APIResponseType, PaginatedContent
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "price"
@@ -18,12 +22,24 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_price(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: price_schemas.ReadPricesParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[price_schemas.Price]]]:
     """
     Get All price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     prices = await pricing_services.read_prices(db, params=params)
     return APIResponse(prices)
@@ -31,12 +47,24 @@ async def read_price(
 
 @router.post("/")
 async def create_price(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     price_in: schemas.PriceCreate,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Price]:
     """
     Create New price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     price = await pricing_services.create_price(db, price_in=price_in)
     return APIResponse(price)
@@ -44,12 +72,24 @@ async def create_price(
 
 @router.get("/{id}")
 async def get_price_by_id(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     id: int,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Price]:
     """
     Get One Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
     price = await crud.price_repo.get(db, id=id)
@@ -65,6 +105,17 @@ async def get_price_by_id(
 @router.put("/{id}")
 async def update_price(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
     price_in: schemas.PriceUpdate,
@@ -72,6 +123,7 @@ async def update_price(
 ) -> APIResponseType[schemas.Price]:
     """
     Update Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     price = await crud.price_repo.get(db, id=id)
     if not price:
@@ -88,12 +140,24 @@ async def update_price(
 @router.delete("/{id}")
 async def delete_price(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Price]:
     """
     Update Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     price = await crud.price_repo.get(db, id=id)
     if not price:

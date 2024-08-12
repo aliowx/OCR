@@ -23,14 +23,19 @@ class WeeklyDays(BaseModel):
     friday: int | None = None
 
 
+class TypeWeek(str, Enum):
+    dynamic = "dynamic"
+    static = "static"
+
+
 class Weekly(BaseModel):
-    week_fixed: WeeklyDays | None = None
-    week_days: WeeklyDays | None = None
+    week: WeeklyDays | None = None
+    type: TypeWeek = TypeWeek.dynamic
 
 
 class DurtionTime(BaseModel):
-    start_time: int | None = None
-    end_time: int | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     price: int | None = None
 
 
@@ -41,9 +46,9 @@ class Staircase(BaseModel):
 
 
 class Proven(BaseModel):
-    weekly: Weekly
-    free_fee_timing: FreeFeeTiming = FreeFeeTiming.thirty_minutes
-    free_fee_first_park: bool | None = None
+    week: Weekly
+    fee_to_timing: FreeFeeTiming = FreeFeeTiming.thirty_minutes
+    free_cost_first_period_timing: bool | None = None
     one_day_price: int | None = None
 
 

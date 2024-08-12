@@ -7,9 +7,6 @@ class Capacity(BaseModel):
     total: int | None = None
     empty: int | None = None
     full: int | None = None
-
-
-class TotalTodayPark(BaseModel):
     total_today_park: int | None = None
 
 

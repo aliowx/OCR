@@ -28,7 +28,8 @@ def get_month_dates(reference_date, months_ago):
 def calculate_percentage(start_time, end_time):
     """Calculate the normalized percentage difference between start_time and end_time."""
     percentage_difference = 0
-    if start_time == 0:
+    # handel devision zero
+    if end_time == 0:
         return percentage_difference
     # Calculate the absolute difference in seconds
     difference = start_time - end_time
@@ -42,17 +43,13 @@ def calculate_percentage(start_time, end_time):
     return round(percentage_difference)
 
 
-async def total_today_park(db: AsyncSession):
+async def capacity(db: AsyncSession):
+
     date_today = datetime.now().date()
 
-    records, total_count_park = await crud.record.find_records(
+    records, total_count_today_park = await crud.record.find_records(
         db, input_start_create_time=date_today
     )
-
-    return report_schemas.TotalTodayPark(total_today_park=total_count_park)
-
-
-async def capacity(db: AsyncSession):
 
     zones = await zone_repo.get_multi(db)
     records, total_count_in_parking = await crud.record.find_records(
@@ -71,6 +68,7 @@ async def capacity(db: AsyncSession):
             else capacity_total
         ),
         full=total_count_in_parking,
+        total_today_park=total_count_today_park
     )
 
 

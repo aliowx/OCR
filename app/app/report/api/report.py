@@ -19,29 +19,8 @@ namespace = "report"
 logger = logging.getLogger(__name__)
 
 
-# @router.get("/status-parking-by-zone")
-async def zone_status(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.REPORTING_ANALYSIS,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_user),
-    params: report_schemas.ReadZoneLotsParams = Depends(),
-) -> APIResponseType[PaginatedContent[list[report_schemas.ZoneLots]]]:
 
-    return APIResponse(await report_services.report_zone(db, params))
-
-
-@router.get("/dashboard")
+@router.get("/capacity")
 async def dashboard(
     _: Annotated[
         bool,
@@ -58,13 +37,105 @@ async def dashboard(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
-    return APIResponse(await report_services.dashboard(db))
+    
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(await report_services.capacity(db))
+
+
+@router.get("/average_time")
+async def dashboard(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(await report_services.average_time(db))
+
+
+@router.get("/avrage_referrd")
+async def dashboard(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(await report_services.avrage_referrd(db))
+
+
+@router.get("/max_time_park")
+async def dashboard(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(await report_services.max_time_park(db))
 
 
 @router.get("/record-moment")
 async def zone_status(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
 
     return APIResponse(await report_services.report_moment(db))

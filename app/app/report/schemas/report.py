@@ -1,75 +1,51 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict
 
 
-class ReportBase(BaseModel): ...
+class Capacity(BaseModel):
+    total: int | None = None
+    empty: int | None = None
+    full: int | None = None
 
 
-class ZoneLots(BaseModel):
-    zone_name: str = None
-    list_lots: list = None
-    capacity: int = None
-    capacity_empty: int = None
-    record: list = None
+class TotalTodayPark(BaseModel):
+    total_today_park: int | None = None
 
 
-class ReadZoneLotsParams(BaseModel):
-    input_floor_number: int | None = None
-    input_name_zone: str | None = None
-    input_name_sub_zone: str | None = None
-    input_start_time: datetime | None = None
-    input_end_time: datetime | None = None
-    input_zone_id: int | None = None
-    size: int | None = 100
-    page: int | None = 1
-    asc: bool | None = True
-
-    @property
-    def skip(self) -> int:
-        skip = 0
-        if self.size is not None:
-            skip = (self.page * self.size) - self.size
-        return skip
+class AverageTimeDetail(BaseModel):
+    time: int | None = None
+    compare: int | None = None
 
 
-class ParamsRecordMoment(BaseModel):
-    input_camera_serial: str | None = None
-    input_plate: str | None = None
-    input_name_zone: str | None = None
-    input_name_sub_zone: str | None = None
-    input_floor_number: int | None = None
-    size: int | None = 100
-    page: int | None = 1
-    asc: bool | None = True
-
-    @property
-    def skip(self) -> int:
-        skip = 0
-        if self.size is not None:
-            skip = (self.page * self.size) - self.size
-        return skip
+class AverageTime(BaseModel):
+    avrage_one_day_ago: AverageTimeDetail | None = None
+    avrage_one_week_ago: AverageTimeDetail | None = None
+    avrage_one_month_ago: AverageTimeDetail | None = None
+    avrage_six_month_ago: AverageTimeDetail | None = None
+    avrage_one_year_ago: AverageTimeDetail | None = None
 
 
-class ParamsRecordMomentFilters(BaseModel):
-    input_camera_id: int | None = None
-    input_plate: str | None = None
-    input_zone_id: int | None = None
+class referred_timing(BaseModel):
+    week: list | None = []
+    month: list | None = []
+    six_month: list | None = []
+    year: list | None = []
 
 
-class ReportCreate(ReportBase): ...
+class Referred(BaseModel):
+    list_referred: dict | None = None
 
 
-class ReportUpdate(ReportBase): ...
+class MaxTimePark(BaseModel):
+    plate: str | None = None
+    created: datetime | None = None
+    time: str | None = None
 
 
-class ReportInDBBase(ReportBase):
-    id: int
-    created: datetime
-    modified: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+class ListMaxTimePark(BaseModel):
+    total_max_time_park: list[MaxTimePark] = [MaxTimePark]
 
 
-class Report(ReportInDBBase):
-    pass
+class CountEntranceExitDoor(BaseModel):
+    count_entrance_exit_door: list | None = []

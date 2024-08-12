@@ -1,72 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
-from app.parking.schemas import Status, ParamsCamera
-from app.report.repo import (
-    zonereportrepository,
-    spotreportrepository,
-)
-from app.utils import PaginatedContent
-from app.report.schemas import (
-    ZoneLots,
-    ReadZoneLotsParams,
-    ParamsRecordMoment,
-    ParamsRecordMomentFilters,
-)
-from app.api.services import records_services
+
 from app import schemas, crud
-from app.parking.repo import equipment_repo, zone_repo
-from app.parking.schemas.equipment import ReadEquipmentsFilter
+from app.parking.repo import zone_repo
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from app.report import schemas as report_schemas
 
 
-async def report_zone(db: AsyncSession, params: ReadZoneLotsParams):
-
-    # list all zone
-    zones = await zonereportrepository.get_multi_by_filter(db, params=params)
-
-    list_lots_zone = []
-    for zone in zones:
-        # list lots zone
-        lots = await spotreportrepository.find_lines(
-            db, params=ReadZoneLotsParams(input_zone_id=zone.id)
-        )
-        if lots:
-            capacity_empty = capacity = len(lots)
-            lots = jsonable_encoder(lots)
-            for lot in lots:
-                if lot["status"] == Status.full:
-                    capacity_empty = capacity - 1
-                records = await records_services.calculator_price(
-                    db=db,
-                    params=schemas.ParamsRecord(input_plate=lot["plate"]),
-                )
-            zone_lots = ZoneLots(
-                zone_name=zone.name,
-                list_lots=lots,
-                record=records.items,
-                capacity=capacity,
-                capacity_empty=capacity_empty,
-            )
-            list_lots_zone.append(jsonable_encoder(zone_lots))
-
-    if params.size is not None:  # limit
-        list_lots_zone = list_lots_zone[: params.size]
-
-    if params.page is not None:  # skip
-        list_lots_zone = list_lots_zone[:: params.page]
-
-    if params.asc:
-        list_lots_zone.reverse()
-
-    return PaginatedContent(
-        data=list_lots_zone,
-        total_count=len(list_lots_zone),
-        size=params.size,
-        page=params.page,
-    )
-
-
+# calculate  first date month
 def get_month_dates(reference_date, months_ago):
     month_dates = []
 
@@ -90,32 +31,31 @@ def calculate_percentage(start_time, end_time):
     if start_time == 0:
         return percentage_difference
     # Calculate the absolute difference in seconds
-    difference = end_time - start_time
+    difference = start_time - end_time
     # Calculate the percentage difference, capped at 100%
     if difference == 0:
         return percentage_difference
-    percentage_difference = (difference / start_time) * 100
+
+    percentage_difference = (difference / end_time) * 100
     # Cap the percentage difference to 100%
-    if percentage_difference > 100:
-        percentage_difference = 100
-    if percentage_difference < 0:
-        percentage_difference = -100
-    return percentage_difference
+
+    return round(percentage_difference)
 
 
-async def dashboard(db: AsyncSession):
-    result = {}
-
+async def total_today_park(db: AsyncSession):
     date_today = datetime.now().date()
 
-    records, total_count_record = await crud.record.find_records(
+    records, total_count_park = await crud.record.find_records(
         db, input_start_create_time=date_today
     )
 
-    result["total_park_today"] = total_count_record
+    return report_schemas.TotalTodayPark(total_today_park=total_count_park)
+
+
+async def capacity(db: AsyncSession):
 
     zones = await zone_repo.get_multi(db)
-    records, total_count_record = await crud.record.find_records(
+    records, total_count_in_parking = await crud.record.find_records(
         db, input_status_record=schemas.StatusRecord.unfinished
     )
     capacity_total = 0
@@ -123,16 +63,19 @@ async def dashboard(db: AsyncSession):
         for zone in zones:
             capacity_total += zone.capacity if zone.capacity else 0
 
-    result["report_capacity"] = {
-        "total": capacity_total,
-        "empty": (
-            capacity_total - total_count_record
-            if total_count_record
+    return report_schemas.Capacity(
+        total=capacity_total,
+        empty=(
+            capacity_total - total_count_in_parking
+            if total_count_in_parking
             else capacity_total
         ),
-        "full": total_count_record,
-    }
+        full=total_count_in_parking,
+    )
 
+
+async def average_time(db: AsyncSession):
+    result = {}
     one_day_ago = datetime.now().date()
     one_week_ago = (datetime.now() - timedelta(days=7)).date()
     one_month_ago = (datetime.now() - timedelta(days=30)).date()
@@ -263,42 +206,41 @@ async def dashboard(db: AsyncSession):
                     avrage_one_year_ago += (
                         total_time_park / total_count_record_timing
                     )
+    return report_schemas.AverageTime(
+        avrage_one_day_ago=report_schemas.AverageTimeDetail(
+            time=round(avrage_one_day_ago),
+            compare=calculate_percentage(
+                avrage_one_day_ago, compare_avrage_one_day_ago
+            ),
+        ),
+        avrage_one_week_ago=report_schemas.AverageTimeDetail(
+            time=round(avrage_one_week_ago),
+            compare=calculate_percentage(
+                avrage_one_week_ago, compare_avrage_one_week_ago
+            ),
+        ),
+        avrage_one_month_ago=report_schemas.AverageTimeDetail(
+            time=round(avrage_one_month_ago),
+            compare=calculate_percentage(
+                avrage_one_month_ago, compare_avrage_one_month_ago
+            ),
+        ),
+        avrage_six_month_ago=report_schemas.AverageTimeDetail(
+            time=round(avrage_six_month_ago),
+            compare=calculate_percentage(
+                avrage_six_month_ago, compare_avrage_six_month_ago
+            ),
+        ),
+        avrage_one_year_ago=report_schemas.AverageTimeDetail(
+            time=round(avrage_one_year_ago),
+            compare=calculate_percentage(
+                avrage_one_year_ago, compare_avrage_one_year_ago
+            ),
+        ),
+    )
 
-    result["report_avrage_time"] = {
-        "avrage_one_day_ago": {
-            "time": round(avrage_one_day_ago),
-            "compare_percentage_with_pervious_day": (
-                calculate_percentage(
-                    compare_avrage_one_day_ago, avrage_one_day_ago
-                )
-            ),
-        },
-        "avrage_one_week_ago": {
-            "time": round(avrage_one_week_ago),
-            "compare_percentage_with_pervious_week": calculate_percentage(
-                compare_avrage_one_week_ago, avrage_one_week_ago
-            ),
-        },
-        "avrage_one_month_ago": {
-            "time": round(avrage_one_month_ago),
-            "compare_percentage_with_pervious_month": calculate_percentage(
-                compare_avrage_one_month_ago, avrage_one_month_ago
-            ),
-        },
-        "avrage_six_month_ago": {
-            "time": round(avrage_six_month_ago),
-            "compare_percentage_with_pervious_six_month": calculate_percentage(
-                compare_avrage_six_month_ago, avrage_six_month_ago
-            ),
-        },
-        "avrage_one_year_ago": {
-            "time": round(avrage_one_year_ago),
-            "compare_percentage_with_pervious_year": calculate_percentage(
-                compare_avrage_one_year_ago, avrage_one_year_ago
-            ),
-        },
-    }
 
+async def avrage_referrd(db: AsyncSession):
     list_referred = {}
     time_weekly_referred = [
         datetime.now() - timedelta(days=i) for i in range(1, 8)
@@ -504,7 +446,7 @@ async def dashboard(db: AsyncSession):
 
         # for division zero
         if yesterday != 0 and today != 0:
-            percent_comparing = ((today + yesterday) / today) * 100
+            percent_comparing = ((today - yesterday) / yesterday) * 100
         else:
             percent_comparing = 0
 
@@ -521,20 +463,20 @@ async def dashboard(db: AsyncSession):
         date_referred_cahnge
     )
 
-    result["list_referred"] = list_referred
+    return report_schemas.Referred(list_referred=list_referred)
 
-    max_time_park = await crud.record.max_time_record(db)
 
-    result["list_max_time_park"] = [
-        {"plate": plate, "created": created, "timr_park": time_park}
-        for plate, created, time_park in max_time_park
-    ]
+async def max_time_park(db: AsyncSession):
 
-    return result
+    time_park, plate, created = await crud.record.max_time_record(db)
+    return report_schemas.MaxTimePark(
+        plate=plate,
+        created=created,
+        time=str(timedelta(seconds=time_park.seconds)),
+    )
 
 
 async def report_moment(db: AsyncSession):
-    result = {}
     data = []
     plate_group = await crud.plate.count_entrance_exit_door(db)
     for count, type_camera, camera_id, camera_name in plate_group:
@@ -545,6 +487,4 @@ async def report_moment(db: AsyncSession):
                 "camera_name": camera_name,
             }
         )
-    result["count_entrance_exit_door"] = data
-
-    return result
+    return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)

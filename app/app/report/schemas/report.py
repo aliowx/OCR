@@ -16,6 +16,7 @@ class AverageTimeDetail(BaseModel):
 
 
 class AverageTime(BaseModel):
+    avrage_all_time: str | None = None
     avrage_one_day_ago: AverageTimeDetail | None = None
     avrage_one_week_ago: AverageTimeDetail | None = None
     avrage_one_month_ago: AverageTimeDetail | None = None

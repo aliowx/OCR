@@ -118,44 +118,24 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
     async def max_time_record(
-        self, db: Session | AsyncSession, *, date: datetime = None
+        self, db: Session | AsyncSession
     ) -> list[Record]:
 
         sub_query = select(
             func.max(Record.end_time - Record.start_time)
         ).scalar_subquery()
 
-        query = (
-            select(
-                ((Record.end_time) - (Record.start_time)).label("time_park"),
-                Record.plate,
-                Record.created,
-            )
-            .where((Record.end_time - Record.start_time) == sub_query)
-            .group_by(
-                Record.plate,
-                Record.created,
-                ((Record.end_time) - (Record.start_time)).label("time_park"),
-            )
-        )
+        query = select(
+            ((Record.end_time) - (Record.start_time)).label("time_park"),
+            Record.plate,
+            Record.created,
+        ).where((Record.end_time - Record.start_time) == sub_query)
 
         filters = [Record.is_deleted == False]
 
-        if date:
-            filters.append(Record.created <= date)
-
-        records_execute = await db.execute(query)
-        records = records_execute.fetchall()
-        result_records = [
-            (
-                record.plate,
-                record.created,
-                str(timedelta(seconds=record.time_park.seconds)),
-            )
-            for record in records
-        ]
-
-        return result_records
+        record_execute = await db.execute(query.filter(*filters))
+        record = record_execute.first()
+        return record
 
     async def get_count_capacity(
         self,

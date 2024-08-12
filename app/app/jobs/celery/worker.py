@@ -10,6 +10,9 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
+from app.db.init_data_fake import create_plates
+
+
 namespace = "job worker"
 logger = logging.getLogger(__name__)
 
@@ -159,6 +162,12 @@ def setup_periodic_tasks(sender, **kwargs):
         set_status_record.s(),
         name="set status unknown for record after 24 hours becuse not exit",
     )
+    if settings.DATA_FAKE_SET:
+        sender.add_periodic_task(
+            settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
+            set_fake_data.s(),
+            name="set fake data every 20 hour",
+        )
 
     logger.info(
         f"cleanup {settings.CLEANUP_COUNT} images every {settings.CLEANUP_PERIOD} seconds "
@@ -212,6 +221,23 @@ def set_status_record(self):
     except:
         print("Not found")
         print("func set status")
+
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
+    name="set_status_record",
+)
+def set_fake_data(self):
+
+    try:
+        create_plates()
+    except Exception as e:
+        print(f"error set data fake {e}")
 
 
 @celery_app.task(

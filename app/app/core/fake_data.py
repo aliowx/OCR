@@ -78,7 +78,7 @@ class FakeData(BaseSettings):
     )
 
     RECORD1: ClassVar = models.Record(
-        plate="plate1",
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         start_time=datetime.now().isoformat(),
         end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
@@ -89,7 +89,7 @@ class FakeData(BaseSettings):
     )
 
     PLATE1: ClassVar = models.Plate(
-        plate="plate1" + generate_random_string(3),
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(datetime.now() + timedelta(hours=random.randint(1, 24))),
         plate_image_id=None,
         lpr_image_id=None,
@@ -102,7 +102,7 @@ class FakeData(BaseSettings):
     )
 
     RECORD2: ClassVar = models.Record(
-        plate="plate2" + generate_random_string(3),
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         start_time=datetime.now().isoformat(),
         end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
@@ -116,7 +116,7 @@ class FakeData(BaseSettings):
     )
 
     PLATE2: ClassVar = models.Plate(
-        plate="plate2" + generate_random_string(3),
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(datetime.now() - timedelta(hours=random.randint(1, 24))),
         plate_image_id=None,
         lpr_image_id=None,
@@ -128,17 +128,38 @@ class FakeData(BaseSettings):
         ),
     )
 
+    PLATE_PAST: ClassVar = models.Plate(
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
+        record_time=(datetime.now() - timedelta(hours=random.randint(1, 24))),
+        plate_image_id=None,
+        lpr_image_id=None,
+        camera_id=None,
+        zone_id=None,
+        type_camera=MainSchema.plate.TypeCamera.entranceDoor,
+        created=datetime(
+            year=random.randint(2022, 2024),
+            month=random.randint(1, 12),
+            day=random.randint(1, 30),
+        ).isoformat(),
+    )
+
+    list_status_record: list = [
+        MainSchema.StatusRecord.finished.value,
+        MainSchema.StatusRecord.unfinished.value,
+        MainSchema.StatusRecord.unknown.value,
+    ]
+
     RECORD_PAST: ClassVar = models.Record(
-        plate="plate-ago-time" + generate_random_string(3),
+        plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         start_time=datetime.now().isoformat(),
         end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
         score=0.01,
         zone_id=None,
-        latest_status=MainSchema.StatusRecord.finished.value,
+        latest_status=random.choice(list_status_record),
         created=datetime(
-            year=random.randint(2023, 2025),
+            year=random.randint(2022, 2024),
             month=random.randint(1, 12),
             day=random.randint(1, 30),
         ).isoformat(),

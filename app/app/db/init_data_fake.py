@@ -10,7 +10,9 @@ import random
 import string
 from app.core.celery_app import celery_app
 from fastapi.encoders import jsonable_encoder
-
+from cache.redis import redis_client
+import rapidjson
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -97,33 +99,63 @@ def create_records(db: Session):
     records_data = [
         fake_data.RECORD1,
         fake_data.RECORD2,
-        fake_data.RECORD_PAST,
     ]
+
+    image = create_image(db)
     for record in records_data:
-        query_record = (
-            db.query(models.Record)
-            .where(
-                models.Record.is_deleted == False,
-                models.Record.plate == record.plate,
-            )
-            .first()
+        record.best_lpr_image_id = image.id
+        record.best_plate_image_id = image.id
+        record.zone_id = create_zone(db).id
+        db.add(record)
+    db.commit()
+    db.refresh(record)
+    logger.info("create record")
+
+
+list_status_record = [
+    schemas.StatusRecord.finished.value,
+    schemas.StatusRecord.unfinished.value,
+    schemas.StatusRecord.unknown.value,
+]
+
+
+def create_records_past(db: Session):
+    image = create_image(db)
+    zone_id = create_zone(db).id
+    for _ in range(1, 100):
+        record = models.Record(
+            plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
+            start_time=datetime.now().isoformat(),
+            end_time=datetime.now() + timedelta(hours=random.randint(1, 23)),
+            best_lpr_image_id=None,
+            best_plate_image_id=None,
+            score=0.01,
+            zone_id=None,
+            latest_status=random.choice(list_status_record),
+            created=datetime(
+                year=random.randint(2022, 2024),
+                month=random.randint(1, 12),
+                day=random.randint(1, 30),
+            ).isoformat(),
         )
-        if not query_record:
-            image = create_image(db)
-            record.best_lpr_image_id = image.id
-            record.best_plate_image_id = image.id
-            record.zone_id = create_zone(db).id
-            commit_to_db(db, data=record, name="record")
-    return record
+        record.best_lpr_image_id = image.id
+        record.best_plate_image_id = image.id
+        record.zone_id = zone_id
+        db.add(record)
+        redis_client.publish(
+            "records:1", rapidjson.dumps(jsonable_encoder(record))
+        )
+        crud.record._commit_refresh(db=db, db_obj=record, commit=False)
+    db.commit()
 
 
 def create_plates(db: Session):
-    plates_data = [fake_data.PLATE1, fake_data.PLATE2]
-    for i in range(1, 10):
+    plates_data = [fake_data.PLATE1, fake_data.PLATE2, fake_data.PLATE_PAST]
+    image = create_image(db)
+    camera = create_equipment(db)
+    zone = create_zone(db)
+    for i in range(1, 100):
         plate = random.choice(plates_data)
-        image = create_image(db)
-        camera = create_equipment(db)
-        zone = create_zone(db)
         if i == 9 or i == 8:
             plate.type_camera = schemas.plate.TypeCamera.exitDoor.value
         plate.plate_image_id = image.id
@@ -138,12 +170,13 @@ def create_plates(db: Session):
 
 def init_db_fake_data(db: Session) -> None:
     try:
-        create_parking(db)
-        create_equipment(db)
-        create_image(db)
-        create_zone(db)
-        create_sub_zone(db)
+        # create_parking(db)
+        # create_equipment(db)
+        # create_image(db)
+        # create_zone(db)
+        # create_sub_zone(db)
         create_records(db)
+        create_records_past(db)
         create_plates(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

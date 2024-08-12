@@ -68,12 +68,11 @@ async def capacity(db: AsyncSession):
             else capacity_total
         ),
         full=total_count_in_parking,
-        total_today_park=total_count_today_park
+        total_today_park=total_count_today_park,
     )
 
 
 async def average_time(db: AsyncSession):
-    result = {}
     one_day_ago = datetime.now().date()
     one_week_ago = (datetime.now() - timedelta(days=7)).date()
     one_month_ago = (datetime.now() - timedelta(days=30)).date()
@@ -204,7 +203,9 @@ async def average_time(db: AsyncSession):
                     avrage_one_year_ago += (
                         total_time_park / total_count_record_timing
                     )
+
     return report_schemas.AverageTime(
+        avrage_all_time=await crud.record.avarage_time_referred(db),
         avrage_one_day_ago=report_schemas.AverageTimeDetail(
             time=round(avrage_one_day_ago),
             compare=calculate_percentage(
@@ -411,10 +412,6 @@ async def avrage_referrd(db: AsyncSession):
                     },
                 )
     list_referred["report_referred"] = report_referred
-
-    list_referred["avarage_all_time_referred"] = (
-        await crud.record.avarage_time_referred(db)
-    )
 
     time_eghit_day_referred = [
         datetime.now() - timedelta(days=i) for i in range(0, 9)

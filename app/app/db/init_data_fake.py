@@ -60,19 +60,15 @@ def create_equipment(db: Session):
 
 
 def create_image(db: Session):
-    image = fake_data.IMAGE
-    return commit_to_db(db, data=image, name="image")
+    image = db.query(models.Image).first()
+    if not image:
+        image = fake_data.IMAGE
+        return commit_to_db(db, data=image, name="image")
+    return image
 
 
 def create_zone(db: Session):
-    zone = (
-        db.query(models.Zone)
-        .where(
-            models.Zone.is_deleted == False,
-            models.Zone.name == fake_data.ZONE.name,
-        )
-        .first()
-    )
+    zone = db.query(models.Zone).first()
     if not zone:
         zone = fake_data.ZONE
         commit_to_db(db, data=zone, name="zone")

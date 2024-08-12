@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time as TIME
 
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
@@ -34,8 +34,8 @@ class Weekly(BaseModel):
 
 
 class DurtionTime(BaseModel):
-    start_time: datetime | None = None
-    end_time: datetime | None = None
+    start_time: TIME | None = None
+    end_time: TIME | None = None
     price: int | None = None
 
 

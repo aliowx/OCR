@@ -117,7 +117,7 @@ class FakeData(BaseSettings):
 
     PLATE2: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        record_time=(datetime.now() - timedelta(hours=random.randint(1, 24))),
+        record_time=(datetime.now() - timedelta(hours=random.randint(1, 23))),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
@@ -130,7 +130,7 @@ class FakeData(BaseSettings):
 
     PLATE_PAST: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        record_time=(datetime.now() - timedelta(hours=random.randint(1, 24))),
+        record_time=(datetime.now() - timedelta(hours=random.randint(1, 23))),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
@@ -139,7 +139,7 @@ class FakeData(BaseSettings):
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),
-            day=random.randint(1, 30),
+            day=random.randint(1, 29),
         ).isoformat(),
     )
 
@@ -152,7 +152,7 @@ class FakeData(BaseSettings):
     RECORD_PAST: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         start_time=datetime.now().isoformat(),
-        end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
+        end_time=datetime.now() + timedelta(hours=random.randint(1, 15)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
         score=0.01,
@@ -161,7 +161,7 @@ class FakeData(BaseSettings):
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),
-            day=random.randint(1, 30),
+            day=random.randint(1, 29),
         ).isoformat(),
     )
 

@@ -131,7 +131,7 @@ def create_records_past(db: Session):
             created=datetime(
                 year=random.randint(2022, 2024),
                 month=random.randint(1, 12),
-                day=random.randint(1, 30),
+                day=random.randint(1, 29),
             ).isoformat(),
         )
         record.best_lpr_image_id = image.id

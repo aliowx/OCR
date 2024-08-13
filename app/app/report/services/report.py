@@ -45,17 +45,13 @@ def calculate_percentage(start_time, end_time):
 
 async def capacity(db: AsyncSession):
 
-    date_today = datetime.now().date()
-
-    records, total_count_today_park = await crud.record.find_records(
-        db, input_start_create_time=date_today
+    count_today_except_status_unfinished = (
+        await crud.record.get_total_park_today_except_unfinished(db)
     )
-
     zones = await zone_repo.get_multi(db)
-    records, total_count_in_parking = await crud.record.find_records(
-        db, input_status_record=schemas.StatusRecord.unfinished
-    )
+    total_count_in_parking = await crud.record.get_total_in_parking(db)
     capacity_total = 0
+
     if zones:
         for zone in zones:
             capacity_total += zone.capacity if zone.capacity else 0
@@ -68,26 +64,27 @@ async def capacity(db: AsyncSession):
             else capacity_total
         ),
         full=total_count_in_parking,
-        total_today_park=total_count_today_park,
+        total_today_park=count_today_except_status_unfinished
+        + total_count_in_parking,
     )
 
 
 async def average_time(db: AsyncSession):
-    one_day_ago = datetime.now().date()
+    today = datetime.now().date()
     one_week_ago = (datetime.now() - timedelta(days=7)).date()
     one_month_ago = (datetime.now() - timedelta(days=30)).date()
     six_month_ago = (datetime.now() - timedelta(days=180)).date()
     one_year_ago = (datetime.now() - timedelta(days=365)).date()
 
     timing_park = [
-        one_day_ago,
+        today,
         one_week_ago,
         one_month_ago,
         six_month_ago,
         one_year_ago,
     ]
 
-    comparing_one_day_ago_pervious_day = one_day_ago - timedelta(days=1)
+    comparing_today_pervious_day = today - timedelta(days=1)
     comparing_one_week_ago_pervious_week = one_week_ago - timedelta(days=7)
     comparing_one_month_ago_pervious_month = one_month_ago - timedelta(days=30)
     comparing_six_month_ago_pervious_six_month = six_month_ago - timedelta(
@@ -96,7 +93,7 @@ async def average_time(db: AsyncSession):
     comparing_one_year_ago_pervious_year = one_year_ago - timedelta(days=365)
 
     comparing_time = [
-        comparing_one_day_ago_pervious_day,
+        comparing_today_pervious_day,
         comparing_one_week_ago_pervious_week,
         comparing_one_month_ago_pervious_month,
         comparing_six_month_ago_pervious_six_month,
@@ -120,7 +117,6 @@ async def average_time(db: AsyncSession):
         )
         if records_compare:
             for record in records_compare:
-                # print(record)
                 # Calculation of spot time
                 time_park_record_compare = str(
                     record.end_time - record.start_time

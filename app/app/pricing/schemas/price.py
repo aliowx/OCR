@@ -43,6 +43,7 @@ class DurtionTime(BaseModel):
 class Staircase(BaseModel):
     hour_durtion: list[DurtionTime] | None = None
     minutes_durtion: list[DurtionTime] | None = None
+    free_cost_first_period_timing: bool | None = None
     one_day_price: int | None = None
 
 

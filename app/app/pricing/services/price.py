@@ -30,7 +30,7 @@ async def create_price(
     )
     price = await price_repo.create(
         db,
-        obj_in=price_data_create.model_dump(exclude_none=True),
+        obj_in=price_data_create.model_dump(mode="json", exclude_none=True),
         commit=False,
     )
     for zone_id in price_in.zone_ids:

@@ -1,10 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import schemas, crud
+from app import schemas, crud, models
 from app.parking.repo import zone_repo
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
+from app.parking.repo import equipment_repo
+from app.parking.schemas import ReadEquipmentsFilter
 
 
 # calculate  first date month
@@ -180,9 +182,7 @@ async def average_time(db: AsyncSession):
                 seconds = seconds / 60 if seconds > 0 else 0
                 total_time_park = hours + minutes + seconds
                 if time == today:
-                    avrage_today += (
-                        total_time_park / total_count_record_timing
-                    )
+                    avrage_today += total_time_park / total_count_record_timing
                 if time == one_week_ago:
                     avrage_one_week_ago += (
                         total_time_park / total_count_record_timing
@@ -468,14 +468,26 @@ async def max_time_park(db: AsyncSession):
 
 
 async def report_moment(db: AsyncSession):
+    cameras_zone, total_camera_zone = (
+        await equipment_repo.get_multi_with_filters(
+            db,
+            filters=ReadEquipmentsFilter(
+                equipment_type__eq=models.base.EquipmentType.CAMERA_ZONE
+            ),
+        )
+    )
     data = []
-    plate_group = await crud.plate.count_entrance_exit_door(db)
-    for count, type_camera, camera_id, camera_name in plate_group:
+    for camera_zone in cameras_zone:
+        plate_group = await crud.plate.count_entrance_exit_door(
+            db, zone_ids=camera_zone.id
+        )
         data.append(
             {
-                "count": count,
-                "type_camera": type_camera,
-                "camera_name": camera_name,
+                "count": plate_group.count if plate_group else 0,
+                "type_camera": (
+                    plate_group.type_camera if plate_group else None
+                ),
+                "camera_name": camera_zone.serial_number,
             }
         )
     return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)

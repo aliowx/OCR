@@ -85,6 +85,7 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
+    AUTO_GEN_PLATE_FAKE: int | None = None
     DATA_FAKE_SET: bool | None = False
     
     FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None

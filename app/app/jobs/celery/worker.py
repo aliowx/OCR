@@ -157,16 +157,16 @@ def update_record(self, plate_id) -> str:
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
 
-    sender.add_periodic_task(
-        settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
-        set_status_record.s(),
-        name="set status unknown for record after 24 hours becuse not exit",
-    )
+    # sender.add_periodic_task(
+    #     settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
+    #     set_status_record.s(),
+    #     name="set status unknown for record after 24 hours becuse not exit",
+    # )
     if settings.DATA_FAKE_SET:
         sender.add_periodic_task(
-            settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
+            settings.AUTO_GEN_PLATE_FAKE,
             set_fake_data.s(),
-            name="set fake data every 20 hour",
+            name=f"set fake data every {settings.AUTO_GEN_PLATE_FAKE}",
         )
 
     logger.info(

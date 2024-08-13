@@ -129,7 +129,7 @@ async def average_time(db: AsyncSession):
                 minutes = minutes if minutes > 0 else 0
                 seconds = seconds / 60 if seconds > 0 else 0
                 compare_total_time_park = hours + minutes + seconds
-                if compare_time == comparing_one_day_ago_pervious_day:
+                if compare_time == comparing_today_pervious_day:
 
                     compare_avrage_one_day_ago += (
                         compare_total_time_park / total_count_record_compare
@@ -155,7 +155,7 @@ async def average_time(db: AsyncSession):
                         compare_total_time_park / total_count_record_compare
                     )
 
-    avrage_one_day_ago = 0
+    avrage_today = 0
     avrage_one_week_ago = 0
     avrage_one_month_ago = 0
     avrage_six_month_ago = 0
@@ -179,8 +179,8 @@ async def average_time(db: AsyncSession):
                 minutes = minutes if minutes > 0 else 0
                 seconds = seconds / 60 if seconds > 0 else 0
                 total_time_park = hours + minutes + seconds
-                if time == one_day_ago:
-                    avrage_one_day_ago += (
+                if time == today:
+                    avrage_today += (
                         total_time_park / total_count_record_timing
                     )
                 if time == one_week_ago:
@@ -203,9 +203,9 @@ async def average_time(db: AsyncSession):
     return report_schemas.AverageTime(
         avrage_all_time=await crud.record.avarage_time_referred(db),
         avrage_one_day_ago=report_schemas.AverageTimeDetail(
-            time=round(avrage_one_day_ago),
+            time=round(avrage_today),
             compare=calculate_percentage(
-                avrage_one_day_ago, compare_avrage_one_day_ago
+                avrage_today, compare_avrage_one_day_ago
             ),
         ),
         avrage_one_week_ago=report_schemas.AverageTimeDetail(

@@ -46,8 +46,7 @@ class Staircase(BaseModel):
 
 
 class Proven(BaseModel):
-    week: WeeklyDays | None = None
-    type: TypeWeek = TypeWeek.dynamic
+    week: Weekly
     fee_to_timing: FreeFeeTiming = FreeFeeTiming.thirty_minutes
     free_cost_first_period_timing: bool | None = None
     one_day_price: int | None = None

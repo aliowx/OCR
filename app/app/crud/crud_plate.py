@@ -75,8 +75,8 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
 
         return [items, all_items_count]
 
-    async def count_entrance_exit_door(self, db: AsyncSession):
-
+    async def count_entrance_exit_door(self, db: AsyncSession, zone_ids: int):
+        zone_ids = {zone_ids}
         query = (
             select(
                 # func.distinact return unique value
@@ -85,6 +85,7 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
                 Plate.camera_id,
                 Equipment.serial_number.label("camera_name"),
             )
+            .where(Plate.camera_id.in_(zone_ids))
             .join(Equipment, Equipment.id == Plate.camera_id)
             .group_by(
                 Plate.camera_id,
@@ -98,13 +99,10 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
             Plate.created >= datetime.now().date(),
         ]
         execute_query = await db.execute(query.filter(*filters))
-        rows = execute_query.fetchall()
 
-        formatted_results = [
-            (row.count, row.type_camera, row.camera_id, row.camera_name)
-            for row in rows
-        ]
-        return formatted_results
+        result = execute_query.fetchone()
+
+        return result
 
 
 plate = CRUDPlate(Plate)

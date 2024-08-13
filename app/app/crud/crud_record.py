@@ -60,6 +60,27 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         else:
             return q.first()
 
+    async def get_total_park_today_except_unfinished(
+        self, db: Session | AsyncSession
+    ):
+
+        return await db.scalar(
+            select(Record)
+            .with_only_columns(func.count())
+            .filter(
+                (Record.latest_status != StatusRecord.unfinished.value)
+                & (Record.created >= datetime.now().date()),
+            )
+        )
+
+    async def get_total_in_parking(self, db: Session | AsyncSession):
+
+        return await db.scalar(
+            select(Record)
+            .with_only_columns(func.count())
+            .filter((Record.latest_status == StatusRecord.unfinished.value))
+        )
+
     async def find_records(
         self,
         db: Session | AsyncSession,

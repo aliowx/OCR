@@ -52,7 +52,7 @@ class RecordInDBBase(RecordBase):
 # Properties to return to client
 class Record(RecordInDBBase):
     total_time: str | None = None
-    total_price: float | None = None
+    # total_price: float | None = None
 
 
 # Properties properties stored in DB

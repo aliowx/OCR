@@ -7,6 +7,7 @@ from app.parking.schemas import ZonePrice
 
 
 class FreeFeeTiming(IntEnum):
+    zero = 0
     fifteen = 15
     thirty_minutes = 30
     one_hour = 60

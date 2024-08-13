@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
 from app.pricing.repo import price_repo
+from datetime import timedelta
 
 
-async def calculator_price(db: AsyncSession, *, params: schemas.ParamsRecord):
+async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
     records = await crud.record.find_records(
         db=db,
         input_status_record=params.input_status_record,
@@ -16,28 +17,19 @@ async def calculator_price(db: AsyncSession, *, params: schemas.ParamsRecord):
         asc=params.asc,
     )
 
+    for record in range(len(records[0])):
+        item_record = records[0][record]
 
-    # for record in range(len(records[0])):
-        # item_record = records[0][record]
-        # get_price = await price_repo.get(db, id=item_record.price_model_id)
+        hours, minutes, seconds = map(
+            float,
+            str(item_record.end_time - item_record.start_time).split(":"),
+        )
 
-        # Calculation of spot time
-        # item_record.total_time = str(
-        #     item_record.end_time - item_record.start_time
-        # )
-        # Calculation hours, conversion minutes and seconds to hours
-        # hours, minutes, seconds = map(float, item_record.total_time.split(":"))
-        # minutes = minutes / 60 if minutes > 0 else 0
-        # seconds = seconds / 3600 if seconds > 0 else 0
-        # total_hours = hours + minutes + seconds
-
-        # TODO set daily_price and penalti_price
-        # item_record.total_price = (
-        #     total_hours * get_price.hourly_fee + get_price.entrance_fee
-        # )
-        # item_record.total_price = (
-        #     total_hours * price.hourly_fee + price.entrance_fee
-        # )
-        # item_record.total_price = price.entrance_fee
-
+        item_record.total_time = str(
+            timedelta(
+                hours=hours,
+                minutes=minutes,
+                seconds=seconds,
+            )
+        )
     return schemas.GetRecords(items=records[0], all_items_count=records[1])

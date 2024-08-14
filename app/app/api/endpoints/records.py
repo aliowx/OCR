@@ -35,7 +35,6 @@ async def read_records(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     record_in: schemas.ParamsRecord = Depends(),
-    asc: bool = False,
 ) -> APIResponseType[schemas.GetRecords]:
     """
     All record

@@ -1,7 +1,7 @@
 import logging
 from typing import Awaitable, List, TypeVar
 
-from sqlalchemy import exists, false, func
+from sqlalchemy import exists, false, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
@@ -39,6 +39,8 @@ from .schemas.rule import (
     RuleCreate,
     ZoneRuleCreate,
 )
+
+from app.models.base import EquipmentType
 
 ModelType = TypeVar("ModelType", bound=Base)
 
@@ -251,6 +253,22 @@ class EquipmentRepository(
             ),
             await total_count,
         )
+
+    async def get_entrance_exit_camera(
+        self, db: AsyncSession
+    ) -> list[Equipment]:
+
+        query = select(Equipment).where(
+            (Equipment.is_deleted == false())
+            & or_(
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_EXIT_DOOR.value,
+            )
+        )
+
+        return await self._all(db.scalars(query))
 
     async def one_equipment(
         self, db: AsyncSession, *, serial_number: str

@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.models.plate import Plate
 from app.parking.models.equipment import Equipment
-from app.schemas.plate import PlateCreate, PlateUpdate, ParamsPlates
+from app.schemas.plate import (
+    PlateCreate,
+    PlateUpdate,
+    ParamsPlates,
+    ReportDoor,
+)
 from cache.redis import redis_client
 from sqlalchemy import func
 
@@ -75,23 +80,17 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
 
         return [items, all_items_count]
 
-    async def count_entrance_exit_door(self, db: AsyncSession, zone_ids: int):
-        zone_ids = {zone_ids}
+    async def count_entrance_exit_door(
+        self, db: AsyncSession, camera_id: int
+    ) -> ReportDoor:
+        camera_id_obj = {camera_id}
         query = (
             select(
                 # func.distinact return unique value
-                func.count(Plate.id).label("count"),
-                Plate.type_camera,
-                Plate.camera_id,
-                Equipment.serial_number.label("camera_name"),
+                func.count(Plate.camera_id).label("count")
             )
-            .where(Plate.camera_id.in_(zone_ids))
-            .join(Equipment, Equipment.id == Plate.camera_id)
-            .group_by(
-                Plate.camera_id,
-                Plate.type_camera,
-                Equipment.serial_number,
-            )
+            .where(Plate.camera_id.in_(camera_id_obj))
+            .group_by(Plate.camera_id)
         )
 
         filters = [
@@ -100,9 +99,9 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
         ]
         execute_query = await db.execute(query.filter(*filters))
 
-        result = execute_query.fetchone()
+        count = execute_query.scalar()
 
-        return result
+        return count
 
 
 plate = CRUDPlate(Plate)

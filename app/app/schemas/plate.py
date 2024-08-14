@@ -87,3 +87,9 @@ class ParamsPlates(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
+
+
+class ReportDoor(BaseModel):
+    count: int | None = None
+    type_camera: TypeCamera | None = None
+    camera_name: str | None = None

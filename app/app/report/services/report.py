@@ -414,12 +414,11 @@ async def avrage_referrd(db: AsyncSession):
     ]
     date_referred = []
     for day in time_eghit_day_referred:
-        start_date = day.replace(hour=0, minute=0, second=1)
+        start_date = day.replace(hour=0, minute=0, second=0)
         end_date = day.replace(hour=23, minute=59, second=59)
 
         records, total_count_record = await crud.record.find_records(
             db,
-            input_status_record=schemas.StatusRecord.finished,
             input_start_create_time=start_date,
             input_end_create_time=end_date,
         )

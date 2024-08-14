@@ -119,24 +119,21 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.score >= input_score)
 
         all_items_count = await self.count_by_filter(db, filters=filters)
-
         if limit is None:
-            return [
-                await self._all(
-                    db.scalars(query.filter(*filters).offset(skip))
-                ),
-                all_items_count,
-            ]
+            result = await self._all(
+                db.scalars(query.filter(*filters).offset(skip))
+            )
 
-        return await self._all(
+            return [result, all_items_count]
+        result = await self._all(
             db.scalars(
                 query.filter(*filters)
                 .offset(skip)
                 .limit(limit)
                 .order_by(Record.id.asc() if asc else Record.id.desc())
-            ),
-            all_items_count,
+            )
         )
+        return [result, all_items_count]
 
     async def max_time_record(
         self, db: Session | AsyncSession

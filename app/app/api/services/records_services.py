@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
-from app.pricing.repo import price_repo
 from datetime import timedelta
 
 
@@ -13,7 +12,7 @@ async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
         input_start_create_time=params.input_start_time,
         input_end_create_time=params.input_end_time,
         skip=params.skip,
-        limit=None,
+        limit=params.limit,
         asc=params.asc,
     )
 

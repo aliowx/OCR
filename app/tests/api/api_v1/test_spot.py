@@ -27,7 +27,7 @@ class TestSpot:
         assert zone_create.status_code == 200
 
         equipment_in = EquipmentCreate(
-            equipment_type=EquipmentType.CAMERA_SPOT,
+            equipment_type=EquipmentType.SENSOR,
             equipment_status=EquipmentStatus.HEALTHY,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),
@@ -76,7 +76,7 @@ class TestSpot:
         assert zone_create.status_code == 200
 
         equipment_in = EquipmentCreate(
-            equipment_type=EquipmentType.CAMERA_SPOT,
+            equipment_type=EquipmentType.SENSOR,
             equipment_status=EquipmentStatus.HEALTHY,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),

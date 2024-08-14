@@ -468,26 +468,31 @@ async def max_time_park(db: AsyncSession):
 
 
 async def report_moment(db: AsyncSession):
-    cameras_zone, total_camera_zone = (
-        await equipment_repo.get_multi_with_filters(
-            db,
-            filters=ReadEquipmentsFilter(
-                equipment_type__eq=models.base.EquipmentType.CAMERA_ZONE
-            ),
-        )
-    )
+    cameras_zone = await equipment_repo.get_entrance_exit_camera(db)
+
     data = []
     for camera_zone in cameras_zone:
-        plate_group = await crud.plate.count_entrance_exit_door(
-            db, zone_ids=camera_zone.id
+        count = await crud.plate.count_entrance_exit_door(
+            db, camera_id=camera_zone.id
         )
-        data.append(
-            {
-                "count": plate_group.count if plate_group else 0,
-                "type_camera": (
-                    plate_group.type_camera if plate_group else None
-                ),
-                "camera_name": camera_zone.serial_number,
-            }
-        )
+        if count:
+            data.append(
+                {
+                    "count": count,
+                    "type_camera": models.base.EquipmentType(
+                        camera_zone.equipment_type
+                    ).name,
+                    "camera_name": camera_zone.serial_number,
+                }
+            )
+        else:
+            data.append(
+                {
+                    "count": 0,
+                    "type_camera": models.base.EquipmentType(
+                        camera_zone.equipment_type
+                    ).name,
+                    "camera_name": camera_zone.serial_number,
+                }
+            )
     return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)

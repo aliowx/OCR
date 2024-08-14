@@ -31,7 +31,7 @@ class TestEquipment:
         )
         equipment_in = EquipmentCreate(
             equipment_status=EquipmentStatus.HEALTHY,
-            equipment_type=EquipmentType.CAMERA_SPOT,
+            equipment_type=EquipmentType.SENSOR,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),
             zone_id=zone.id,
@@ -91,7 +91,7 @@ class TestEquipment:
         )
         equipment_in = EquipmentCreate(
             equipment_status=EquipmentStatus.BROKEN,
-            equipment_type=EquipmentType.CAMERA_ZONE,
+            equipment_type=EquipmentType.CAMERA_ENTRANCE_DOOR,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),
             zone_id=zone.id,

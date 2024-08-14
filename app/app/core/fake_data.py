@@ -51,7 +51,7 @@ class FakeData(BaseSettings):
     )
 
     EQUIPMENT: ClassVar = models.Equipment(
-        equipment_type=ParkingSchema.equipment.EquipmentType.CAMERA_ZONE,
+        equipment_type=ParkingSchema.equipment.EquipmentType.CAMERA_ENTRANCE_DOOR,
         equipment_status=ParkingSchema.equipment.EquipmentStatus.HEALTHY,
         serial_number="abc123",
         ip_address="127.0.0.1",

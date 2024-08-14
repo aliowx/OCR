@@ -25,7 +25,7 @@ class TestEquipment:
         assert zone_create.status_code == 200
 
         equipment_in = EquipmentCreate(
-            equipment_type=EquipmentType.CAMERA_SPOT,
+            equipment_type=EquipmentType.SENSOR,
             equipment_status=EquipmentStatus.HEALTHY,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),
@@ -52,7 +52,7 @@ class TestEquipment:
         assert zone_create.status_code == 200
 
         equipment_in = EquipmentCreate(
-            equipment_type=EquipmentType.CAMERA_ZONE,
+            equipment_type=EquipmentType.CAMERA_ENTRANCE_DOOR,
             equipment_status=EquipmentStatus.HEALTHY,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),
@@ -177,7 +177,7 @@ class TestEquipment:
         assert equipment_create.status_code == 200
 
         equipment_update_in = EquipmentUpdate(
-            equipment_type=EquipmentType.CAMERA_SPOT,
+            equipment_type=EquipmentType.SENSOR,
             equipment_status=EquipmentStatus.BROKEN,
             serial_number=random_lower_string(),
             ip_address=random_lower_string(),

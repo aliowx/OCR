@@ -235,7 +235,7 @@ def set_status_record(self):
 def set_fake_data(self):
 
     try:
-        create_plates()
+        create_plates(self.session)
     except Exception as e:
         print(f"error set data fake {e}")
 

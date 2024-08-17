@@ -32,6 +32,8 @@ def calculate_percentage(start_time, end_time):
     percentage_difference = 0
     # handel devision zero
     if start_time == 0:
+        if end_time == 0:
+            return percentage_difference
         return -100
     # Calculate the absolute difference in seconds
     difference = start_time - end_time
@@ -434,11 +436,7 @@ async def avrage_referrd(db: AsyncSession):
 
         yesterday = date_referred[referred - 1]["count_referred"]
 
-        # for division zero
-        if yesterday != 0 and today != 0:
-            percent_comparing = ((today - yesterday) / yesterday) * 100
-        else:
-            percent_comparing = 0
+        percent_comparing = calculate_percentage(today, yesterday)
 
         date_referred_cahnge.append(
             {

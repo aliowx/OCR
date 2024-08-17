@@ -139,7 +139,7 @@ class FakeData(BaseSettings):
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),
-            day=random.randint(1, 29),
+            day=random.randint(1, 28),
         ).isoformat(),
     )
 
@@ -161,7 +161,7 @@ class FakeData(BaseSettings):
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),
-            day=random.randint(1, 29),
+            day=random.randint(1, 28),
         ).isoformat(),
     )
 

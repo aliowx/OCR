@@ -13,7 +13,7 @@ from app.parking.schemas import ReadEquipmentsFilter
 def get_month_dates(reference_date, months_ago):
     month_dates = []
 
-    for i in range(1, months_ago + 1):
+    for i in range(0, months_ago):
         # Calculate the start date of the month `i` months ago
         start_date = (reference_date - relativedelta(months=i)).replace(day=1)
 
@@ -239,12 +239,13 @@ async def average_time(db: AsyncSession):
 
 async def avrage_referrd(db: AsyncSession):
     list_referred = {}
+
     time_weekly_referred = [
-        datetime.now() - timedelta(days=i) for i in range(1, 8)
+        datetime.now() - timedelta(days=i) for i in range(0, 7)
     ]
 
     time_month_referred = [
-        datetime.now() - timedelta(days=i) for i in range(1, 30)
+        datetime.now() - timedelta(days=i) for i in range(0, 30)
     ]
 
     time_six_month_referred = get_month_dates(datetime.now(), 6)
@@ -259,11 +260,11 @@ async def avrage_referrd(db: AsyncSession):
     ]
 
     compare_time_weekly_referred = [
-        time_weekly_referred[-1] - timedelta(days=i) for i in range(1, 8)
+        time_weekly_referred[-1] - timedelta(days=i) for i in range(0, 8)
     ]
 
     compare_time_month_referred = [
-        time_month_referred[-1] - timedelta(days=i) for i in range(1, 30)
+        time_month_referred[-1] - timedelta(days=i) for i in range(0, 30)
     ]
 
     compare_time_six_month_referred = get_month_dates(
@@ -300,7 +301,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )
@@ -317,7 +317,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )
@@ -334,7 +333,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )
@@ -363,7 +361,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )
@@ -380,7 +377,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )
@@ -397,7 +393,6 @@ async def avrage_referrd(db: AsyncSession):
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
-                        input_status_record=schemas.StatusRecord.finished,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
                     )

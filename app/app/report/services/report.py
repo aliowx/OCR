@@ -315,13 +315,11 @@ async def avrage_referrd(db: AsyncSession):
                     hour=00,
                     minute=00,
                     second=00,
-                    microsecond=000,
                 )
                 end_time = referred_timeing.replace(
                     hour=23,
                     minute=59,
                     second=59,
-                    microsecond=999,
                 )
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -449,7 +447,7 @@ async def avrage_referrd(db: AsyncSession):
 
     time_eghit_day_referred = [
         datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
-        for i in range(0, 9)
+        for i in range(0, 8)
     ]
     date_referred = []
     for day in time_eghit_day_referred:

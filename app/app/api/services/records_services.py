@@ -28,7 +28,6 @@ async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
             timedelta(
                 hours=hours,
                 minutes=minutes,
-                seconds=seconds,
             )
         )
     return schemas.GetRecords(items=records[0], all_items_count=records[1])

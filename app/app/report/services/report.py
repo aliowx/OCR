@@ -315,11 +315,13 @@ async def avrage_referrd(db: AsyncSession):
                     hour=00,
                     minute=00,
                     second=00,
+                    microsecond=000000,
                 )
                 end_time = referred_timeing.replace(
                     hour=23,
                     minute=59,
                     second=59,
+                    microsecond=999999,
                 )
                 records, total_count_record_timing = (
                     await crud.record.find_records(
@@ -387,11 +389,13 @@ async def avrage_referrd(db: AsyncSession):
                     hour=00,
                     minute=00,
                     second=00,
+                    microsecond=000000,
                 )
                 end_time = referred_timeing.replace(
                     hour=23,
                     minute=59,
                     second=59,
+                    microsecond=999999,
                 )
 
                 records, total_count_record_timing = (
@@ -411,6 +415,7 @@ async def avrage_referrd(db: AsyncSession):
                 )
         elif key == "six_month":
             for start_time, end_time in time_six_month_referred:
+
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
@@ -455,11 +460,13 @@ async def avrage_referrd(db: AsyncSession):
             hour=00,
             minute=00,
             second=00,
+            microsecond=000000,
         )
         end_date = day.replace(
             hour=23,
             minute=59,
             second=59,
+            microsecond=999999,
         )
         records, total_count_record = await crud.record.find_records(
             db,
@@ -470,15 +477,6 @@ async def avrage_referrd(db: AsyncSession):
         date_referred.append(
             {"date": start_date.date(), "count_referred": total_count_record}
         )
-        print(
-            "start_date",
-            start_date,
-            "end_date",
-            end_date,
-            "count",
-            total_count_record,
-        )
-    print("list_all", date_referred)
     date_referred_cahnge = []
 
     date_referred.reverse()

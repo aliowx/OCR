@@ -31,12 +31,12 @@ def calculate_percentage(start_time, end_time):
     """Calculate the normalized percentage difference between start_time and end_time."""
     percentage_difference = 0
     # handel devision zero
-    if start_time == 0:
-        if end_time == 0:
+    if end_time == 0:
+        if start_time == 0:
             return percentage_difference
         return -100
     # Calculate the absolute difference in seconds
-    difference = end_time - start_time
+    difference = start_time - end_time
     # Calculate the percentage difference, capped at 100%
     if difference == 0:
         return percentage_difference

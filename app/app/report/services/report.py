@@ -323,12 +323,11 @@ async def avrage_referrd(db: AsyncSession):
                     second=59,
                     microsecond=999999,
                 )
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
@@ -340,12 +339,11 @@ async def avrage_referrd(db: AsyncSession):
                 )
         elif key_compare == "six_month":
             for start_time, end_time in compare_time_six_month_referred:
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
@@ -357,12 +355,11 @@ async def avrage_referrd(db: AsyncSession):
                 )
         elif key_compare == "year":
             for start_time, end_time in compare_time_one_year_referred:
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
@@ -398,12 +395,11 @@ async def avrage_referrd(db: AsyncSession):
                     microsecond=999999,
                 )
 
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred[key].append(
@@ -416,12 +412,11 @@ async def avrage_referrd(db: AsyncSession):
         elif key == "six_month":
             for start_time, end_time in time_six_month_referred:
 
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred[key].append(
@@ -433,12 +428,11 @@ async def avrage_referrd(db: AsyncSession):
                 )
         elif key == "year":
             for start_time, end_time in time_one_year_referred:
-                records, total_count_record_timing = (
-                    await crud.record.find_records(
+                total_count_record_timing = (
+                    await crud.record.get_count_referred(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
-                        limit=None,
                     )
                 )
                 report_referred[key].append(
@@ -468,14 +462,13 @@ async def avrage_referrd(db: AsyncSession):
             second=59,
             microsecond=999999,
         )
-        records, total_count_record = await crud.record.find_records(
+        count_record = await crud.record.get_count_referred(
             db,
             input_start_create_time=start_date,
             input_end_create_time=end_date,
-            limit=None,
         )
         date_referred.append(
-            {"date": start_date.date(), "count_referred": total_count_record}
+            {"date": start_date.date(), "count_referred": count_record}
         )
     date_referred_cahnge = []
 

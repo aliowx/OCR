@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Awaitable
 
 import rapidjson
@@ -95,7 +95,7 @@ class CRUDPlate(CRUDBase[Plate, PlateCreate, PlateUpdate]):
 
         filters = [
             Plate.is_deleted == False,
-            Plate.created >= datetime.now(timezone.utc).date(),
+            Plate.created >= datetime.now(UTC).replace(tzinfo=None).date(),
         ]
         execute_query = await db.execute(query.filter(*filters))
 

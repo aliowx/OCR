@@ -1,5 +1,5 @@
 from asyncio import iscoroutine
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any, Awaitable, Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -181,7 +181,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         if hasattr(self.model, "modified"):
-            setattr(db_obj, "modified", datetime.now(timezone.utc))
+            setattr(db_obj, "modified", datetime.now(UTC).replace(tzinfo=None))
         db.add(db_obj)
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
@@ -190,7 +190,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType] | Awaitable[list[ModelType]]:
         if hasattr(self.model, "modified"):
             for db_obj in db_objs:
-                setattr(db_obj, "modified", datetime.now(timezone.utc))
+                setattr(db_obj, "modified", datetime.now(UTC).replace(tzinfo=None))
         db.add_all(db_objs)
         return self._commit_refresh_all(db=db, db_objs=db_objs)
 

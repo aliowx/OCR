@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import schemas, crud, models
 from app.parking.repo import zone_repo
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
 from app.parking.repo import equipment_repo
@@ -74,11 +74,20 @@ async def capacity(db: AsyncSession):
 
 
 async def average_time(db: AsyncSession):
-    today = datetime.now().date()
-    one_week_ago = (datetime.now() - timedelta(days=7)).date()
-    one_month_ago = (datetime.now() - timedelta(days=30)).date()
-    six_month_ago = (datetime.now() - timedelta(days=180)).date()
-    one_year_ago = (datetime.now() - timedelta(days=365)).date()
+
+    today = datetime.now(UTC).replace(tzinfo=None).date()
+    one_week_ago = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
+    ).date()
+    one_month_ago = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=30)
+    ).date()
+    six_month_ago = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=180)
+    ).date()
+    one_year_ago = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=365)
+    ).date()
 
     timing_park = [
         today,
@@ -241,16 +250,22 @@ async def avrage_referrd(db: AsyncSession):
     list_referred = {}
 
     time_weekly_referred = [
-        datetime.now() - timedelta(days=i) for i in range(0, 7)
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
+        for i in range(0, 7)
     ]
 
     time_month_referred = [
-        datetime.now() - timedelta(days=i) for i in range(0, 30)
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
+        for i in range(0, 30)
     ]
 
-    time_six_month_referred = get_month_dates(datetime.now(), 6)
+    time_six_month_referred = get_month_dates(
+        datetime.now(UTC).replace(tzinfo=None), 6
+    )
 
-    time_one_year_referred = get_month_dates(datetime.now(), 12)
+    time_one_year_referred = get_month_dates(
+        datetime.now(UTC).replace(tzinfo=None), 12
+    )
 
     timing_referred = [
         (time_weekly_referred, "week"),
@@ -296,19 +311,30 @@ async def avrage_referrd(db: AsyncSession):
             "month",
         ]:
             for referred_timeing in referred_time_compare:
-                start_time = referred_timeing.date()
-                end_time = (referred_timeing + timedelta(days=1)).date()
+                start_time = referred_timeing.replace(
+                    hour=00,
+                    minute=00,
+                    second=00,
+                    microsecond=000,
+                )
+                end_time = referred_timeing.replace(
+                    hour=23,
+                    minute=59,
+                    second=59,
+                    microsecond=999,
+                )
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
                     {
-                        "start_date": start_time,
-                        "end_date": end_time,
+                        "start_date": start_time.date(),
+                        "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
                 )
@@ -319,6 +345,7 @@ async def avrage_referrd(db: AsyncSession):
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
@@ -335,6 +362,7 @@ async def avrage_referrd(db: AsyncSession):
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred_compare[key_compare].append(
@@ -344,6 +372,7 @@ async def avrage_referrd(db: AsyncSession):
                         "count_referred": total_count_record_timing,
                     },
                 )
+
     list_referred["report_referred_compare"] = report_referred_compare
 
     report_referred = {
@@ -356,19 +385,29 @@ async def avrage_referrd(db: AsyncSession):
 
         if key in ["week", "month"]:
             for referred_timeing in referred_time:
-                start_time = referred_timeing.date()
-                end_time = (referred_timeing + timedelta(days=1)).date()
+                start_time = referred_timeing.replace(
+                    hour=00,
+                    minute=00,
+                    second=00,
+                )
+                end_time = referred_timeing.replace(
+                    hour=23,
+                    minute=59,
+                    second=59,
+                )
+
                 records, total_count_record_timing = (
                     await crud.record.find_records(
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred[key].append(
                     {
-                        "start_date": start_time,
-                        "end_date": end_time,
+                        "start_date": start_time.date(),
+                        "end_date": end_time.date(),
                         "count_referred": total_count_record_timing,
                     },
                 )
@@ -379,6 +418,7 @@ async def avrage_referrd(db: AsyncSession):
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred[key].append(
@@ -395,6 +435,7 @@ async def avrage_referrd(db: AsyncSession):
                         db,
                         input_start_create_time=start_time,
                         input_end_create_time=end_time,
+                        limit=None,
                     )
                 )
                 report_referred[key].append(
@@ -407,13 +448,21 @@ async def avrage_referrd(db: AsyncSession):
     list_referred["report_referred"] = report_referred
 
     time_eghit_day_referred = [
-        datetime.now() - timedelta(days=i) for i in range(0, 9)
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
+        for i in range(0, 9)
     ]
     date_referred = []
     for day in time_eghit_day_referred:
-        start_date = day.replace(hour=0, minute=0, second=0)
-        end_date = day.replace(hour=23, minute=59, second=59)
-
+        start_date = day.replace(
+            hour=0,
+            minute=0,
+            second=0,
+        )
+        end_date = day.replace(
+            hour=23,
+            minute=59,
+            second=59,
+        )
         records, total_count_record = await crud.record.find_records(
             db,
             input_start_create_time=start_date,

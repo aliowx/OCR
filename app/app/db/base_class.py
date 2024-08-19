@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from persiantools.jdatetime import JalaliDate
@@ -26,14 +26,14 @@ class Base(DeclarativeBase):
 
     created = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(timezone.utc),
+        default=datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )
     modified = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(timezone.utc),
+        default=datetime.now(UTC).replace(tzinfo=None),
         index=True,
-        onupdate=datetime.now(timezone.utc),
+        onupdate=datetime.now(UTC).replace(tzinfo=None),
     )
 
     def __str__(self):

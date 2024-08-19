@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSON
@@ -14,12 +14,12 @@ class Record(Base):
 
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(timezone.utc),
+        default=datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )
     end_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(timezone.utc),
+        default=datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )
 

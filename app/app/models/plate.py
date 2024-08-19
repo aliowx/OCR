@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,7 +13,7 @@ class Plate(Base):
 
     record_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(timezone.utc),
+        default=datetime.now(UTC).replace(tzinfo=None),
         index=True,
     )
 

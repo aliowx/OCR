@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.parking import schemas as ParkingSchema
 from app import schemas as MainSchema
 from app import models
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 import random
 import string
 
@@ -79,8 +79,8 @@ class FakeData(BaseSettings):
 
     RECORD1: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now(timezone.utc).isoformat(),
-        end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
+        start_time=datetime.now(UTC).replace(tzinfo=None),
+        end_time=datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
         score=0.01,
@@ -91,7 +91,7 @@ class FakeData(BaseSettings):
     PLATE1: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
-            datetime.now(timezone.utc) + timedelta(hours=random.randint(1, 24))
+            datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=random.randint(1, 24))
         ),
         plate_image_id=None,
         lpr_image_id=None,
@@ -100,7 +100,7 @@ class FakeData(BaseSettings):
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
         created=random.choice(
             [
-                datetime.now(timezone.utc) - timedelta(days=i)
+                datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
                 for i in range(1, 8)
             ]
         ),
@@ -108,8 +108,8 @@ class FakeData(BaseSettings):
 
     RECORD2: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now(timezone.utc).isoformat(),
-        end_time=datetime.now(timezone.utc)
+        start_time=datetime.now(UTC).replace(tzinfo=None),
+        end_time=datetime.now(UTC).replace(tzinfo=None)
         + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
@@ -118,7 +118,7 @@ class FakeData(BaseSettings):
         latest_status=MainSchema.StatusRecord.finished.value,
         created=random.choice(
             [
-                datetime.now(timezone.utc) - timedelta(days=i)
+                datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
                 for i in range(1, 8)
             ]
         ),
@@ -127,7 +127,7 @@ class FakeData(BaseSettings):
     PLATE2: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
-            datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 23))
+            datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=random.randint(1, 23))
         ),
         plate_image_id=None,
         lpr_image_id=None,
@@ -136,7 +136,7 @@ class FakeData(BaseSettings):
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
         created=random.choice(
             [
-                datetime.now(timezone.utc) - timedelta(days=i)
+                datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
                 for i in range(0, 8)
             ]
         ),
@@ -145,7 +145,7 @@ class FakeData(BaseSettings):
     PLATE_PAST: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
-            datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 23))
+            datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=random.randint(1, 23))
         ),
         plate_image_id=None,
         lpr_image_id=None,
@@ -167,8 +167,8 @@ class FakeData(BaseSettings):
 
     RECORD_PAST: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now(timezone.utc).isoformat(),
-        end_time=datetime.now(timezone.utc)
+        start_time=datetime.now(UTC).replace(tzinfo=None),
+        end_time=datetime.now(UTC).replace(tzinfo=None)
         + timedelta(hours=random.randint(1, 15)),
         best_lpr_image_id=None,
         best_plate_image_id=None,

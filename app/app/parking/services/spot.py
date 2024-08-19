@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +10,6 @@ from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.parking.repo import zone_repo
 from app.utils import PaginatedContent
-from app.models.base import EquipmentType
-from app.pricing.repo import price_repo
 
 
 async def create_spot(
@@ -135,7 +133,7 @@ async def update_status(
 
         plate_in = schemas.PlateCreate(
             plate=spot_in.plate,
-            record_time=datetime.now(timezone.utc).isoformat(),
+            record_time=datetime.now(UTC).replace(tzinfo=None),
             lpr_image_id=(
                 spot_in.lpr_image_id if spot_in.lpr_image_id else None
             ),
@@ -158,7 +156,7 @@ async def update_status(
     check_spot.status = spot_in.status
     check_spot.lpr_image_id = spot_in.lpr_image_id
     check_spot.plate_image_id = spot_in.plate_image_id
-    check_spot.latest_time_modified = datetime.now(timezone.utc)
+    check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
     return await crud.spot_repo.update(db, db_obj=check_spot)
 
 

@@ -1,7 +1,7 @@
 import logging
 import math
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from sqlalchemy import text
 
 from app import crud, models, schemas
@@ -206,7 +206,7 @@ def set_status_record(self):
         records = crud.record.get_multi_record(
             self.session,
             input_status_record=StatusRecord.unfinished.value,
-            input_create_time=datetime.now(timezone.utc)
+            input_create_time=datetime.now(UTC).replace(tzinfo=None)
             - timedelta(
                 seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
             ),
@@ -268,7 +268,7 @@ def cleanup(self, table_name: str = "image"):
                     .filter(
                         model_img.modified
                         < (
-                            datetime.now(timezone.utc)
+                            datetime.now(UTC).replace(tzinfo=None)
                             - timedelta(days=settings.CLEANUP_AGE)
                         ),
                         model_img.id != img_id.id,
@@ -282,13 +282,13 @@ def cleanup(self, table_name: str = "image"):
                     .delete(synchronize_session="fetch")
                 )
         elif table_name == "plate":
-            limit = datetime.now(timezone.utc) - timedelta(
+            limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )
             filter = models.Plate.record_time
             model = models.Plate
         elif table_name == "record":
-            limit = datetime.now(timezone.utc) - timedelta(
+            limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 days=settings.CLEANUP_RECORDS_AGE
             )
             filter = models.Record.end_time

@@ -454,9 +454,9 @@ async def avrage_referrd(db: AsyncSession):
     date_referred = []
     for day in time_eghit_day_referred:
         start_date = day.replace(
-            hour=0,
-            minute=0,
-            second=0,
+            hour=00,
+            minute=00,
+            second=00,
         )
         end_date = day.replace(
             hour=23,
@@ -467,10 +467,20 @@ async def avrage_referrd(db: AsyncSession):
             db,
             input_start_create_time=start_date,
             input_end_create_time=end_date,
+            limit=None,
         )
         date_referred.append(
             {"date": start_date.date(), "count_referred": total_count_record}
         )
+        print(
+            "start_date",
+            start_date,
+            "end_date",
+            end_date,
+            "count",
+            total_count_record,
+        )
+    print("list_all", date_referred)
     date_referred_cahnge = []
 
     date_referred.reverse()

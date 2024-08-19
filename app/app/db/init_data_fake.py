@@ -12,7 +12,7 @@ from app.core.celery_app import celery_app
 from fastapi.encoders import jsonable_encoder
 from cache.redis import redis_client
 import rapidjson
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +121,9 @@ def create_records_past(db: Session):
     for _ in range(1, 100):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-            start_time=datetime.now().isoformat(),
-            end_time=datetime.now() + timedelta(hours=random.randint(1, 23)),
+            start_time=datetime.now(timezone.utc).isoformat(),
+            end_time=datetime.now(timezone.utc)
+            + timedelta(hours=random.randint(1, 23)),
             best_lpr_image_id=None,
             best_plate_image_id=None,
             score=0.01,

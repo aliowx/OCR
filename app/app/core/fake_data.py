@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.parking import schemas as ParkingSchema
 from app import schemas as MainSchema
 from app import models
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 import string
 
@@ -79,7 +79,7 @@ class FakeData(BaseSettings):
 
     RECORD1: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now().isoformat(),
+        start_time=datetime.now(timezone.utc).isoformat(),
         end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
@@ -90,47 +90,63 @@ class FakeData(BaseSettings):
 
     PLATE1: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        record_time=(datetime.now() + timedelta(hours=random.randint(1, 24))),
+        record_time=(
+            datetime.now(timezone.utc) + timedelta(hours=random.randint(1, 24))
+        ),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
         created=random.choice(
-            [datetime.now() - timedelta(days=i) for i in range(1, 8)]
+            [
+                datetime.now(timezone.utc) - timedelta(days=i)
+                for i in range(1, 8)
+            ]
         ),
     )
 
     RECORD2: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now().isoformat(),
-        end_time=datetime.now() + timedelta(hours=random.randint(1, 10)),
+        start_time=datetime.now(timezone.utc).isoformat(),
+        end_time=datetime.now(timezone.utc)
+        + timedelta(hours=random.randint(1, 10)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
         score=0.01,
         zone_id=None,
         latest_status=MainSchema.StatusRecord.finished.value,
         created=random.choice(
-            [datetime.now() - timedelta(days=i) for i in range(1, 8)]
+            [
+                datetime.now(timezone.utc) - timedelta(days=i)
+                for i in range(1, 8)
+            ]
         ),
     )
 
     PLATE2: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        record_time=(datetime.now() - timedelta(hours=random.randint(1, 23))),
+        record_time=(
+            datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 23))
+        ),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
         type_camera=MainSchema.plate.TypeCamera.entranceDoor,
         created=random.choice(
-            [datetime.now() - timedelta(days=i) for i in range(0, 8)]
+            [
+                datetime.now(timezone.utc) - timedelta(days=i)
+                for i in range(0, 8)
+            ]
         ),
     )
 
     PLATE_PAST: ClassVar = models.Plate(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        record_time=(datetime.now() - timedelta(hours=random.randint(1, 23))),
+        record_time=(
+            datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 23))
+        ),
         plate_image_id=None,
         lpr_image_id=None,
         camera_id=None,
@@ -151,8 +167,9 @@ class FakeData(BaseSettings):
 
     RECORD_PAST: ClassVar = models.Record(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-        start_time=datetime.now().isoformat(),
-        end_time=datetime.now() + timedelta(hours=random.randint(1, 15)),
+        start_time=datetime.now(timezone.utc).isoformat(),
+        end_time=datetime.now(timezone.utc)
+        + timedelta(hours=random.randint(1, 15)),
         best_lpr_image_id=None,
         best_plate_image_id=None,
         score=0.01,

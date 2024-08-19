@@ -212,4 +212,4 @@ class Cache(metaclass=MetaSingleton):
     @staticmethod
     def get_log_time():
         """Get a timestamp to include with a log message."""
-        return datetime.now().strftime(LOG_TIMESTAMP)
+        return datetime.now(timezone.utc).strftime(LOG_TIMESTAMP)

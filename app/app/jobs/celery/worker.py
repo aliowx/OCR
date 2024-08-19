@@ -206,7 +206,7 @@ def set_status_record(self):
         records = crud.record.get_multi_record(
             self.session,
             input_status_record=StatusRecord.unfinished.value,
-            input_create_time=datetime.now()
+            input_create_time=datetime.now(timezone.utc)
             - timedelta(
                 seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
             ),
@@ -282,7 +282,7 @@ def cleanup(self, table_name: str = "image"):
                     .delete(synchronize_session="fetch")
                 )
         elif table_name == "plate":
-            limit = datetime.now() - timedelta(
+            limit = datetime.now(timezone.utc) - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )
             filter = models.Plate.record_time

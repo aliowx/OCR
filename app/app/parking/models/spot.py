@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import ARRAY, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,7 +32,9 @@ class Spot(Base):
     plate: Mapped[str] = mapped_column(String, nullable=True)
 
     latest_time_modified: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=datetime.now(timezone.utc),
+        index=True,
     )
 
     camera_id: Mapped[int] = mapped_column(

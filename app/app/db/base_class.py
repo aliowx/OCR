@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from persiantools.jdatetime import JalaliDate
@@ -25,13 +25,15 @@ class Base(DeclarativeBase):
     )
 
     created = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=datetime.now(timezone.utc),
+        index=True,
     )
     modified = mapped_column(
-        DateTime(timezone=True),
-        default=datetime.now,
+        DateTime(timezone=False),
+        default=datetime.now(timezone.utc),
         index=True,
-        onupdate=datetime.now,
+        onupdate=datetime.now(timezone.utc),
     )
 
     def __str__(self):
@@ -42,21 +44,3 @@ class Base(DeclarativeBase):
             return f"{self.__class__.__name__}({self.__tablename__}:{self.id})"
         except:
             return f"Faulty-{self.__class__.__name__}"
-
-    @property
-    def created_jalali(self) -> JalaliDate:
-        created = (self.created).replace(tzinfo=None)
-        return self.make_jalali(created)
-
-    @property
-    def modified_jalali(self) -> JalaliDate:
-        modified = (self.modified).replace(tzinfo=None)
-        return self.make_jalali(modified)
-
-    def make_jalali(date_time: datetime) -> JalaliDate:
-        utc = datetime.strptime(str(date_time), "%Y-%m-%d %H:%M:%S.%f")
-        hour = "{:0>2}".format(int(utc.hour))
-        minute = "{:0>2}".format(int(utc.minute))
-        second = "{:0>2}".format(int(utc.second))
-        time = hour + ":" + minute + ":" + second
-        return JalaliDate(utc).strftime("%Y-%m-%d") + " " + time

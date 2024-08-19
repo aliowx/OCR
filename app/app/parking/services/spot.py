@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +45,7 @@ async def create_spot(
             detail="camera not exist",
             msg_code=utils.MessageCodes.operation_failed,
         )
-    
+
     # if camera.equipment_type != EquipmentType.CAMERA_SPOT:
     #     raise exc.ServiceFailure(
     #         detail="type camera not spot",
@@ -135,7 +135,7 @@ async def update_status(
 
         plate_in = schemas.PlateCreate(
             plate=spot_in.plate,
-            record_time=datetime.now().isoformat(),
+            record_time=datetime.now(timezone.utc).isoformat(),
             lpr_image_id=(
                 spot_in.lpr_image_id if spot_in.lpr_image_id else None
             ),
@@ -158,7 +158,7 @@ async def update_status(
     check_spot.status = spot_in.status
     check_spot.lpr_image_id = spot_in.lpr_image_id
     check_spot.plate_image_id = spot_in.plate_image_id
-    check_spot.latest_time_modified = datetime.now()
+    check_spot.latest_time_modified = datetime.now(timezone.utc)
     return await crud.spot_repo.update(db, db_obj=check_spot)
 
 

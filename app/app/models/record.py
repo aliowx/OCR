@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSON
@@ -13,10 +13,14 @@ class Record(Base):
     plate: Mapped[str] = mapped_column(String, index=True, nullable=True)
 
     start_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=datetime.now(timezone.utc),
+        index=True,
     )
     end_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=datetime.now(timezone.utc),
+        index=True,
     )
 
     score: Mapped[float] = mapped_column(

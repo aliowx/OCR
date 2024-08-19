@@ -69,7 +69,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             .with_only_columns(func.count())
             .filter(
                 (Record.latest_status != StatusRecord.unfinished.value)
-                & (Record.created >= datetime.now(UTC).replace(tzinfo=None).date()),
+                & (
+                    Record.created
+                    >= datetime.now(UTC).replace(tzinfo=None).date()
+                ),
             )
         )
 
@@ -81,7 +84,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             .filter((Record.latest_status == StatusRecord.unfinished.value))
         )
 
-    #TODO use this
     async def get_count_referred(
         self,
         db: Session | AsyncSession,
@@ -91,11 +93,18 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
     ):
 
         query = select(Record)
+
         filters = [Record.is_deleted == False]
 
-        filters.append(Record.created >= input_start_create_time)
-        filters.append(Record.created <= input_end_create_time)
-        return await self._all(db.scalars(query.filter(*filters)))
+        filters.append(
+            Record.created.between(
+                input_start_create_time, input_end_create_time
+            )
+        )
+
+        return await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
 
     async def find_records(
         self,
@@ -123,11 +132,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.zone_id == input_zone_id)
 
         if input_start_create_time is not None:
-            print(input_start_create_time)
             filters.append(Record.created >= input_start_create_time)
 
         if input_end_create_time is not None:
-            print(input_end_create_time)
             filters.append(Record.created <= input_end_create_time)
 
         if input_status_record is not None:

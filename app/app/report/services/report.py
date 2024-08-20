@@ -144,7 +144,6 @@ async def average_time(db: AsyncSession):
         records_compare, total_count_record_compare = (
             await crud.record.find_records(
                 db,
-                input_status_record=schemas.StatusRecord.finished,
                 input_start_create_time=compare_time,
                 input_end_create_time=time_park,
             )
@@ -190,7 +189,6 @@ async def average_time(db: AsyncSession):
     for time in timing_park:
         records, total_count_record_timing = await crud.record.find_records(
             db,
-            input_status_record=schemas.StatusRecord.finished,
             input_start_create_time=time,
         )
         if records:

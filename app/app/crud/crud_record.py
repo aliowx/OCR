@@ -126,7 +126,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
 
         if input_plate is not None:
-            filters.append(Record.plate == input_plate)
+            filters.append(Record.plate.ilike(f"%{input_plate}%"))
 
         if input_zone_id is not None:
             filters.append(Record.zone_id == input_zone_id)

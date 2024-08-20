@@ -513,10 +513,16 @@ async def avrage_referrd(db: AsyncSession):
 async def max_time_park(db: AsyncSession):
 
     time_park, plate, created = await crud.record.max_time_record(db)
+    
     return report_schemas.MaxTimePark(
         plate=plate,
         created=created,
-        time=str(timedelta(seconds=time_park.seconds)),
+        time=str(
+            timedelta(
+                days=time_park.days if time_park.days else 0,
+                seconds=time_park.seconds,
+            )
+        ),
     )
 
 

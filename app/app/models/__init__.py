@@ -7,3 +7,4 @@ from .base import UserType
 from .image import Image
 from .plate import Plate
 from .record import Record
+from app.bill.models.bill import Bill

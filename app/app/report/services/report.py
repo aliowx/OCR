@@ -27,6 +27,28 @@ def get_month_dates(reference_date, months_ago):
     return month_dates
 
 
+# convert day, hour, seconed to minute
+def convert_time_to_minutes(start_time, end_time):
+    if start_time > end_time:
+        return 0
+    days = 0
+    time_diffrence = end_time - start_time
+
+    # seprating day from time
+    if time_diffrence.days:
+        days = time_diffrence.days * 24 * 60
+        time_diffrence = str(time_diffrence).split(", ")[
+            1
+        ]  # example 1 day, 00:00:00 -> 00:00:00
+    # Calculation hours, conversion minutes and seconds to hours
+    hours, minutes, seconds = map(float, str(time_diffrence).split(":"))
+    hours = hours * 60 if hours > 0 else 0
+    minutes = minutes if minutes > 0 else 0
+    seconds = seconds / 60 if seconds > 0 else 0
+    time_diffrence = hours + minutes + seconds + days
+    return time_diffrence
+
+
 def calculate_percentage(start_time, end_time):
     """Calculate the normalized percentage difference between start_time and end_time."""
     percentage_difference = 0
@@ -37,12 +59,11 @@ def calculate_percentage(start_time, end_time):
         return -100
     # Calculate the absolute difference in seconds
     difference = start_time - end_time
-    # Calculate the percentage difference, capped at 100%
     if difference == 0:
         return percentage_difference
 
+    # Calculate the percentage difference, capped at 100%
     percentage_difference = (difference / end_time) * 100
-    # Cap the percentage difference to 100%
 
     return round(percentage_difference)
 
@@ -130,18 +151,10 @@ async def average_time(db: AsyncSession):
         )
         if records_compare:
             for record in records_compare:
-                # Calculation of spot time
-                time_park_record_compare = str(
-                    record.end_time - record.start_time
+                # Calculation time park
+                compare_total_time_park = convert_time_to_minutes(
+                    record.start_time, record.end_time
                 )
-                # Calculation hours, conversion minutes and seconds to hours
-                hours, minutes, seconds = map(
-                    float, time_park_record_compare.split(":")
-                )
-                hours = hours * 60 if hours > 0 else 0
-                minutes = minutes if minutes > 0 else 0
-                seconds = seconds / 60 if seconds > 0 else 0
-                compare_total_time_park = hours + minutes + seconds
                 if compare_time == comparing_today_pervious_day:
 
                     compare_avrage_one_day_ago += (
@@ -182,16 +195,11 @@ async def average_time(db: AsyncSession):
         )
         if records:
             for record in records:
-                # Calculation of spot time
-                time_park_record = str(record.end_time - record.start_time)
-                # Calculation hours, conversion minutes and seconds to hours
-                hours, minutes, seconds = map(
-                    float, time_park_record.split(":")
+                # Calculation time park
+                total_time_park = convert_time_to_minutes(
+                    record.start_time, record.end_time
                 )
-                hours = hours * 60 if hours > 0 else 0
-                minutes = minutes if minutes > 0 else 0
-                seconds = seconds / 60 if seconds > 0 else 0
-                total_time_park = hours + minutes + seconds
+
                 if time == today:
                     avrage_today += total_time_park / total_count_record_timing
                 if time == one_week_ago:
@@ -249,20 +257,21 @@ async def average_time(db: AsyncSession):
 async def avrage_referrd(db: AsyncSession):
     list_referred = {}
 
+    # Counting the one week ago
     time_weekly_referred = [
         datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
         for i in range(0, 7)
     ]
-
+    # Counting the one month ago
     time_month_referred = [
         datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
         for i in range(0, 30)
     ]
-
+    # Counting the six month ago
     time_six_month_referred = get_month_dates(
         datetime.now(UTC).replace(tzinfo=None), 6
     )
-
+    # Counting the one year ago
     time_one_year_referred = get_month_dates(
         datetime.now(UTC).replace(tzinfo=None), 12
     )
@@ -274,18 +283,22 @@ async def avrage_referrd(db: AsyncSession):
         (time_one_year_referred, "year"),
     ]
 
+    # Counting the first day one week ago and counting from that one week ago before
     compare_time_weekly_referred = [
         time_weekly_referred[-1] - timedelta(days=i) for i in range(0, 8)
     ]
 
+    # Counting the first day one month ago and counting from that one month ago before
     compare_time_month_referred = [
         time_month_referred[-1] - timedelta(days=i) for i in range(0, 30)
     ]
 
+    # Counting the first month six month ago and counting from that month to six month before
     compare_time_six_month_referred = get_month_dates(
         time_six_month_referred[-1][-1], 6
     )
 
+    # Counting the first month one year ago and counting from that month to one year before
     compare_time_one_year_referred = get_month_dates(
         time_one_year_referred[-1][-1], 12
     )

@@ -18,14 +18,24 @@ async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
 
     for record in range(len(records[0])):
         item_record = records[0][record]
+        days = 0
+        time_diffrence = item_record.end_time - item_record.start_time
+
+        # seprating day from time
+        if time_diffrence.days:
+            days = time_diffrence.days
+            time_diffrence = str(time_diffrence).split(", ")[
+                1
+            ]  # example 1 day, 00:00:00 -> 00:00:00
 
         hours, minutes, seconds = map(
             float,
-            str(item_record.end_time - item_record.start_time).split(":"),
+            str(time_diffrence).split(":"),
         )
 
         item_record.total_time = str(
             timedelta(
+                days=days,
                 hours=hours,
                 minutes=minutes,
             )

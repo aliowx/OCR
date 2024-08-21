@@ -11,6 +11,9 @@ from app import crud, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "images"
@@ -20,11 +23,23 @@ logger = logging.getLogger(__name__)
 @router.post("/")
 async def create_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     image_in: schemas.ImageCreateBase64,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Create new image.
+
+    user access to this [ ADMINISTRATOR ]
     """
     image = await crud.image.create_base64(db=db, obj_in=image_in)
     return APIResponse(image)
@@ -53,11 +68,24 @@ async def create_image(
 @router.get("/{id}")
 async def read_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Get image by ID.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = await crud.image.get_base64(db=db, id=id)
     if not image:
@@ -71,11 +99,24 @@ async def read_image(
 @router.get("/binary/{id}")
 async def read_image_binary(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[Any]:
     """
     Get binary image by ID.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = await crud.image.get(db=db, id=id)
     if not image:
@@ -89,11 +130,24 @@ async def read_image_binary(
 @router.delete("/{id}")
 def delete_image(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
     db: Session = Depends(deps.get_db),
     id: int,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """
     Delete an image.
+
+    user access to this [ ADMINISTRATOR ]
+
     """
     image = crud.image.get(db=db, id=id)
     if not image:

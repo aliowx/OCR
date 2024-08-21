@@ -17,7 +17,7 @@ class Beneficiary(BaseModel):
     company_sheba_number: str | None = None
     company_address: str | None = None
     beneficiary_type: UserType | None = None
-    beneficiary_type: ParkingPaymentType | None = None
+    
 
 
 class ParkingBase(BaseModel):
@@ -28,7 +28,7 @@ class ParkingBase(BaseModel):
     location_lat: float | None = None
     location_lon: float | None = None
     parking_address: str | None = None
-    parking_logo_base64: str | None = None
+    parking_logo_image_id: int | None = None
     owner_first_name: str | None = None
     owner_last_name: str | None = None
     owner_national_id: str | None = None
@@ -37,7 +37,9 @@ class ParkingBase(BaseModel):
     owner_email: str | None = None
     owner_sheba_number: str | None = None
     owner_address: str | None = None
+    
     owner_type: UserType | None = None
+    payment_type: ParkingPaymentType | None = None
     beneficiary_data: Beneficiary | None = None
 
 

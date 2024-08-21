@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.core.security import verify_password
-from app.schemas.user import UserCreate, UserUpdate
+from app.users.schemas import UserCreate, UserUpdate
 from tests.utils.utils import random_lower_string, random_username
 
 

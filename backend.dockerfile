@@ -9,13 +9,14 @@ COPY ./app/pyproject.toml ./app/poetry.lock* /app/
 
 RUN useradd -m -d /home/dockeruser -s /bin/bash dockeruser && \
     chown -R dockeruser:dockeruser /app/ && \
-    pip install poetry fastapi uvicorn gunicorn && \
+    pip install poetry fastapi uvicorn gunicorn requests && \
     poetry config virtualenvs.create false && \
     poetry install
 
 COPY ./gunicorn_conf.py ./scripts/start-server.sh  ./scripts/prestart.sh ./scripts/run.sh /
 COPY ./app/worker-start.sh /worker-start.sh
 COPY ./app .
+
 
 # Switch to the non-root user
 USER dockeruser

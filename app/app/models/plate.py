@@ -1,52 +1,75 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql.json import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 
 
 class Plate(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    ocr: Mapped[str] = mapped_column(String, index=True)
+    plate: Mapped[str] = mapped_column(String, index=True)
 
     record_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=get_now_datetime_utc,
+        index=True,
     )
 
-    number_line: Mapped[int] = mapped_column(Integer)
+    type_camera: Mapped[str] = mapped_column(String, nullable=True)
 
-    floor_number: Mapped[int] = mapped_column(Integer)
-    floor_name: Mapped[str] = mapped_column(String)
+    zone_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("zone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    zone = relationship("Zone", foreign_keys=zone_id)
 
-    name_parkinglot: Mapped[str] = mapped_column(String)
+    spot_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("spot.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    spot = relationship("Spot", foreign_keys=spot_id)
 
     camera_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("camera.id"), index=True
+        Integer,
+        ForeignKey("equipment.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
     )
-    camera_plate = relationship("Camera", back_populates="parkinglot_plate")
+    camera = relationship("Equipment", foreign_keys=camera_id)
 
     record_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("record.id"), index=True, nullable=True
+        Integer,
+        ForeignKey("record.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
     )
     record = relationship("Record", back_populates="plates")
 
-    lpr_id: Mapped[int] = mapped_column(
+    plate_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    lpr = relationship("Image", foreign_keys=lpr_id)
+    plate_image = relationship("Image", foreign_keys=plate_image_id)
 
-    big_image_id: Mapped[int] = mapped_column(
+    lpr_image_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    big_image = relationship("Image", foreign_keys=big_image_id)
+    lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
-    price_model: Mapped[dict] = mapped_column(JSON, nullable=True)
+    price_model_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("price.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    price = relationship("Price", foreign_keys=price_model_id)

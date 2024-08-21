@@ -6,10 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models
 from app.api import deps
-from app.core import exceptions as exc
 from app.parking.repo import parking_repo
 from app.parking.schemas import parking as schemas
-from app.utils import APIResponse, APIResponseType, MessageCodes
+from app.utils import APIResponse, APIResponseType
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "parkings"
@@ -18,32 +21,56 @@ logger = logging.getLogger(__name__)
 
 @router.get("/main")
 async def read_main_parking(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     skip: int = 0,
     limit: int = 100,
-    _: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.Parking | None]:
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[schemas.Parking | schemas.ParkingBase]:
     """
     Read main parking.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+
     """
     main_parking = await parking_repo.get_main_parking(db)
     if not main_parking:
-        raise exc.ServiceFailure(
-            detail="Parking not found.",
-            msg_code=MessageCodes.not_found,
-        )
+        return APIResponse(schemas.ParkingBase(beneficiary_data=schemas.Beneficiary()))
     return APIResponse(main_parking)
 
 
 @router.post("/main")
 async def create_main_parking(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     parking_in: schemas.ParkingCreate,
-    _: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     Create main parking.
+
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     # FIXME: add input validations
     main_parking = await parking_repo.get_main_parking(db)

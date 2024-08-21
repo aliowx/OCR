@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Awaitable, Optional
 
 import rapidjson
@@ -6,13 +6,14 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.models.record import Record
 from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
+from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -36,8 +37,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         db: Session,
         *,
         plate: schemas.Plate,
+        status: StatusRecord,
         offset: timedelta = timedelta(
-            seconds=settings.FREE_TIME_BETWEEN_RECORDS
+            seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
         ),
         for_update: bool = False,
     ) -> Optional[Record]:
@@ -45,9 +47,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         q = (
             db.query(Record)
             .filter(
-                (Record.ocr == plate.ocr)
+                (Record.plate == plate.plate)
                 & (Record.end_time >= plate.record_time - offset)
                 & (Record.start_time <= plate.record_time + offset)
+                & (Record.latest_status == status)
             )
             .order_by(Record.end_time.desc())
         )
@@ -57,18 +60,64 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         else:
             return q.first()
 
+    async def get_total_park_today_except_unfinished(
+        self, db: Session | AsyncSession
+    ):
+
+        return await db.scalar(
+            select(Record)
+            .with_only_columns(func.count())
+            .filter(
+                (Record.latest_status != StatusRecord.unfinished.value)
+                & (
+                    Record.created
+                    >= datetime.now(UTC).replace(tzinfo=None).date()
+                ),
+            )
+        )
+
+    async def get_total_in_parking(self, db: Session | AsyncSession):
+
+        return await db.scalar(
+            select(Record)
+            .with_only_columns(func.count())
+            .filter((Record.latest_status == StatusRecord.unfinished.value))
+        )
+
+    async def get_count_referred(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_start_create_time: datetime = None,
+        input_end_create_time: datetime = None,
+    ):
+
+        query = select(Record)
+
+        filters = [Record.is_deleted == False]
+
+        filters.append(
+            Record.created.between(
+                input_start_create_time, input_end_create_time
+            )
+        )
+
+        return await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
+
     async def find_records(
         self,
         db: Session | AsyncSession,
         *,
-        input_ocr: str = None,
-        input_start_time_min: datetime = None,
-        input_start_time_max: datetime = None,
-        input_end_time_min: datetime = None,
-        input_end_time_max: datetime = None,
+        input_plate: str = None,
+        input_zone_id: int = None,
+        input_status_record: StatusRecord = None,
+        input_start_create_time: datetime = None,
+        input_end_create_time: datetime = None,
         input_score: float = None,
         skip: int = 0,
-        limit: int = 100,
+        limit: int | None = None,
         asc: bool = False,
     ) -> list[Record] | Awaitable[list[Record]]:
 
@@ -76,32 +125,32 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [Record.is_deleted == False]
 
-        if input_ocr is not None:
-            filters.append(Record.ocr.like(f"%{input_ocr}%"))
+        if input_plate is not None:
+            filters.append(Record.plate.ilike(f"%{input_plate}%"))
 
-        if input_start_time_min is not None:
-            filters.append(Record.start_time >= input_start_time_min)
+        if input_zone_id is not None:
+            filters.append(Record.zone_id == input_zone_id)
 
-        if input_start_time_max is not None:
-            filters.append(Record.start_time <= input_start_time_max)
+        if input_start_create_time is not None:
+            filters.append(Record.created >= input_start_create_time)
 
-        if input_end_time_min is not None:
-            filters.append(Record.end_time >= input_end_time_min)
+        if input_end_create_time is not None:
+            filters.append(Record.created <= input_end_create_time)
 
-        if input_end_time_max is not None:
-            filters.append(Record.end_time <= input_end_time_max)
+        if input_status_record is not None:
+            filters.append(Record.latest_status == input_status_record)
 
         if input_score is not None:
             filters.append(Record.score >= input_score)
 
+        all_items_count = await self.count_by_filter(db, filters=filters)
         if limit is None:
-            return await self._all(
+            result = await self._all(
                 db.scalars(query.filter(*filters).offset(skip))
             )
 
-        all_items_count = await self.count_by_filter(db, filters=filters)
-
-        items = await self._all(
+            return [result, all_items_count]
+        result = await self._all(
             db.scalars(
                 query.filter(*filters)
                 .offset(skip)
@@ -109,7 +158,80 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if asc else Record.id.desc())
             )
         )
-        return [items, all_items_count]
+        return [result, all_items_count]
+
+    async def max_time_record(
+        self, db: Session | AsyncSession
+    ) -> list[Record]:
+
+        sub_query = select(
+            func.max(Record.end_time - Record.start_time)
+        ).scalar_subquery()
+
+        query = select(
+            ((Record.end_time) - (Record.start_time)).label("time_park"),
+            Record.plate,
+            Record.created,
+        ).where((Record.end_time - Record.start_time) == sub_query)
+
+        filters = [Record.is_deleted == False]
+
+        record_execute = await db.execute(query.filter(*filters))
+        record = record_execute.first()
+        return record
+
+    async def get_count_capacity(
+        self,
+        db: Session | AsyncSession,
+        zone: schemas.Zone,
+        status_in: StatusRecord,
+    ):
+        # add id zone and id subzone
+        # when have list to add set use update
+        # when have int to add set use add
+        zone_ids = {zone.id}
+        zone_ids.update(zone.children)
+
+        query = (
+            select(func.count(Record.id))
+            .where(Record.zone_id.in_(zone_ids))
+            .filter(*[Record.latest_status == status_in])
+        )
+
+        return await db.scalar(query)
+
+    async def avarage_time_referred(self, db: AsyncSession):
+
+        query = select(
+            func.avg(
+                ((Record.end_time) - (Record.start_time)).label("time_park")
+            )
+        )
+        avg_time_park = await db.scalar(query)
+        avg_time_park_convert = str(timedelta(seconds=avg_time_park.seconds))
+
+        return avg_time_park_convert
+
+    # for worker need func sync
+    def get_multi_record(
+        self,
+        db: Session,
+        *,
+        input_create_time: datetime = None,
+        input_status_record: StatusRecord = None,
+    ) -> list[Record]:
+
+        query = select(Record)
+
+        filters = [Record.is_deleted == False]
+
+        if input_create_time is not None:
+            filters.append(Record.created <= input_create_time.isoformat())
+
+        if input_status_record is not None:
+            filters.append(Record.latest_status == input_status_record)
+
+        return self._all(db.scalars(query.filter(*filters)))
 
 
 record = CRUDRecord(Record)

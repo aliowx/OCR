@@ -1,17 +1,26 @@
 import logging
-from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,WebSocket
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from cache.redis import redis_connect_async
 
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from cache.redis import redis_client
+from app.parking.repo import equipment_repo
+from app.utils import PaginatedContent
+from app.parking.schemas.equipment import (
+    ReadEquipmentsFilter,
+)
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "plates"
@@ -20,55 +29,85 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_plates(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetPlates]:
+    params: schemas.ParamsPlates = Depends(),
+) -> APIResponseType[PaginatedContent[list[schemas.Plate]]]:
     """
     All plates.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    plates = await crud.plate.get_multi(db, skip=skip, limit=limit)
-    for i in range(len(plates)):
-        plates[i].fancy = f"{plates[i].big_image_id}/{plates[i].lpr_id}"
-    all_items_count = redis_client.get("plates_count")
-    if all_items_count is None:
-        all_items_count = await crud.plate.count(db=db)
-    return APIResponse(
-        schemas.GetPlates(items=plates, all_items_count=all_items_count)
-    )
-
-
-@router.get("/by_record")
-async def read_plates_by_record(
-    *,
-    db: AsyncSession = Depends(deps.get_db_async),
-    record_id: int,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetPlates]:
-    """
-    all plates for one record.
-    """
-    plates = await crud.plate.get_by_record(
-        db, record_id=record_id, skip=skip, limit=limit
-    )
-    for i in range(len(plates)):
-        plates[i].fancy = f"{plates[i].big_image_id}/{plates[i].lpr_id}"
+    camera_id = None
+    if params.input_camera_serial is not None:
+        camera_id, total_count = await equipment_repo.get_multi_with_filters(
+            db,
+            filters=ReadEquipmentsFilter(
+                serial_number__eq=params.input_camera_serial
+            ),
+        )
+        params.input_camera_id = camera_id.id
+    plates = await crud.plate.find_plates(db, params=params)
 
     return APIResponse(
-        schemas.GetPlates(items=plates, all_items_count=len(plates))
+        PaginatedContent(
+            data=plates[0],
+            total_count=plates[1],
+            page=params.page,
+            size=params.size,
+        )
     )
+
+
+
+@router.websocket("/plates")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection = await redis_connect_async(240)  # 3 mins
+    async with connection.pubsub() as channel:
+        await channel.subscribe("plates:1")
+        try:
+            while True:
+                data = await channel.get_message(
+                    ignore_subscribe_messages=True, timeout=240
+                )
+                if data and "data" in data:
+                    print(data["data"])
+                    await websocket.send_text(data["data"])
+        finally:
+            channel.unsubscribe("plates:1")
 
 
 @router.post("/")
 async def create_plate(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     plate_in: schemas.PlateCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     Create new item.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     result = celery_app.send_task(
         "add_plates",
@@ -81,11 +120,23 @@ async def create_plate(
 @router.get("/{id}")
 async def read_plate(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.Plate]:
     """
     Get plate by ID.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     plate = await crud.plate.get(db=db, id=id)
     if not plate:
@@ -93,44 +144,4 @@ async def read_plate(
             detail="not exist.",
             msg_code=utils.MessageCodes.not_found,
         )
-    plate.fancy = f"{plate.big_image_id}/{plate.lpr_id}"
     return APIResponse(plate)
-
-
-@router.get("/find/search")
-async def findplates(
-    db: AsyncSession = Depends(deps.get_db_async),
-    input_ocr: str = None,
-    input_camera_code: str = None,
-    input_time_min: datetime = None,
-    input_time_max: datetime = None,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetPlates]:
-    """
-    search plates
-    """
-    camera_id = None
-    if input_camera_code is not None:
-        camera = await crud.camera.one_camera(
-            db, input_camera_code=input_camera_code
-        )
-        camera_id = camera.id
-
-    plates = await crud.plate.find_plates(
-        db,
-        input_ocr=input_ocr,
-        input_camera_id=camera_id,
-        input_time_min=input_time_min,
-        input_time_max=input_time_max,
-        skip=skip,
-        limit=limit,
-    )
-    for i in range(plates[1]):
-        plates[0][
-            i
-        ].fancy = f"{plates[0][i].big_image_id}/{plates[0][i].lpr_id}"
-
-    return APIResponse(
-        schemas.GetPlates(items=plates[0], all_items_count=plates[1])
-    )

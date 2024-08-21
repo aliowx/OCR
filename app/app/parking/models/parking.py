@@ -15,7 +15,16 @@ class Parking(Base):
     location_lat: Mapped[float] = mapped_column(NUMERIC(10, 7), nullable=True)
     location_lon: Mapped[float] = mapped_column(NUMERIC(10, 7), nullable=True)
     parking_address: Mapped[str] = mapped_column(String, nullable=True)
-    parking_logo_base64: Mapped[str] = mapped_column(String, nullable=True)
+    parking_logo_image_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "image.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+    )
+    image_logo = relationship("Image", foreign_keys=parking_logo_image_id)
     owner_first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     owner_last_name: Mapped[str] = mapped_column(String(50), nullable=True)
     owner_national_id: Mapped[str] = mapped_column(String(50), nullable=True)
@@ -31,48 +40,47 @@ class Parking(Base):
     beneficiary_data: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
-class ParkingZone(Base):
+class Zone(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     tag: Mapped[str] = mapped_column(String(50), nullable=True)
-    parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
+    floor_number: Mapped[int] = mapped_column(Integer, nullable=True)
+    floor_name: Mapped[str] = mapped_column(String, nullable=True)
     parent_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
-    parent = relationship(
-        "ParkingZone",
-        remote_side=[id],
-        lazy="selectin",
-        back_populates="children",
-    )
-    children = relationship(
-        "ParkingZone", back_populates="parent", lazy="immediate"
-    )
+    capacity: Mapped[int] = mapped_column(Integer, nullable=True)
     pricings = relationship(
-        "ParkingZonePrice", back_populates="zone", lazy="immediate"
+        "ZonePrice", back_populates="zone_price", lazy="immediate"
     )
-    rules = relationship("ZoneRule", back_populates="zone", lazy="immediate")
+    rules = relationship(
+        "ZoneRule", back_populates="zone_rule", lazy="immediate"
+    )
 
     __table_args__ = (
         ForeignKeyConstraint(
             ["parent_id"],
-            ["parkingzone.id"],
+            ["zone.id"],
             deferrable=True,
             initially="DEFERRED",
         ),
     )
 
 
-class ParkingZonePrice(Base):
+class ZonePrice(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     priority: Mapped[int] = mapped_column(Integer, default=100)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
-    zone = relationship("ParkingZone", back_populates="pricings")
+    zone_price = relationship("Zone", back_populates="pricings")
     price_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("price.id"),
+        ForeignKey("price.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     price = relationship("Price", back_populates="pricings")

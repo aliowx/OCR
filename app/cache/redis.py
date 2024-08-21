@@ -10,6 +10,16 @@ from app.core.config import settings
 from cache.enums import RedisStatus
 
 
+# for ws
+async def redis_connect_async(timeout: int = None) -> aioredis.Redis:
+    client = aioredis.from_url(
+        str(settings.REDIS_URI),
+        # timeout=timeout,
+        decode_responses=True,
+    )
+    return client
+
+
 async def redis_connect(
     host_url: str,
 ) -> Tuple[RedisStatus, aioredis.client.Redis]:

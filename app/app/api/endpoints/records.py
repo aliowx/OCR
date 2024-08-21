@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas, utils
@@ -9,6 +9,11 @@ from app.api import deps
 from app.api.services import records_services
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+from cache.redis import redis_connect_async
+
 
 logger = logging.getLogger(__name__)
 namespace = "records"
@@ -17,19 +22,26 @@ router = APIRouter()
 
 @router.get("/")
 async def read_records(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
-    score: float = 0,
-    skip: int = 0,
-    limit: int = 100,
-    asc: bool = False,
+    record_in: schemas.ParamsRecord = Depends(),
 ) -> APIResponseType[schemas.GetRecords]:
     """
     All record
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    records = await records_services.calculator_price(
-        db, score=score, skip=skip, limit=limit, asc=asc
-    )
+    records = await records_services.calculator_time(db, params=record_in)
 
     return APIResponse(records)
 
@@ -37,12 +49,24 @@ async def read_records(
 @router.post("/")
 async def create_record(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     record_in: schemas.RecordCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.RecordCreate]:
     """
     Create new item.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     record = await crud.record.create(db=db, obj_in=record_in)
     return APIResponse(record)
@@ -51,11 +75,23 @@ async def create_record(
 @router.get("/{id}")
 async def read_record(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
 ) -> APIResponseType[schemas.Record]:
     """
     Get record by ID.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     record = await crud.record.get(db=db, id=id)
     if not record:
@@ -65,33 +101,51 @@ async def read_record(
     return APIResponse(record)
 
 
-@router.get("/find/search")
-async def findrecords(
+@router.put("/")
+async def update_record(
     db: AsyncSession = Depends(deps.get_db_async),
-    input_ocr: str = None,
-    input_start_time_min: datetime = None,
-    input_start_time_max: datetime = None,
-    input_end_time_min: datetime = None,
-    input_end_time_max: datetime = None,
-    input_score: float = None,
-    skip: int = 0,
-    limit: int = 100,
-) -> APIResponseType[schemas.GetRecords]:
+    *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    id_record: int,
+    params: schemas.RecordUpdate,
+) -> APIResponseType[schemas.Record]:
     """
-    Retrieve records.
+    update status record .
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    records = await crud.record.find_records(
-        db,
-        input_ocr=input_ocr,
-        input_start_time_min=input_start_time_min,
-        input_start_time_max=input_start_time_max,
-        input_end_time_min=input_end_time_min,
-        input_end_time_max=input_end_time_max,
-        input_score=input_score,
-        skip=skip,
-        limit=limit,
-    )
+    record = await crud.record.get(db=db, id=id_record)
+    if not record:
+        exc.ServiceFailure(
+            detail="Record Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    record_update = await crud.record.update(db, db_obj=record, obj_in=params)
+    return APIResponse(record_update)
 
-    return APIResponse(
-        schemas.GetRecords(items=records[0], all_items_count=records[1])
-    )
+
+@router.websocket("/records")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection = await redis_connect_async(240)  # 3 mins
+    async with connection.pubsub() as channel:
+        await channel.subscribe("records:1")
+        try:
+            while True:
+                data = await channel.get_message(
+                    ignore_subscribe_messages=True, timeout=240
+                )
+                # data = await websocket.receive_text()
+                if data and "data" in data:
+                    print(data["data"])
+                    await websocket.send_text(data["data"])
+        except:
+            channel.unsubscribe("records:1")

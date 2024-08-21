@@ -10,6 +10,10 @@ from app.pricing import schemas as price_schemas
 from app.pricing import services as pricing_services
 from app.pricing.repo import price_repo
 from app.utils import APIResponse, APIResponseType, PaginatedContent
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
+
 
 router = APIRouter()
 namespace = "price"
@@ -18,53 +22,74 @@ logger = logging.getLogger(__name__)
 
 @router.get("/")
 async def read_price(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     params: price_schemas.ReadPricesParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[price_schemas.Price]]]:
     """
     Get All price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     prices = await pricing_services.read_prices(db, params=params)
     return APIResponse(prices)
 
 
-@router.get("/search")
-async def find_price(
-    db: AsyncSession = Depends(deps.get_db_async),
-    input_model_price: str = None,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[list[price_schemas.Price]]:
-    """
-    Get All price.
-    """
-    prices = await price_repo.find_model_price(
-        db, input_name_fa_price=input_model_price
-    )
-    return APIResponse(prices)
-
-
 @router.post("/")
 async def create_price(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     price_in: schemas.PriceCreate,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Price]:
     """
     Create New price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    price = await pricing_services.create_price(db, price_data=price_in)
+    price = await pricing_services.create_price(db, price_in=price_in)
     return APIResponse(price)
 
 
 @router.get("/{id}")
 async def get_price_by_id(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     id: int,
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[schemas.Price]:
     """
     Get One Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
     price = await crud.price_repo.get(db, id=id)
@@ -80,6 +105,17 @@ async def get_price_by_id(
 @router.put("/{id}")
 async def update_price(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
     price_in: schemas.PriceUpdate,
@@ -87,6 +123,7 @@ async def update_price(
 ) -> APIResponseType[schemas.Price]:
     """
     Update Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     price = await crud.price_repo.get(db, id=id)
     if not price:
@@ -96,18 +133,31 @@ async def update_price(
         )
 
     return APIResponse(
-        await crud.camera.update(db, db_obj=price, obj_in=price_in)
+        await crud.price_repo.update(db, db_obj=price, obj_in=price_in)
     )
 
 
 @router.delete("/{id}")
 async def delete_price(
-    id: int,
+    *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
+    id: int,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Price]:
     """
-    Delete Price
+    Update Price.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     price = await crud.price_repo.get(db, id=id)
     if not price:
@@ -115,4 +165,5 @@ async def delete_price(
             detail="The price not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
-    return APIResponse(await crud.price_repo._remove_async(db, id=id))
+
+    return APIResponse(await crud.price_repo.remove(db, id_in=price.id))

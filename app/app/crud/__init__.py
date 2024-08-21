@@ -1,10 +1,9 @@
 from app.parking.repo import (
-    camera_repo,
     equipment_repo,
     parking_repo,
-    parkinglot_repo,
-    parkingzone_repo,
-    parkingzoneprice_repo,
+    spot_repo,
+    zone_repo,
+    zoneprice_repo,
 )
 from app.pricing.repo import price_repo
 from app.users.repo import user

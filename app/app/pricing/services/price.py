@@ -3,39 +3,43 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ServiceFailure
 from app.parking.repo import parking_repo
 from app.parking.schemas import SetZonePriceInput
-from app.parking.services import parkingzone as parkingzone_services
+from app.parking.services import zone as zone_services
 from app.pricing import schemas as price_schemas
 from app.pricing.repo import price_repo
 from app.utils import MessageCodes, PaginatedContent
 
 
 async def create_price(
-    db: AsyncSession, price_data: price_schemas.PriceCreate
+    db: AsyncSession, price_in: price_schemas.PriceCreate
 ) -> price_schemas.Price:
-    if price_data.parking_id:
-        parking = await parking_repo.get(db, id=price_data.parking_id)
-    else:
-        parking = await parking_repo.get_main_parking(db)
-    if not parking:
+
+    get_price, total_count = await price_repo.get_multi_with_filters(
+        db,
+        filters=price_schemas.ReadPricesParams(
+            name=price_in.name, name_fa=price_in.name_fa
+        ),
+    )
+    if get_price:
         raise ServiceFailure(
-            detail="Parking not found",
-            msg_code=MessageCodes.not_found,
+            detail="This name or name_fa exist",
+            msg_code=MessageCodes.duplicate_name,
         )
-    price_data_create = price_data.model_copy(
+
+    price_data_create = price_in.model_copy(
         update={"zone_ids": None, "priority": None}
     )
     price = await price_repo.create(
         db,
-        obj_in=price_data_create.model_dump(exclude_none=True),
+        obj_in=price_data_create.model_dump(mode="json", exclude_none=True),
         commit=False,
     )
-    for zone_id in price_data.zone_ids:
+    for zone_id in price_in.zone_ids:
         zoneprice_data = SetZonePriceInput(
-            price_id=price.id, priority=price_data.priority
+            price_id=price.id, priority=price_in.priority
         )
-        await parkingzone_services.set_price(
+        await zone_services.set_price(
             db,
-            parkingzone_id=zone_id,
+            zone_id=zone_id,
             zoneprice_data=zoneprice_data,
             commit=False,
         )
@@ -47,7 +51,7 @@ async def read_prices(
     db: AsyncSession, params: price_schemas.ReadPricesParams
 ) -> PaginatedContent[list[price_schemas.Price]]:
     prices, total_count = await price_repo.get_multi_with_filters(
-        db, filters=params.db_filters
+        db, filters=params
     )
     return PaginatedContent(
         data=prices,

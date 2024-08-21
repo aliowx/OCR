@@ -2,19 +2,17 @@ import random
 import string
 import time
 from datetime import datetime, timedelta
-
 import requests
 from image_data_base64 import image, lpr_img1, lpr_img2, ocr_img1, ocr_img2
-
 from app import schemas
 from app.core.config import settings
 from app.parking.schemas import camera as cameraShemas
 from app.parking.schemas import parking as parkingSchemas
-from app.parking.schemas import parkinglot as parkinglotShemas
-from app.parking.schemas import parkingzone as zoneSchemas
+from app.parking.schemas import spot as parkinglotShemas
+from app.parking.schemas import zone as zoneSchemas
 from app.pricing.schemas import price as priceSchemas
 
-url = "http://0.0.0.0:8585/park/api/v1"
+url = settings.URL_FOR_SET_DATA_FAKE
 headers = {"Content-Type": "application/json"}
 auth = (settings.FIRST_SUPERUSER, settings.FIRST_SUPERUSER_PASSWORD)
 
@@ -74,11 +72,12 @@ def main_request(list: list):
             headers=headers,
         )
         print("parking", parking.url, parking.status_code)
-    else:
-        parking = requests.get(
-            f"{url}/parking/main", auth=auth, headers=headers
-        )
-        print("parking", parking.url, parking.status_code)
+    # else:
+        
+    #     parking = requests.get(
+    #         f"{url}/parking/main", auth=auth, headers=headers
+    #     )
+    #     print("parking", parking.url, parking.status_code)
 
     """
     --------------        create zone            -----------------
@@ -100,12 +99,16 @@ def main_request(list: list):
             name=f"z1c1-30{generate_random_string(3)}",
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-1,
         )
 
         zone2 = zoneSchemas.ParkingZoneCreate(
             name=f"z2c1-90{generate_random_string(3)}",
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-2,
         )
 
         zone1_create = requests.post(
@@ -114,11 +117,14 @@ def main_request(list: list):
             auth=auth,
             headers=headers,
         )
+        print(zone1_create.json()["content"]["id"])
         sub1_zone1 = zoneSchemas.ParkingZoneCreate(
             name=f"sz1c1-15{generate_random_string(3)}",
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
             parent_id=zone1_create.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-1,
         )
 
         sub2_zone1 = zoneSchemas.ParkingZoneCreate(
@@ -126,6 +132,8 @@ def main_request(list: list):
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
             parent_id=zone1_create.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-1,
         )
         print("zone 1", zone1_create.url, zone1_create.status_code)
         sub1_zone1_create = requests.post(
@@ -158,6 +166,8 @@ def main_request(list: list):
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
             parent_id=zone2_create.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-2,
         )
 
         sub1_zone2_create = requests.post(
@@ -171,6 +181,8 @@ def main_request(list: list):
             tag=generate_random_string(5),
             parking_id=parking.json()["content"]["id"],
             parent_id=sub1_zone2_create.json()["content"]["id"],
+            floor_name=generate_random_string(5),
+            floor_number=-2,
         )
         print(
             "sub 1 zone 2",
@@ -182,6 +194,8 @@ def main_request(list: list):
             data=sub1_sub1_zone2.model_dump_json(),
             auth=auth,
             headers=headers,
+            floor_name=generate_random_string(5),
+            floor_number=-2,
         )
         print(
             "sub 1 sub 1 zone 1",
@@ -283,17 +297,17 @@ def main_request(list: list):
         camera_exit_door_create = camera_exit_door_create.json()["content"][
             "id"
         ]
-    else:
-        params = [
-            {"input_camera_code": "entrance door"},
-            {"input_camera_code": "exit door"},
-        ]
-        camera_entrance_door_create = requests.get(
-            f"{url}/camera/search", params=params[0], auth=auth
-        ).json()["content"]["items"][0]["id"]
-        camera_exit_door_create = requests.get(
-            f"{url}/camera/search", params=params[1], auth=auth
-        ).json()["content"]["items"][0]["id"]
+    # else:
+        # params = [
+        #     {"input_camera_code": "entrance door"},
+        #     {"input_camera_code": "exit door"},
+        # ]
+        # camera_entrance_door_create = requests.get(
+        #     f"{url}/camera/search", params=params[0], auth=auth
+        # ).json()["content"]["items"][0]["id"]
+        # camera_exit_door_create = requests.get(
+        #     f"{url}/camera/search", params=params[1], auth=auth
+        # ).json()["content"]["items"][0]["id"]
 
     """
     --------------        create pricing            -----------------
@@ -368,25 +382,25 @@ def main_request(list: list):
         price_create = price_create.json()["content"]["id"]
         price_create2 = price_create2.json()["content"]["id"]
 
-    else:
-        params_price = [
-            {"input_model_price": "هفتگی"},
-            {"input_model_price": "مکان"},
-        ]
+    # else:
+    #     params_price = [
+    #         {"input_model_price": "هفتگی"},
+    #         {"input_model_price": "مکان"},
+    #     ]
 
-        price_create = requests.get(
-            f"{url}/price/search",
-            params=params_price[0]["input_model_price"],
-            auth=auth,
-            headers=headers,
-        ).json()["content"][0]["id"]
+    #     price_create = requests.get(
+    #         f"{url}/price/search",
+    #         params=params_price[0]["input_model_price"],
+    #         auth=auth,
+    #         headers=headers,
+    #     ).json()["content"][0]["id"]
 
-        price_create2 = requests.get(
-            f"{url}/price/search",
-            params=params_price[1]["input_model_price"],
-            auth=auth,
-            headers=headers,
-        ).json()["content"][0]["id"]
+    #     price_create2 = requests.get(
+    #         f"{url}/price/search",
+    #         params=params_price[1]["input_model_price"],
+    #         auth=auth,
+    #         headers=headers,
+    #     ).json()["content"][0]["id"]
 
     """
     --------------        create parling lot            -----------------
@@ -407,7 +421,7 @@ def main_request(list: list):
                 }
             ],
             camera_id=camera_entrance_door_create,
-            zone_id=sub1_zone1_create.json()["content"]["id"],
+            zone_id=zone1_create.json()["content"]["id"],
         )
         data_lots2 = parkinglotShemas.ParkingLotCreate(
             floor_number=random.randint(1, 10),
@@ -424,7 +438,7 @@ def main_request(list: list):
                 },
             ],
             camera_id=camera_exit_door_create,
-            zone_id=sub1_zone1_create.json()["content"]["id"],
+            zone_id=zone2_create.json()["content"]["id"],
         )
 
         lot_create = requests.post(
@@ -441,25 +455,24 @@ def main_request(list: list):
             headers=headers,
         )
         print("lot exit", lot_create2.url, lot_create2.status_code)
-    else:
+    # else:
+    #     lot_create = requests.get(
+    #         f"{url}/parkinglot/entrance door",
+    #         auth=auth,
+    #         headers=headers,
+    #     )
 
-        lot_create = requests.get(
-            f"{url}/parkinglot/entrance door",
-            auth=auth,
-            headers=headers,
-        )
+    #     lot_create2 = requests.get(
+    #         f"{url}/parkinglot/exit door",
+    #         auth=auth,
+    #         headers=headers,
+    #     )
 
-        lot_create2 = requests.get(
-            f"{url}/parkinglot/exit door",
-            auth=auth,
-            headers=headers,
-        )
-
-        if not (
-            (lot_create.json()["header"]["status"] == 0)
-            and (lot_create2.json()["header"]["status"] == 0)
-        ):
-            raise Exception("please create lots")
+    #     if not (
+    #         (lot_create.json()["header"]["status"] == 0)
+    #         and (lot_create2.json()["header"]["status"] == 0)
+    #     ):
+    #         raise Exception("please create lots")
 
     """
     --------------        create plate and record            -----------------
@@ -544,35 +557,35 @@ def main_request(list: list):
         data3_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
             camera_code="entrance door",
             number_line=1,
-            ocr_img_id=ocr1_img_create.json()["content"]["id"],
-            lpr_img_id=lpr1_img_create.json()["content"]["id"],
-            ocr="77ج44366",
+            plate_image_id=85,
+            lpr_image_id=84,
+            plate="77ج44366",
             status="entranceDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data4_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
             camera_code="exit door",
             number_line=1,
-            ocr_img_id=ocr1_img_create.json()["content"]["id"],
-            lpr_img_id=lpr1_img_create.json()["content"]["id"],
-            ocr="77ج44366",
+            plate_image_id=84,
+            lpr_image_id=85,
+            plate="77ج44366",
             status="exitDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data5_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
             camera_code="entrance door",
             number_line=1,
-            ocr_img_id=ocr2_img_create.json()["content"]["id"],
-            lpr_img_id=lpr2_img_create.json()["content"]["id"],
-            ocr="12ب34511",
+            plate_image_id=85,
+            lpr_image_id=84,
+            plate="12ب34511",
             status="entranceDoor",
             latest_time_modified=datetime.now().isoformat(),
         )
         data6_USPLots = parkinglotShemas.ParkingLotUpdateStatus(
             camera_code="exit door",
             number_line=1,
-            ocr_img_id=ocr2_img_create.json()["content"]["id"],
-            lpr_img_id=lpr2_img_create.json()["content"]["id"],
+            ocr_img_id=84,
+            lpr_img_id=85,
             ocr="12ب34511",
             status="exitDoor",
             latest_time_modified=datetime.now().isoformat(),
@@ -592,7 +605,7 @@ def main_request(list: list):
             data_status_lot = random.choice(data_status)
             print(data_status_lot)
             status_lot = requests.post(
-                f"{url}/parkinglot/update_status/",
+                f"{url}/parkinglot/update_status",
                 data=data_status_lot.model_dump_json(),
                 auth=auth,
                 headers=headers,
@@ -600,7 +613,7 @@ def main_request(list: list):
             print("status_lot", status_lot.url, status_lot.status_code)
             if status_lot.status_code == 400:
                 print(status_lot.json())
-            time.sleep(10)
+            # time.sleep(10)
             s += 1
 
     return
@@ -608,12 +621,12 @@ def main_request(list: list):
 
 if __name__ == "__main__":
     req_name = [
-        "parking",
-        "zone",
-        "image",
+        # "parking",
+        # "zone",
+        # "image",
         # "camera",
-        "price",
-        "parkinglot",
+        # "price",
+        # "parkinglot",
         "status",
         # "plate",
     ]

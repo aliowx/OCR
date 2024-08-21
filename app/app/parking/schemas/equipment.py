@@ -8,25 +8,31 @@ from app.models.base import EquipmentStatus, EquipmentType, QueryParam
 class EquipmentBase(BaseModel):
     equipment_type: EquipmentType | None = None
     equipment_status: EquipmentStatus | None = None
-    tag: str | None = None
     serial_number: str | None = None
     ip_address: str | None = None
-    parking_id: int | None = None
     zone_id: int | None = None
+    zone_detail: dict | None = None
+    image_id: int | None = None
     additional_data: dict | None = None
 
 
-class EquipmentCreate(EquipmentBase):
+class EquipmentCreate(BaseModel):
     equipment_type: EquipmentType
-    parking_id: int | None = None
+    equipment_status: EquipmentStatus
+    serial_number: str = Field(None, max_length=50)
+    ip_address: str | None = None
     zone_id: int
-    tag: str | None = Field(None, max_length=30)
-    serial_number: str | None = Field(None, max_length=50)
-    ip_address: str | None = Field(None, max_length=15)
+    image_id: int | None = None
+    additional_data: dict | None = None
 
 
-class EquipmentUpdate(EquipmentBase):
-    tag: str | None = Field(None, max_length=30)
+class EquipmentUpdate(BaseModel):
+    equipment_type: EquipmentType
+    equipment_status: EquipmentStatus
+    ip_address: str | None = None
+    zone_id: int | None = None
+    image_id: int | None = None
+    additional_data: dict | None = None
     serial_number: str | None = Field(None, max_length=50)
     ip_address: str | None = Field(None, max_length=15)
 
@@ -48,7 +54,6 @@ class EquipmentInDB(EquipmentInDBBase): ...
 class ReadEquipmentsFilter(BaseModel):
     ip_address__eq: str | None = None
     serial_number__eq: str | None = None
-    parking_id__eq: int | None = None
     zone_id__eq: int | None = None
     equipment_type__eq: int | None = None
     equipment_status__eq: int | None = None
@@ -61,7 +66,6 @@ class ReadEquipmentsFilter(BaseModel):
 class ReadEquipmentsParams(BaseModel):
     ip_address: str | None = None
     serial_number: str | None = None
-    parking_id: int | None = None
     zone_id: int | None = None
     equipment_type: EquipmentType | None = Field(
         QueryParam(None, description=str(list(EquipmentType)))
@@ -85,16 +89,16 @@ class ReadEquipmentsParams(BaseModel):
     @property
     def db_filters(self) -> ReadEquipmentsFilter:
         filters = ReadEquipmentsFilter(limit=self.size, skip=self.skip)
-        if self.parking_id:
-            filters.parking_id__eq = self.parking_id
         if self.ip_address:
             filters.ip_address__eq = self.ip_address
+        if self.zone_id:
+            filters.zone_id__eq = self.zone_id
         if self.serial_number:
             filters.serial_number__eq = self.serial_number
         if self.equipment_type:
-            filters.equipment_type__eq = self.equipment_type.value
+            filters.equipment_type__eq = self.equipment_type
         if self.equipment_status:
-            filters.equipment_status__eq = self.equipment_status.value
+            filters.equipment_status__eq = self.equipment_status
         if self.start_date:
             filters.created__gte = self.start_date
         if self.end_date:

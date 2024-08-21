@@ -13,14 +13,27 @@ class Equipment(Base):
     equipment_status: Mapped[EquipmentStatus] = mapped_column(
         Integer, nullable=True
     )
-    tag: Mapped[str] = mapped_column(String(30), nullable=True)
     serial_number: Mapped[str] = mapped_column(String(50), nullable=True)
+
     ip_address: Mapped[str] = mapped_column(String(15), nullable=True)
+
     additional_data: Mapped[dict] = mapped_column(JSON, default=dict)
 
-    parking_id: Mapped[int] = mapped_column(Integer, ForeignKey("parking.id"))
-    parking = relationship("Parking")
-    zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+    image_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(
+            "image.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+        ),
+        index=True,
+        nullable=True,
     )
-    zone = relationship("ParkingZone")
+    image_camera = relationship("Image", foreign_keys=image_id)
+
+    zone_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("zone.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
+    )
+    zone = relationship("Zone", foreign_keys=zone_id)

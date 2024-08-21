@@ -85,7 +85,10 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
-    FREE_TIME_BETWEEN_RECORDS: int | None
+    AUTO_GEN_PLATE_FAKE: int | None = None
+    DATA_FAKE_SET: bool | None = False
+    
+    FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None
 
     CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
     CLEANUP_PERIOD: Optional[int] = 30  # every 30 seconds
@@ -103,6 +106,8 @@ class StorageSettings(SettingsBase):
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
 
+    URL_FOR_SET_DATA_FAKE: str = None
+
     # database test
     TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     # dsn database test
@@ -111,6 +116,9 @@ class StorageSettings(SettingsBase):
     TEST_DSN_POSTGRES_IP: str = None
     TEST_DSN_POSTGRES_PORT: str = None
     TEST_DSN_POSTGRES_DB_NAME: str = None
+
+    TEST_FIRST_SUPERUSER: str = None
+    TEST_FIRST_SUPERUSER_PASSWORD: str = None
 
     @property
     def async_database_url(self) -> str | None:

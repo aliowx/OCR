@@ -1,17 +1,19 @@
 import logging
 import math
 import random
-from datetime import datetime, timedelta
-
+from datetime import datetime, timedelta, UTC
 from sqlalchemy import text
 
 from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.schemas import PlateUpdate, RecordUpdate
+from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
-namespace = "parkinglot"
+from app.db.init_data_fake import create_plates
+
+
+namespace = "job worker"
 logger = logging.getLogger(__name__)
 
 
@@ -70,60 +72,80 @@ def update_record(self, plate_id) -> str:
         self.session.execute(text("LOCK TABLE plate IN EXCLUSIVE MODE"))
         plate = crud.plate.get(self.session, plate_id)
         record = crud.record.get_by_plate(
-            db=self.session, plate=plate, for_update=True
+            db=self.session,
+            plate=plate,
+            status=StatusRecord.unfinished.value,
+            for_update=True,
         )
-        if record is None:
+        if record is None and plate.type_camera != TypeCamera.exitDoor.value:
             record = schemas.RecordCreate(
-                ocr=plate.ocr,
+                plate=plate.plate,
                 start_time=plate.record_time,
                 end_time=plate.record_time,
                 score=0.01,
-                best_lpr_id=plate.lpr_id,
-                best_big_image_id=plate.big_image_id,
-                price_model=plate.price_model,
+                best_lpr_image_id=plate.lpr_image_id,
+                best_plate_image_id=plate.plate_image_id,
+                price_model_id=plate.price_model_id,
+                spot_id=plate.spot_id,
+                zone_id=plate.zone_id,
+                latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-
-        else:
+        elif record:
             if record.start_time > plate.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     start_time=plate.record_time,
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
             elif record.end_time < plate.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     end_time=plate.record_time,
-                    best_lpr_id=plate.lpr_id,
-                    best_big_image_id=plate.big_image_id,
+                    best_lpr_image_id=plate.lpr_image_id,
+                    best_plate_image_id=plate.plate_image_id,
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
             else:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
+                    latest_status=(
+                        StatusRecord.finished.value
+                        if plate.type_camera == TypeCamera.exitDoor.value
+                        else StatusRecord.unfinished.value
+                    ),
                 )
 
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
             )
 
-        update_plate = PlateUpdate(record_id=record.id)
-        # this refresh for update plate with out this not working ==> solution 1
-        self.session.refresh(plate)
-        # or solution 2
-        # logger.info(f"latest value plate.record_id ===> {plate.record_id}")
-        # or solution 3
-        # plate.record_id = record.id
-        # plate_update = crud.plate.update(
-        #     self.session, db_obj=plate
-        # )
+            update_plate = PlateUpdate(record_id=record.id)
+            # this refresh for update plate with out this not working ==> solution 1
+            self.session.refresh(plate)
+            # or solution 2
+            # logger.info(f"latest value plate.record_id ===> {plate.record_id}")
+            # or solution 3
+            # plate.record_id = record.id
+            # plate_update = crud.plate.update(
+            #     self.session, db_obj=plate
+            # )
 
-        plate_update = crud.plate.update(
-            self.session, db_obj=plate, obj_in=update_plate
-        )
-        if plate_update:
-            logger.info(
-                f"new value plate.record_id ===> {plate_update.record_id}"
+            plate_update = crud.plate.update(
+                self.session, db_obj=plate, obj_in=update_plate
             )
+            if plate_update:
+                logger.info(
+                    f"new value plate.record_id ===> {plate_update.record_id}"
+                )
 
     except Exception as exc:
         countdown = int(random.uniform(2, 4) ** self.request.retries)
@@ -134,6 +156,19 @@ def update_record(self, plate_id) -> str:
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+
+    # sender.add_periodic_task(
+    #     settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
+    #     set_status_record.s(),
+    #     name="set status unknown for record after 24 hours becuse not exit",
+    # )
+    if settings.DATA_FAKE_SET:
+        sender.add_periodic_task(
+            settings.AUTO_GEN_PLATE_FAKE,
+            set_fake_data.s(),
+            name=f"set fake data every {settings.AUTO_GEN_PLATE_FAKE}",
+        )
+
     logger.info(
         f"cleanup {settings.CLEANUP_COUNT} images every {settings.CLEANUP_PERIOD} seconds "
         f"which are older than {settings.CLEANUP_AGE} days"
@@ -163,6 +198,55 @@ def setup_periodic_tasks(sender, **kwargs):
     max_retries=1,
     soft_time_limit=240,
     time_limit=360,
+    name="set_status_record",
+)
+def set_status_record(self):
+
+    try:
+        records = crud.record.get_multi_record(
+            self.session,
+            input_status_record=StatusRecord.unfinished.value,
+            input_create_time=datetime.now(UTC).replace(tzinfo=None)
+            - timedelta(
+                seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
+            ),
+        )
+        if records:
+            for record in records:
+                logger.info(
+                    f"this plate {record.plate} after {timedelta(seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR)} hour not exieted"
+                )
+                record.latest_status = StatusRecord.unknown.value
+                crud.record.update(self.session, db_obj=record)
+    except:
+        print("Not found")
+        print("func set status")
+
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
+    name="set_status_record",
+)
+def set_fake_data(self):
+
+    try:
+        create_plates(self.session)
+    except Exception as e:
+        print(f"error set data fake {e}")
+
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
     name="cleanup",
 )
 def cleanup(self, table_name: str = "image"):
@@ -177,17 +261,17 @@ def cleanup(self, table_name: str = "image"):
     try:
         if table_name == "image":
             model_img = models.Image
-            img_ids = crud.camera_repo.get_multi(self.session)
+            img_ids = crud.image.get_multi(self.session)
             for img_id in img_ids:
                 subquery = (
                     self.session.query(model_img.id)
                     .filter(
                         model_img.modified
                         < (
-                            datetime.now()
+                            datetime.now(UTC).replace(tzinfo=None)
                             - timedelta(days=settings.CLEANUP_AGE)
                         ),
-                        model_img.id != img_id.image_id,
+                        model_img.id != img_id.id,
                     )
                     .limit(settings.CLEANUP_COUNT)
                     .subquery()
@@ -198,13 +282,13 @@ def cleanup(self, table_name: str = "image"):
                     .delete(synchronize_session="fetch")
                 )
         elif table_name == "plate":
-            limit = datetime.now() - timedelta(
+            limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 days=settings.CLEANUP_PLATES_AGE
             )
             filter = models.Plate.record_time
             model = models.Plate
         elif table_name == "record":
-            limit = datetime.now() - timedelta(
+            limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 days=settings.CLEANUP_RECORDS_AGE
             )
             filter = models.Record.end_time

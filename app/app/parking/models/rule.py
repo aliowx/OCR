@@ -1,10 +1,10 @@
-from datetime import date, datetime
+from datetime import date
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 from app.models.base import RuleType
 
 
@@ -14,10 +14,10 @@ class Rule(Base):
     rule_type: Mapped[RuleType] = mapped_column(Integer, nullable=True)
     weekdays: Mapped[list[int]] = mapped_column(ARRAY(Integer), default=list)
     start_datetime = mapped_column(
-        DateTime(timezone=False), default=datetime.utcnow
+        DateTime(timezone=False), default=get_now_datetime_utc
     )
     end_datetime = mapped_column(
-        DateTime(timezone=False), default=datetime.utcnow
+        DateTime(timezone=False), default=get_now_datetime_utc
     )
     registeration_date = mapped_column(Date, default=date.today)
 
@@ -28,12 +28,14 @@ class Rule(Base):
 class ZoneRule(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     zone_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("parkingzone.id"), nullable=True
+        Integer,
+        ForeignKey("zone.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
     )
-    zone = relationship("ParkingZone", back_populates="rules")
+    zone_rule = relationship("Zone", back_populates="rules")
     rule_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("rule.id"),
+        ForeignKey("rule.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     rule = relationship("Rule", back_populates="zones")
@@ -44,7 +46,7 @@ class PlateRule(Base):
     plate: Mapped[str] = mapped_column(String(50))
     rule_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("rule.id"),
+        ForeignKey("rule.id", ondelete="SET NULL", onupdate="CASCADE"),
         nullable=True,
     )
     rule = relationship("Rule", back_populates="plates")

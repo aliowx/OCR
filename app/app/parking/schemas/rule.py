@@ -3,7 +3,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.base import QueryParam, RuleType, Weekday
-from app.parking.schemas.parkingzone import ParkingZoneRule
+from app.parking.schemas.zone import ZoneRule
 from app.schemas.types import UTCDatetime
 
 
@@ -120,7 +120,7 @@ class ZoneRuleBase(BaseModel):
 
 
 class ZoneRuleComplete(ZoneRuleBase):
-    zone: ParkingZoneRule | None = None
+    zone: ZoneRule | None = None
     rule: Rule | None = None
 
 

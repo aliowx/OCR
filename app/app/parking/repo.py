@@ -1,38 +1,37 @@
 import logging
 from typing import Awaitable, List, TypeVar
 
-from sqlalchemy import exists, false, func
+from sqlalchemy import exists, false, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
 
 from .models import (
-    Camera,
     Equipment,
     Parking,
-    ParkingLot,
-    ParkingZone,
-    ParkingZonePrice,
+    Spot,
+    Zone,
+    ZonePrice,
     PlateRule,
     Rule,
     ZoneRule,
 )
-from .schemas.camera import CameraCreate, CameraUpdate
 from .schemas.equipment import (
     EquipmentCreate,
     EquipmentUpdate,
     ReadEquipmentsFilter,
 )
 from .schemas.parking import ParkingCreate, ParkingUpdate
-from .schemas.parkinglot import ParkingLotCreate, ParkingLotUpdate
-from .schemas.parkingzone import (
-    ParkingZoneCreate,
-    ParkingZonePriceCreate,
-    ParkingZonePriceUpdate,
-    ParkingZoneUpdate,
+from .schemas.spot import SpotCreate, SpotUpdate
+from .schemas.zone import (
+    ZoneCreate,
+    ZonePriceCreate,
+    ZonePriceUpdate,
+    ZoneUpdate,
+    ZonePramsFilters,
 )
 from .schemas.rule import (
     PlateRuleCreate,
@@ -41,37 +40,37 @@ from .schemas.rule import (
     ZoneRuleCreate,
 )
 
+from app.models.base import EquipmentType
+
 ModelType = TypeVar("ModelType", bound=Base)
 
 logger = logging.getLogger(__name__)
 
 
-class ParkingLotRepository(
-    CRUDBase[ParkingLot, ParkingLotCreate, ParkingLotUpdate]
-):
-    async def find_lines(
+class SpotRepository(CRUDBase[Spot, SpotCreate, SpotUpdate]):
+    async def get_multi_with_filters(
         self,
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
-        input_number_line: int = None,
+        input_number_spot: int = None,
         input_zone_id: int = None,
         skip: int = 0,
-        limit: int = 100,
-    ) -> List[ParkingLot] | Awaitable[List[ParkingLot]]:
+        limit: int | None = 100,
+    ) -> List[Spot] | Awaitable[List[Spot]]:
 
-        query = select(ParkingLot)
+        query = select(Spot)
 
-        filters = [ParkingLot.is_deleted == false()]
+        filters = [Spot.is_deleted == false()]
 
         if input_camera_id is not None:
-            filters.append(ParkingLot.camera_id == input_camera_id)
+            filters.append(Spot.camera_id == input_camera_id)
 
-        if input_number_line is not None:
-            filters.append(ParkingLot.number_line == input_number_line)
+        if input_number_spot is not None:
+            filters.append(Spot.number_spot == input_number_spot)
 
         if input_zone_id is not None:
-            filters.append(ParkingLot.zone_id == input_zone_id)
+            filters.append(Spot.zone_id == input_zone_id)
 
         if limit is None:
             return await self._all(
@@ -82,73 +81,23 @@ class ParkingLotRepository(
             db.scalars(query.filter(*filters).offset(skip).limit(limit))
         )
 
-    async def one_parkinglot(
+    async def one_spot(
         self,
         db: Session | AsyncSession,
         *,
         input_camera_id: int = None,
-        input_number_line: int = None,
-    ) -> ParkingLot | Awaitable[ParkingLot]:
+        input_number_spot: int = None,
+    ) -> Spot | Awaitable[Spot]:
 
-        query = select(ParkingLot)
+        query = select(Spot)
 
-        filters = [ParkingLot.is_deleted == false()]
+        filters = [Spot.is_deleted == false()]
 
         if input_camera_id is not None:
-            filters.append(ParkingLot.camera_id == input_camera_id)
+            filters.append(Spot.camera_id == input_camera_id)
 
-        if input_number_line is not None:
-            filters.append(ParkingLot.number_line == input_number_line)
-
-        return await self._first(db.scalars(query.filter(*filters)))
-
-
-class CameraRepository(CRUDBase[Camera, CameraCreate, CameraUpdate]):
-
-    async def find_cameras(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_camera_code: str = None,
-        input_camera_ip: str = None,
-        input_location: str = None,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[Camera] | Awaitable[list[Camera]]:
-
-        query = select(Camera)
-
-        filters = [Camera.is_deleted == false()]
-
-        if input_camera_code is not None:
-            filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
-
-        if input_camera_ip is not None:
-            filters.append(Camera.camera_ip.like(f"%{input_camera_ip}%"))
-
-        if input_location is not None:
-            filters.append(Camera.location.like(f"%{input_location}%"))
-
-        if limit is None:
-            return self._all(db.scalars(query.filter(*filters).offset(skip)))
-
-        return await self._all(
-            db.scalars(query.filter(*filters).offset(skip).limit(limit))
-        )
-
-    async def one_camera(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_camera_code: str = None,
-    ) -> Camera | Awaitable[Camera]:
-
-        query = select(Camera)
-
-        filters = [Camera.is_deleted == false()]
-
-        if input_camera_code is not None:
-            filters.append(Camera.camera_code.like(f"%{input_camera_code}%"))
+        if input_number_spot is not None:
+            filters.append(Spot.number_spot == input_number_spot)
 
         return await self._first(db.scalars(query.filter(*filters)))
 
@@ -161,12 +110,8 @@ class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
         return parkings[0]
 
 
-class ParkingZoneRepository(
-    CRUDBase[ParkingZone, ParkingZoneCreate, ParkingZoneUpdate]
-):
-    async def get_by_name(
-        self, db: AsyncSession, name: str
-    ) -> ParkingZone | None:
+class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
+    async def get_by_name(self, db: AsyncSession, name: str) -> Zone | None:
         zone = await self._first(
             db.scalars(
                 select(self.model).filter(
@@ -177,14 +122,89 @@ class ParkingZoneRepository(
         )
         return zone
 
+    async def get_multi_child(self, db: Session | AsyncSession, ids: int):
+        if ids is not None:
+            return await self._all(
+                db.scalars(
+                    select(Zone).filter(
+                        *[Zone.parent_id.in_(ids), Zone.is_deleted == false()]
+                    )
+                )
+            )
+
+    async def get_multi_ancestor(self, db: Session | AsyncSession, ids: int):
+        if ids is not None:
+            return await self._all(
+                db.scalars(
+                    select(Zone).filter(
+                        *[Zone.id.in_(ids), Zone.is_deleted == false()]
+                    )
+                )
+            )
+
+    async def get(
+        self, db: Session | AsyncSession, id: int
+    ) -> ModelType | Awaitable[ModelType] | None:
+        query = select(self.model).filter(
+            self.model.id == id, self.model.is_deleted == False
+        )
+
+        return await self._first(db.scalars(query))
+
+    async def get_multi_by_filter(
+        self,
+        db: AsyncSession,
+        *,
+        params: ZonePramsFilters,
+    ) -> tuple[list[Zone], int]:
+        query = select(Zone)
+
+        filters = [Zone.is_deleted == false()]
+
+        if params.input_name_zone is not None:
+            filters.append(Zone.name == params.input_name_zone)
+
+        if params.input_name_floor is not None:
+            filters.append(Zone.floor_name == params.input_name_floor)
+
+        if params.input_number_floor is not None:
+            filters.append(Zone.floor_number == params.input_number_floor)
+
+        q = query.filter(*filters).with_only_columns(func.count())
+        total_count = db.scalar(q)
+
+        order_by = Zone.id.asc() if params.asc else Zone.id.desc()
+
+        if params.size is None:
+            return (
+                await self._all(
+                    db.scalars(
+                        query.filter(*filters)
+                        .offset(params.skip)
+                        .order_by(order_by)
+                    )
+                ),
+                await total_count,
+            )
+
+        return (
+            await self._all(
+                db.scalars(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .limit(params.size)
+                    .order_by(order_by)
+                )
+            ),
+            await total_count,
+        )
+
 
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]
 ):
     def _build_filters(self, filters: ReadEquipmentsFilter) -> list:
         orm_filters = []
-        if filters.parking_id__eq:
-            orm_filters.append(self.model.parking_id == filters.parking_id__eq)
         if filters.zone_id__eq:
             orm_filters.append(self.model.zone_id == filters.zone_id__eq)
         if filters.equipment_type__eq:
@@ -234,9 +254,38 @@ class EquipmentRepository(
             await total_count,
         )
 
+    async def get_entrance_exit_camera(
+        self, db: AsyncSession
+    ) -> list[Equipment]:
 
-class ParkingZonePriceRepository(
-    CRUDBase[ParkingZonePrice, ParkingZonePriceCreate, ParkingZonePriceUpdate]
+        query = select(Equipment).where(
+            (Equipment.is_deleted == false())
+            & or_(
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_EXIT_DOOR.value,
+            )
+        )
+
+        return await self._all(db.scalars(query))
+
+    async def one_equipment(
+        self, db: AsyncSession, *, serial_number: str
+    ) -> Equipment:
+
+        query = select(Equipment)
+
+        filters = [Equipment.is_deleted == false()]
+
+        if serial_number is not None:
+            filters.append(Equipment.serial_number == serial_number)
+
+        return await self._first(db.scalars(query.filter(*filters)))
+
+
+class ZonePriceRepository(
+    CRUDBase[ZonePrice, ZonePriceCreate, ZonePriceUpdate]
 ):
     async def pricing_exists(
         self, db: AsyncSession, zone_id: int, price_id: int, priority: int
@@ -371,12 +420,11 @@ class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
         return rule
 
 
-parkinglot_repo = ParkingLotRepository(ParkingLot)
-camera_repo = CameraRepository(Camera)
+spot_repo = SpotRepository(Spot)
 parking_repo = ParkingRepository(Parking)
-parkingzone_repo = ParkingZoneRepository(ParkingZone)
+zone_repo = ZoneRepository(Zone)
 equipment_repo = EquipmentRepository(Equipment)
-parkingzoneprice_repo = ParkingZonePriceRepository(ParkingZonePrice)
+zoneprice_repo = ZonePriceRepository(ZonePrice)
 rule_repo = RuleRepository(Rule)
 zonerule_repo = ZoneRuleRepository(ZoneRule)
 platerule_repo = PlateRuleRepository(PlateRule)

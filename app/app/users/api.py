@@ -1,19 +1,21 @@
 import logging
 from datetime import timedelta
-
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
 from app.core import security
 from app.core.config import settings
-from app.utils import APIResponse, APIResponseType
+from app.utils import APIResponse, APIResponseType, PaginatedContent
 from cache import cache, invalidate
 from cache.util import ONE_DAY_IN_SECONDS
+
+from app.acl.role_checker import RoleChecker
+from app.acl.role import UserRoles
+from typing import Annotated
 
 router = APIRouter()
 namespace = "user"
@@ -53,36 +55,75 @@ async def login(
             user.id, expires_delta=access_token_expires
         ),
         token_type="bearer",
-        # 'access_list' later used for user access control
-        access_list=[route.name for route in request.app.routes],
     )
 
 
 @router.get("/")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_users(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
-    skip: int = 0,
-    limit: int = 100,
+    params: schemas.ParamsUser = Depends(),
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[list[schemas.User]]:
+) -> APIResponseType[PaginatedContent[list[schemas.User]]]:
+    """
+    Retrieve users.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    users, total_count = await crud.user.get_multi_by_filter(db, params=params)
+    return APIResponse(
+        PaginatedContent(
+            data=users,
+            total_count=total_count,
+            size=params.size,
+            page=params.page,
+        )
+    )
+
+
+@router.get("/me")
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+async def user_me(
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[schemas.User]:
     """
     Retrieve users.
     """
-    users = await crud.user.get_multi(db, skip=skip, limit=limit)
-    return APIResponse(users)
+    return APIResponse(current_user)
 
 
 @router.post("/")
-@invalidate(namespace=namespace)
+# @invalidate(namespace=namespace)
 async def create_user(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     user_in: schemas.UserCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.User]:
     """
     Create new user.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     user = await crud.user.get_by_username(db, username=user_in.username)
     if user:
@@ -95,14 +136,26 @@ async def create_user(
 
 
 @router.get("/{user_id}")
-@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_user_by_id(
     user_id: int,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     current_user: models.User = Depends(deps.get_current_active_user),
     db: AsyncSession = Depends(deps.get_db_async),
 ) -> APIResponseType[schemas.User]:
     """
     Get a specific user by id.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     user = await crud.user.get(db, id=user_id)
     if not user:
@@ -123,6 +176,17 @@ async def read_user_by_id(
 @router.put("/{user_id}")
 async def update_user(
     *,
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
     db: AsyncSession = Depends(deps.get_db_async),
     user_id: int,
     user_in: schemas.UserUpdate,
@@ -130,6 +194,7 @@ async def update_user(
 ) -> APIResponseType[schemas.User]:
     """
     Update a user.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     user = await crud.user.get(db, id=user_id)
     if not user:

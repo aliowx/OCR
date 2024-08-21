@@ -1,43 +1,43 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app import crud, schemas
+from datetime import timedelta
 
 
-async def calculator_price(db: AsyncSession, *, score, skip, limit, asc):
+async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
     records = await crud.record.find_records(
-        db, input_score=score, skip=skip, limit=limit, asc=asc
+        db=db,
+        input_status_record=params.input_status_record,
+        input_score=params.input_score,
+        input_plate=params.input_plate,
+        input_start_create_time=params.input_start_time,
+        input_end_create_time=params.input_end_time,
+        skip=params.skip,
+        limit=params.limit,
+        asc=params.asc,
     )
 
-    weekdays = [
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ]
-    for t in range(len(records[0])):
-        item_record = records[0][t]
+    for record in range(len(records[0])):
+        item_record = records[0][record]
+        days = 0
+        time_diffrence = item_record.end_time - item_record.start_time
 
-        # Calculation of parkinglot time
-        item_record.parkinglot_time = str(
-            item_record.end_time - item_record.start_time
-        )
-        # Calculation hours, conversion minutes and seconds to hours
+        # seprating day from time
+        if time_diffrence.days:
+            days = time_diffrence.days
+            time_diffrence = str(time_diffrence).split(", ")[
+                1
+            ]  # example 1 day, 00:00:00 -> 00:00:00
+
         hours, minutes, seconds = map(
-            int, item_record.parkinglot_time.split(":")
+            float,
+            str(time_diffrence).split(":"),
         )
-        total_hours = hours + minutes / 60 + seconds / 3600
 
-        if item_record.price_model["price_type"] == "weekly":
-            price_weekly_day = weekdays[item_record.end_time.weekday()]
-            item_record.parkinglot_price = (
-                total_hours * item_record.price_model[price_weekly_day]
+        item_record.total_time = str(
+            timedelta(
+                days=days,
+                hours=hours,
+                minutes=minutes,
             )
-        if item_record.price_model["price_type"] == "zone":
-            item_record.parkinglot_price = (
-                total_hours * item_record.price_model["price"]
-            )
-
+        )
     return schemas.GetRecords(items=records[0], all_items_count=records[1])

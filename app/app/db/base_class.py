@@ -1,10 +1,13 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 
-from persiantools.jdatetime import JalaliDate
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 from sqlalchemy.sql.sqltypes import Boolean, DateTime
+
+
+def get_now_datetime_utc() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -25,13 +28,15 @@ class Base(DeclarativeBase):
     )
 
     created = mapped_column(
-        DateTime(timezone=True), default=datetime.now, index=True
+        DateTime(timezone=False),
+        default=get_now_datetime_utc,
+        index=True,
     )
     modified = mapped_column(
-        DateTime(timezone=True),
-        default=datetime.now,
+        DateTime(timezone=False),
+        default=get_now_datetime_utc,
         index=True,
-        onupdate=datetime.now,
+        onupdate=datetime.now(UTC).replace(tzinfo=None),
     )
 
     def __str__(self):
@@ -42,21 +47,3 @@ class Base(DeclarativeBase):
             return f"{self.__class__.__name__}({self.__tablename__}:{self.id})"
         except:
             return f"Faulty-{self.__class__.__name__}"
-
-    @property
-    def created_jalali(self) -> JalaliDate:
-        created = (self.created).replace(tzinfo=None)
-        return self.make_jalali(created)
-
-    @property
-    def modified_jalali(self) -> JalaliDate:
-        modified = (self.modified).replace(tzinfo=None)
-        return self.make_jalali(modified)
-
-    def make_jalali(date_time: datetime) -> JalaliDate:
-        utc = datetime.strptime(str(date_time), "%Y-%m-%d %H:%M:%S.%f")
-        hour = "{:0>2}".format(int(utc.hour))
-        minute = "{:0>2}".format(int(utc.minute))
-        second = "{:0>2}".format(int(utc.second))
-        time = hour + ":" + minute + ":" + second
-        return JalaliDate(utc).strftime("%Y-%m-%d") + " " + time

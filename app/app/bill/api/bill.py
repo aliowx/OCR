@@ -48,9 +48,6 @@ async def read_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     bills = await bill_repo.get_multi_by_filters(db, params=params)
-    print(dir(bills))
-    print(bills[0])
-    print(bills[1])
     return APIResponse(
         PaginatedContent(
             data=bills[0],

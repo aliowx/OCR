@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.base_class import get_now_datetime_utc
 
-from datetime import datetime, UTC
 from app.schemas import ImageCreateBase64
 from app.parking.repo import equipment_repo
 from app.parking.schemas import spot as spotsSchemas
@@ -123,7 +123,7 @@ class TestSpot:
         check_spot.status = update_status_spot_in.status
         check_spot.lpr_image_id = update_status_spot_in.lpr_image_id
         check_spot.plate_image_id = update_status_spot_in.plate_image_id
-        check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+        check_spot.latest_time_modified = get_now_datetime_utc
 
         spot_update = await crud.spot_repo.update(db, db_obj=check_spot)
         assert spot_update.status == update_status_spot_in.status
@@ -188,7 +188,7 @@ class TestSpot:
         check_spot.status = update_status_spot_in.status
         check_spot.lpr_image_id = update_status_spot_in.lpr_image_id
         check_spot.plate_image_id = update_status_spot_in.plate_image_id
-        check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+        check_spot.latest_time_modified = get_now_datetime_utc
 
         spot_update = await crud.spot_repo.update(db, db_obj=check_spot)
         assert spot_update.status == update_status_spot_in.status
@@ -253,7 +253,7 @@ class TestSpot:
         check_spot.status = update_status_spot_in.status
         check_spot.lpr_image_id = update_status_spot_in.lpr_image_id
         check_spot.plate_image_id = update_status_spot_in.plate_image_id
-        check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+        check_spot.latest_time_modified = get_now_datetime_utc
 
         spot_update = await crud.spot_repo.update(db, db_obj=check_spot)
         assert spot_update.status == update_status_spot_in.status
@@ -315,7 +315,7 @@ class TestSpot:
         check_spot.status = update_status_spot_in.status
         check_spot.lpr_image_id = None
         check_spot.plate_image_id = None
-        check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+        check_spot.latest_time_modified = get_now_datetime_utc
 
         spot_update = await crud.spot_repo.update(db, db_obj=check_spot)
         assert spot_update.status == update_status_spot_in.status
@@ -377,7 +377,7 @@ class TestSpot:
         check_spot.status = update_status_spot_in.status
         check_spot.lpr_image_id = None
         check_spot.plate_image_id = None
-        check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+        check_spot.latest_time_modified = get_now_datetime_utc
 
         spot_update = await crud.spot_repo.update(db, db_obj=check_spot)
 

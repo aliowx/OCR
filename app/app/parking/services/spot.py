@@ -1,7 +1,6 @@
-from datetime import datetime, UTC
-
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.base_class import get_now_datetime_utc
 
 from app import crud, schemas, utils
 from app.parking.schemas import spot as spotsSchemas
@@ -133,7 +132,7 @@ async def update_status(
 
         plate_in = schemas.PlateCreate(
             plate=spot_in.plate,
-            record_time=datetime.now(UTC).replace(tzinfo=None),
+            record_time=get_now_datetime_utc,
             lpr_image_id=(
                 spot_in.lpr_image_id if spot_in.lpr_image_id else None
             ),
@@ -156,7 +155,7 @@ async def update_status(
     check_spot.status = spot_in.status
     check_spot.lpr_image_id = spot_in.lpr_image_id
     check_spot.plate_image_id = spot_in.plate_image_id
-    check_spot.latest_time_modified = datetime.now(UTC).replace(tzinfo=None)
+    check_spot.latest_time_modified = get_now_datetime_utc
     return await crud.spot_repo.update(db, db_obj=check_spot)
 
 

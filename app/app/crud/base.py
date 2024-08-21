@@ -190,7 +190,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType] | Awaitable[list[ModelType]]:
         if hasattr(self.model, "modified"):
             for db_obj in db_objs:
+<<<<<<< 383d2ec0de278b105e6afaf0a2c0e7e175f0c337
+                setattr(db_obj, "modified",  datetime.now(UTC).replace(tzinfo=None))
+=======
                 setattr(db_obj, "modified", get_now_datetime_utc)
+>>>>>>> 021f910e2feb108b4713d7dfea98d7f41087cb6f
         db.add_all(db_objs)
         return self._commit_refresh_all(db=db, db_objs=db_objs)
 

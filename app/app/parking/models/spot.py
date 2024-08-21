@@ -1,9 +1,9 @@
-from datetime import datetime, UTC
+from datetime import datetime
 
 from sqlalchemy import ARRAY, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 
 
 class Spot(Base):
@@ -33,7 +33,7 @@ class Spot(Base):
 
     latest_time_modified: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(UTC).replace(tzinfo=None),
+        default=get_now_datetime_utc,
         index=True,
     )
 

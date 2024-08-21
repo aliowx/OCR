@@ -1,10 +1,13 @@
 from datetime import datetime, UTC
 from typing import Any
 
-from persiantools.jdatetime import JalaliDate
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, mapped_column
 from sqlalchemy.sql.sqltypes import Boolean, DateTime
+
+
+def get_now_datetime_utc():
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -26,14 +29,14 @@ class Base(DeclarativeBase):
 
     created = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(UTC).replace(tzinfo=None),
+        default=get_now_datetime_utc,
         index=True,
     )
     modified = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(UTC).replace(tzinfo=None),
+        default=get_now_datetime_utc,
         index=True,
-        onupdate=datetime.now(UTC).replace(tzinfo=None),
+        onupdate=get_now_datetime_utc,
     )
 
     def __str__(self):

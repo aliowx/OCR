@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -181,7 +181,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         if hasattr(self.model, "modified"):
-            setattr(db_obj, "modified", datetime.now(UTC).replace(tzinfo=None))
+            setattr(db_obj, "modified", get_now_datetime_utc)
         db.add(db_obj)
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
@@ -190,7 +190,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType] | Awaitable[list[ModelType]]:
         if hasattr(self.model, "modified"):
             for db_obj in db_objs:
-                setattr(db_obj, "modified", datetime.now(UTC).replace(tzinfo=None))
+                setattr(db_obj, "modified", get_now_datetime_utc)
         db.add_all(db_objs)
         return self._commit_refresh_all(db=db, db_objs=db_objs)
 

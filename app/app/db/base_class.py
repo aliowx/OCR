@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, mapped_column
 from sqlalchemy.sql.sqltypes import Boolean, DateTime
 
 
-def get_now_datetime_utc():
+def get_now_datetime_utc() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
@@ -36,7 +36,7 @@ class Base(DeclarativeBase):
         DateTime(timezone=False),
         default=get_now_datetime_utc,
         index=True,
-        onupdate=get_now_datetime_utc,
+        onupdate=datetime.now(UTC).replace(tzinfo=None),
     )
 
     def __str__(self):

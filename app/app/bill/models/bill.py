@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, String, DateTime, Float
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 from datetime import datetime, UTC
 
 
@@ -10,15 +10,17 @@ class Bill(Base):
 
     plate: Mapped[str] = mapped_column(String, nullable=True)
 
+    tracking_code: Mapped[str] = mapped_column(String, nullable=True)
+
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(UTC).replace(tzinfo=None),
+        default=get_now_datetime_utc,
         index=True,
     )
-    
+
     end_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=datetime.now(UTC).replace(tzinfo=None),
+        default=get_now_datetime_utc,
         index=True,
     )
 

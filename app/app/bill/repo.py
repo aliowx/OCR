@@ -29,6 +29,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_status_bill is not None:
             filters.append(Bill.status <= params.input_status_bill)
 
+        if params.input_tracking_code is not None:
+            filters.append(Bill.tracking_code <= params.input_tracking_code)
+
         count = await self.count_by_filter(db, filters=filters)
 
         order_by = Bill.id.asc() if params.asc else Bill.id.desc()

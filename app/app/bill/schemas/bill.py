@@ -17,6 +17,7 @@ class BillBase(BaseModel):
     end_time: datetime | None = None
     price: float | None = None
     status: StatusBill | None = None
+    tracking_code: str | None = None
 
 
 # Properties to receive on item creation
@@ -49,6 +50,7 @@ class ParamsBill(BaseModel):
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
     input_status_bill: StatusBill | None = None
+    input_tracking_code: str | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = False

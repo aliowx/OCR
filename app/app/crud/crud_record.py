@@ -160,6 +160,25 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
         return [result, all_items_count]
 
+    async def get_record(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_plate: str = None,
+        input_status: StatusRecord = None,
+    ):
+        query = select(Record)
+
+        filters = [Record.is_deleted == False]
+
+        if input_plate is not None:
+            filters.append(Record.plate == input_plate)
+
+        if input_status is not None:
+            filters.append(Record.latest_status == input_status)
+
+        return await self._first(db.scalars(query.filter(*filters)))
+
     async def max_time_record(
         self, db: Session | AsyncSession
     ) -> list[Record]:

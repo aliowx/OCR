@@ -4,10 +4,9 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 
-class StatusBill(str, Enum):
-    paid = "paid"
-    unsuccessful = "unsuccessful"
-    paying = "paying"
+class Issued(str, Enum):
+    kiosk = "kiosk"
+    exit_camera = "exit_camera"
 
 
 # Shared properties
@@ -16,13 +15,15 @@ class BillBase(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
     price: float | None = None
-    status: StatusBill | None = None
-    tracking_code: str | None = None
+    issued_by: Issued | None = None
 
 
 # Properties to receive on item creation
 class BillCreate(BillBase): ...
 
+
+class BillShowBykiosk(BillCreate):
+    time_park_so_far: float | None = None
 
 # Properties to receive on item update
 class BillUpdate(BaseModel): ...
@@ -49,8 +50,7 @@ class ParamsBill(BaseModel):
     input_plate: str | None = None
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
-    input_status_bill: StatusBill | None = None
-    input_tracking_code: str | None = None
+    input_issued_by: Issued | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = False
@@ -61,4 +61,3 @@ class ParamsBill(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
-

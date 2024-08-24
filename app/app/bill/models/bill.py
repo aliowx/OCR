@@ -10,8 +10,6 @@ class Bill(Base):
 
     plate: Mapped[str] = mapped_column(String, nullable=True)
 
-    tracking_code: Mapped[str] = mapped_column(String, nullable=True)
-
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
         default=get_now_datetime_utc,
@@ -26,4 +24,4 @@ class Bill(Base):
 
     price: Mapped[float] = mapped_column(Float, nullable=True, index=True)
 
-    status: Mapped[str] = mapped_column(String, nullable=True, index=True)
+    issued_by: Mapped[str] = mapped_column(String, nullable=True, index=True)

@@ -8,3 +8,4 @@ from .image import Image
 from .plate import Plate
 from .record import Record
 from app.bill.models.bill import Bill
+from app.payment.models.payment import Payment

@@ -36,7 +36,7 @@ class RecordCreate(RecordBase):
 
 
 # Properties to receive on item update
-class RecordUpdate(BaseModel):
+class RecordUpdate(RecordBase):
     latest_status: StatusRecord
 
 

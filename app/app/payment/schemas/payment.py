@@ -5,8 +5,9 @@ from pydantic import BaseModel, ConfigDict
 
 
 class StatusPayment(str, Enum):
-    pay = "pay"
+    paid = "paid"
     unsuccessful = "unsuccessful"
+    awaiting_payment = "awaiting_payment"
 
 
 # Shared properties
@@ -18,7 +19,6 @@ class PaymentBase(BaseModel):
 
 # Properties to receive on item creation
 class PaymentCreate(PaymentBase): ...
-
 
 
 # Properties to receive on item update

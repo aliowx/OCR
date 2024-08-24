@@ -1,7 +1,12 @@
 from .models import Bill
 from app.crud.base import CRUDBase
-from .schemas.bill import BillCreate, BillUpdate, ParamsBill
-
+from .schemas.bill import (
+    BillCreate,
+    BillUpdate,
+    ParamsBill,
+    Bill as billschemas,
+)
+from app.payment.models import Payment
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -20,13 +25,15 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if plate_in is not None:
             filters.append(Bill.plate == plate_in)
 
-        return await self._first(db.scalars(query.order_by(Bill.created.desc()).filter(*filters)))
+        return await self._first(
+            db.scalars(query.order_by(Bill.created.desc()).filter(*filters))
+        )
 
     async def get_multi_by_filters(
         self, db: AsyncSession, *, params: ParamsBill
-    ) -> tuple[list[Bill], int]:
+    ) -> tuple[list[billschemas], int]:
 
-        query = select(Bill)
+        query = select(Bill).join(Payment)
 
         filters = [Bill.is_deleted == false()]
 
@@ -41,6 +48,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if params.input_issued_by is not None:
             filters.append(Bill.issued_by == params.input_issued_by)
+
+        if params.input_payment is not None:
+            filters.append(Payment.status == params.input_payment)
 
         count = await self.count_by_filter(db, filters=filters)
 

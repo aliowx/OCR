@@ -51,6 +51,7 @@ async def read_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     bills = await bill_repo.get_multi_by_filters(db, params=params)
+    
     return APIResponse(
         PaginatedContent(
             data=bills[0],
@@ -59,6 +60,30 @@ async def read_bill(
             size=params.size,
         )
     )
+
+
+@router.get("/{id}")
+async def get_bill(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    id: int,
+    db: AsyncSession = Depends(deps.get_db_async),
+) -> APIResponseType[billSchemas.Bill]:
+    """
+    get bill.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    bill = await bill_repo.get(db, id=id)
+    return APIResponse(bill)
 
 
 @router.post("/kiosk")
@@ -98,10 +123,10 @@ async def create_bill_by_kiosk(
         start_time=record.start_time,
         end_time=end_time,
         issued_by=billSchemas.Issued.kiosk.value,
-        price=await calculate_price(
+        price=calculate_price(
             start_time_in=record.start_time, end_time_in=end_time
         ),
-        time_park_so_far=await convert_time_to_hour(
+        time_park_so_far=convert_time_to_hour(
             record.start_time, end_time
         ),
     )
@@ -117,9 +142,10 @@ async def create_bill_by_kiosk(
                 price=round(bill.price, 3),
             ).model_dump(),
         )
-
         payment = await payment_repo.create(
-            db, obj_in=paymentSchemas.PaymentCreate(bill_id=bill.id).model_dump()
+            db,
+            obj_in=paymentSchemas.PaymentCreate(bill_id=bill.id).model_dump(),
         )
+        # TODO send to payment gateway and call back update this
 
     return APIResponse(bill)

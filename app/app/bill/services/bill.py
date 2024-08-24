@@ -1,27 +1,18 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
-from app.core.exceptions import ServiceFailure
-from app.parking.models import Equipment
-from app.parking.repo import equipment_repo, zone_repo
-from app.parking.schemas import equipment as schemas
-from app.parking.schemas import Zone as schemasZone
-from app.utils import MessageCodes, PaginatedContent
-from pydantic import TypeAdapter
 from datetime import datetime
 
 
-async def calculate_price(
+def calculate_price(
     start_time_in: datetime, end_time_in: datetime, price_in: float = 5000
 ) -> float:
 
-    duration_time = await convert_time_to_hour(start_time_in, end_time_in)
+    duration_time = convert_time_to_hour(start_time_in, end_time_in)
 
     price = duration_time * price_in
     
     return price
 
 
-async def convert_time_to_hour(start_time, end_time):
+def convert_time_to_hour(start_time, end_time):
     if start_time > end_time:
         return 0
     days = 0

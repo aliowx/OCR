@@ -1,9 +1,7 @@
 from sqlalchemy import Integer, String, DateTime, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.bill.models import Bill
 from app.db.base_class import Base, get_now_datetime_utc
-from datetime import datetime, UTC
 
 
 class Payment(Base):

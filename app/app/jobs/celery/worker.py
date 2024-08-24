@@ -10,6 +10,9 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
 
+from app.bill.services.bill import calculate_price
+from app.bill.repo import bill_repo
+from app.bill.schemas import bill as billSchemas
 from app.db.init_data_fake import create_plates
 
 
@@ -127,6 +130,21 @@ def update_record(self, plate_id) -> str:
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
             )
+
+            if record.latest_status == StatusRecord.finished.value:
+                bill = bill_repo.create(
+                    self.session,
+                    obj_in=billSchemas.BillCreate(
+                        plate=record.plate,
+                        start_time=record.start_time,
+                        end_time=record.end_time,
+                        issued_by=billSchemas.Issued.exit_camera.value,
+                        price=calculate_price(
+                            start_time_in=record.start_time,
+                            end_time_in=record.end_time,
+                        ),
+                    ),
+                )
 
             update_plate = PlateUpdate(record_id=record.id)
             # this refresh for update plate with out this not working ==> solution 1

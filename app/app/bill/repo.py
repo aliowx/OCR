@@ -9,6 +9,19 @@ from sqlalchemy.future import select
 
 class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
+    async def get_bill_by_plate(
+        self, db: AsyncSession, plate_in: str = None
+    ) -> Bill:
+
+        query = select(Bill)
+
+        filters = [Bill.is_deleted == false()]
+
+        if plate_in is not None:
+            filters.append(Bill.plate == plate_in)
+
+        return await self._first(db.scalars(query.order_by(Bill.created.desc()).filter(*filters)))
+
     async def get_multi_by_filters(
         self, db: AsyncSession, *, params: ParamsBill
     ) -> tuple[list[Bill], int]:
@@ -26,11 +39,8 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_end_time is not None:
             filters.append(Bill.created <= params.input_end_time)
 
-        if params.input_status_bill is not None:
-            filters.append(Bill.status <= params.input_status_bill)
-
-        if params.input_tracking_code is not None:
-            filters.append(Bill.tracking_code <= params.input_tracking_code)
+        if params.input_issued_by is not None:
+            filters.append(Bill.issued_by == params.input_issued_by)
 
         count = await self.count_by_filter(db, filters=filters)
 

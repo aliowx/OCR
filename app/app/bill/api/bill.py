@@ -12,7 +12,7 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from app.bill.repo import bill_repo
+from app.bill.repo import bill_repo, payment_bill_repo
 from app.utils import PaginatedContent, MessageCodes
 from app.bill.schemas import bill as billSchemas
 from datetime import datetime, timedelta
@@ -51,7 +51,6 @@ async def read_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     bills = await bill_repo.get_multi_by_filters(db, params=params)
-    
     return APIResponse(
         PaginatedContent(
             data=bills[0],
@@ -126,9 +125,7 @@ async def create_bill_by_kiosk(
         price=calculate_price(
             start_time_in=record.start_time, end_time_in=end_time
         ),
-        time_park_so_far=convert_time_to_hour(
-            record.start_time, end_time
-        ),
+        time_park_so_far=convert_time_to_hour(record.start_time, end_time),
     )
     # isuue True create bill
     if issue:
@@ -143,9 +140,16 @@ async def create_bill_by_kiosk(
             ).model_dump(),
         )
         payment = await payment_repo.create(
-            db,
-            obj_in=paymentSchemas.PaymentCreate(bill_id=bill.id).model_dump(),
+            db, obj_in=paymentSchemas.PaymentCreate(price=bill.price)
         )
+
+        await payment_bill_repo.create(
+            db,
+            obj_in=billSchemas.PaymentBillCreate(
+                bill_id=bill.id, payment_id=payment.id
+            ),
+        )
+
         # TODO send to payment gateway and call back update this
 
     return APIResponse(bill)

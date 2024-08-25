@@ -12,7 +12,8 @@ from app.core.celery_app import celery_app
 from fastapi.encoders import jsonable_encoder
 from cache.redis import redis_client
 import rapidjson
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +122,8 @@ def create_records_past(db: Session):
     for _ in range(1, 100):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-            start_time=datetime.now(UTC).replace(tzinfo=None),
-            end_time=datetime.now(UTC).replace(tzinfo=None)
+            start_time=datetime.now(timezone.utc).replace(tzinfo=None),
+            end_time=datetime.now(timezone.utc).replace(tzinfo=None)
             + timedelta(hours=random.randint(1, 23)),
             best_lpr_image_id=None,
             best_plate_image_id=None,
@@ -147,18 +148,44 @@ def create_records_past(db: Session):
 
 
 def create_plates(db: Session):
-    plates_data = [fake_data.PLATE1, fake_data.PLATE2, fake_data.PLATE_PAST]
     image = create_image(db)
     camera = create_equipment(db)
     zone = create_zone(db)
-    for i in range(1, 100):
-        plate = random.choice(plates_data)
-        if i == 9 or i == 8:
-            plate.type_camera = schemas.plate.TypeCamera.exitDoor.value
-        plate.plate_image_id = image.id
-        plate.lpr_image_id = image.id
-        plate.camera_id = camera.id
-        plate.zone_id = zone.id
+    plates = []
+    for _ in range(1, 5):
+        plate = models.Plate(
+            plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
+            record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
+            plate_image_id=image.id,
+            lpr_image_id=image.id,
+            camera_id=camera.id,
+            zone_id=zone.id,
+            type_camera=schemas.plate.TypeCamera.entranceDoor.value,
+            created=random.choice(
+                [
+                    datetime.now(timezone.utc).replace(tzinfo=None)
+                    - timedelta(days=i)
+                    for i in range(0, 8)
+                ]
+            ),
+        )
+        plates.append(plate)
+        celery_app.send_task(
+            "add_plates",
+            args=[jsonable_encoder(plate)],
+        )
+
+    time.sleep(10)
+    for one_plate in plates:
+        plate = models.Plate(
+            plate=one_plate.plate,
+            record_time=datetime.now(timezone.utc).replace(tzinfo=None),
+            type_camera=schemas.plate.TypeCamera.exitDoor.value,
+            plate_image_id=image.id,
+            lpr_image_id=image.id,
+            camera_id=camera.id,
+            zone_id=zone.id,
+        )
         celery_app.send_task(
             "add_plates",
             args=[jsonable_encoder(plate)],
@@ -172,8 +199,8 @@ def init_db_fake_data(db: Session) -> None:
         # create_image(db)
         # create_zone(db)
         # create_sub_zone(db)
-        create_records(db)
-        create_records_past(db)
+        # create_records(db)
+        # create_records_past(db)
         create_plates(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

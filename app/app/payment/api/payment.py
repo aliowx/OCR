@@ -55,3 +55,19 @@ async def read_payment(
     )
 
 
+@router.post("/bulk-payment")
+async def bulk_payment(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    ids_bill: list[int],
+    db: AsyncSession = Depends(deps.get_db_async),
+): ...

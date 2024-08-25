@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from app.payment.schemas import payment as paymentSchemas
 
 
@@ -42,7 +42,7 @@ class BillInDBBase(BillBase):
 
 # Properties to return to client
 class Bill(BillInDBBase):
-    status_payment: paymentSchemas.StatusPayment | None = None
+    bill_payment: list["PaymentBill"] = Field(default_factory=list)
 
 
 # Properties properties stored in DB
@@ -65,3 +65,29 @@ class ParamsBill(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
+
+
+class PaymentBillBase(BaseModel):
+    payment_id: int | None = None
+    bill_id: int | None = None
+
+
+class PaymentBillCreate(PaymentBillBase): ...
+
+
+class PaymentBillUpdate(PaymentBillBase): ...
+
+
+class PaymentBillInDBBase(PaymentBillBase):
+    id: int
+
+    created: datetime | None = None
+    modified: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaymentBill(PaymentBillInDBBase): ...
+
+
+class PaymentBillInDB(PaymentBillInDBBase): ...

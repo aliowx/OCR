@@ -94,7 +94,7 @@ def update_record(self, plate_id) -> str:
                 latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-        elif record:
+        else:
             if record.start_time > plate.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
@@ -105,7 +105,7 @@ def update_record(self, plate_id) -> str:
                         else StatusRecord.unfinished.value
                     ),
                 )
-            elif record.end_time < plate.record_time:
+            if record.end_time < plate.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     end_time=plate.record_time,
@@ -117,11 +117,11 @@ def update_record(self, plate_id) -> str:
                         else StatusRecord.unfinished.value
                     ),
                 )
-            else:
+            if not record_update:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     latest_status=(
-                        StatusRecord.finished.value
+                        StatusRecord.finished
                         if plate.type_camera == TypeCamera.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
@@ -131,7 +131,7 @@ def update_record(self, plate_id) -> str:
                 self.session, db_obj=record, obj_in=record_update
             )
 
-            if record.latest_status == StatusRecord.finished.value:
+            if record.latest_status == StatusRecord.finished:
                 bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
@@ -145,6 +145,7 @@ def update_record(self, plate_id) -> str:
                         ),
                     ),
                 )
+                logger.info(f"issue bill {record} by number {bill}")
 
             update_plate = PlateUpdate(record_id=record.id)
             # this refresh for update plate with out this not working ==> solution 1

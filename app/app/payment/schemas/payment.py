@@ -83,3 +83,9 @@ class PaymentBill(PaymentBillInDBBase): ...
 
 
 class PaymentBillInDB(PaymentBillInDBBase): ...
+
+
+class CreatePaymentByBill(BaseModel):
+    payment: Payment | None = None
+    total_price: float | None = None
+    bills: list | None = None

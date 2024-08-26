@@ -75,6 +75,16 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         )
         return (items, count)
 
+    async def get_all_by_ids(self, db: AsyncSession, *, ids: int):
+
+        return await self._all(
+            db.scalars(
+                select(Bill).filter(
+                    *[Bill.is_deleted == false(), Bill.id.in_(ids)]
+                )
+            )
+        )
+
 
 class PaymentBillRepository(
     CRUDBase[PaymentBill, PaymentBillCreate, PaymentBillUpdate]

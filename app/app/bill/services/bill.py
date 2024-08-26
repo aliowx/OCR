@@ -4,12 +4,12 @@ from datetime import datetime
 def calculate_price(
     start_time_in: datetime, end_time_in: datetime, price_in: float = 5000
 ) -> float:
-
+    
     duration_time = convert_time_to_hour(start_time_in, end_time_in)
 
     price = duration_time * price_in
-    
-    return price
+
+    return round(price, 4)
 
 
 def convert_time_to_hour(start_time, end_time):
@@ -30,4 +30,4 @@ def convert_time_to_hour(start_time, end_time):
     minutes = minutes / 60 if minutes > 0 else 0
     seconds = seconds / 3600 if seconds > 0 else 0
     time_diffrence = hours + minutes + seconds + days
-    return round(time_diffrence, 2)
+    return time_diffrence

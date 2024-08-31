@@ -85,7 +85,7 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
-    AUTO_GEN_PLATE_FAKE: int | None = None
+    AUTO_GEN_EVENT_FAKE: int | None = None
     DATA_FAKE_SET: bool | None = False
     
     FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
@@ -93,7 +93,7 @@ class StorageSettings(SettingsBase):
     CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
     CLEANUP_PERIOD: Optional[int] = 30  # every 30 seconds
     CLEANUP_AGE: Optional[float] = 2.5  # which are older than 2.5 days
-    CLEANUP_PLATES_AGE: Optional[float] = (
+    CLEANUP_EVENTS_AGE: Optional[float] = (
         30.5  # which are older than 30.5 days
     )
     CLEANUP_RECORDS_AGE: Optional[float] = (

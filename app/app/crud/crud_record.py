@@ -13,7 +13,7 @@ from app.crud.base import CRUDBase
 from app.models.record import Record
 from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
-from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
+from app.schemas import RecordUpdate, StatusRecord
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -32,11 +32,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
         return self._commit_refresh(db=db, db_obj=db_obj)
 
-    def get_by_plate(
+    def get_by_event(
         self,
         db: Session,
         *,
-        plate: schemas.Plate,
+        plate: schemas.Event,
         status: StatusRecord,
         offset: timedelta = timedelta(
             seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR

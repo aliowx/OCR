@@ -58,7 +58,7 @@ class Record(Base):
     )
     spot = relationship("Spot", foreign_keys=spot_id)
 
-    plates = relationship("Plate", back_populates="record")
+    events = relationship("Event", back_populates="record")
 
     price_model_id: Mapped[int] = mapped_column(
         Integer,

@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends,WebSocket
+from fastapi import APIRouter, Depends, WebSocket
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,12 +23,12 @@ from typing import Annotated
 
 
 router = APIRouter()
-namespace = "plates"
+namespace = "events"
 logger = logging.getLogger(__name__)
 
 
 @router.get("/")
-async def read_plates(
+async def read_events(
     _: Annotated[
         bool,
         Depends(
@@ -41,10 +41,10 @@ async def read_plates(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    params: schemas.ParamsPlates = Depends(),
-) -> APIResponseType[PaginatedContent[list[schemas.Plate]]]:
+    params: schemas.ParamsEvents = Depends(),
+) -> APIResponseType[PaginatedContent[list[schemas.Event]]]:
     """
-    All plates.
+    All events.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     camera_id = None
@@ -56,25 +56,24 @@ async def read_plates(
             ),
         )
         params.input_camera_id = camera_id.id
-    plates = await crud.plate.find_plates(db, params=params)
+    events = await crud.event.find_events(db, params=params)
 
     return APIResponse(
         PaginatedContent(
-            data=plates[0],
-            total_count=plates[1],
+            data=events[0],
+            total_count=events[1],
             page=params.page,
             size=params.size,
         )
     )
 
 
-
-@router.websocket("/plates")
+@router.websocket("/events")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connection = await redis_connect_async(240)  # 3 mins
     async with connection.pubsub() as channel:
-        await channel.subscribe("plates:1")
+        await channel.subscribe("events:1")
         try:
             while True:
                 data = await channel.get_message(
@@ -84,11 +83,11 @@ async def websocket_endpoint(websocket: WebSocket):
                     print(data["data"])
                     await websocket.send_text(data["data"])
         finally:
-            channel.unsubscribe("plates:1")
+            channel.unsubscribe("events:1")
 
 
 @router.post("/")
-async def create_plate(
+async def create_event(
     *,
     _: Annotated[
         bool,
@@ -102,7 +101,7 @@ async def create_plate(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    plate_in: schemas.PlateCreate,
+    event_in: schemas.EventCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
@@ -110,15 +109,15 @@ async def create_plate(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     result = celery_app.send_task(
-        "add_plates",
-        args=[jsonable_encoder(plate_in)],
+        "add_events",
+        args=[jsonable_encoder(event_in)],
     )
 
     return APIResponse(f"This id task => {result.task_id}")
 
 
 @router.get("/{id}")
-async def read_plate(
+async def read_event(
     *,
     _: Annotated[
         bool,
@@ -133,15 +132,15 @@ async def read_plate(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
-) -> APIResponseType[schemas.Plate]:
+) -> APIResponseType[schemas.Event]:
     """
-    Get plate by ID.
+    Get event by ID.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    plate = await crud.plate.get(db=db, id=id)
-    if not plate:
+    event = await crud.event.get(db=db, id=id)
+    if not event:
         raise exc.ServiceFailure(
             detail="not exist.",
             msg_code=utils.MessageCodes.not_found,
         )
-    return APIResponse(plate)
+    return APIResponse(event)

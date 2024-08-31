@@ -9,5 +9,5 @@ from app.pricing.repo import price_repo
 from app.users.repo import user
 
 from .crud_image import image
-from .crud_plate import plate
+from .crud_event import event
 from .crud_record import record

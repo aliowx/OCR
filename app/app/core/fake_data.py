@@ -88,7 +88,7 @@ class FakeData(BaseSettings):
         latest_status=MainSchema.StatusRecord.finished.value,
     )
 
-    PLATE1: ClassVar = models.Plate(
+    PLATE1: ClassVar = models.Event(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
             datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=random.randint(1, 24))
@@ -97,7 +97,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.plate.TypeCamera.entranceDoor,
+        type_camera=MainSchema.event.TypeCamera.entranceDoor,
         created=random.choice(
             [
                 datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
@@ -124,7 +124,7 @@ class FakeData(BaseSettings):
         ),
     )
 
-    PLATE2: ClassVar = models.Plate(
+    PLATE2: ClassVar = models.Event(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
             datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=random.randint(1, 23))
@@ -133,7 +133,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.plate.TypeCamera.entranceDoor,
+        type_camera=MainSchema.event.TypeCamera.entranceDoor,
         created=random.choice(
             [
                 datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
@@ -142,7 +142,7 @@ class FakeData(BaseSettings):
         ),
     )
 
-    PLATE_PAST: ClassVar = models.Plate(
+    PLATE_PAST: ClassVar = models.Event(
         plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
         record_time=(
             datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=random.randint(1, 23))
@@ -151,7 +151,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.plate.TypeCamera.entranceDoor,
+        type_camera=MainSchema.event.TypeCamera.entranceDoor,
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),

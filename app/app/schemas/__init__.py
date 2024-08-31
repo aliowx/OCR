@@ -35,12 +35,12 @@ from .image import (
     ImageUpdateBase64,
 )
 from .msg import Msg
-from .plate import (
-    GetPlates,
-    Plate,
-    PlateCreate,
-    PlateUpdate,
-    ParamsPlates,
+from .event import (
+    GetEvents,
+    Event,
+    EventCreate,
+    EventUpdate,
+    ParamsEvents,
     TypeCamera,
 )
 from .record import (

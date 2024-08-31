@@ -12,7 +12,7 @@ class TypeCamera(str, Enum):
 
 
 # Shared properties
-class PlateBase(BaseModel):
+class EventBase(BaseModel):
     plate: Optional[str] = None
 
     record_time: Optional[datetime] = None
@@ -30,7 +30,7 @@ class PlateBase(BaseModel):
     type_camera: TypeCamera | None = None
 
 
-class PlateCreate(PlateBase):
+class EventCreate(EventBase):
     plate: str
     record_time: datetime
     spot_id: int | None = None
@@ -43,12 +43,12 @@ class PlateCreate(PlateBase):
 
 
 # Properties to receive on item update
-class PlateUpdate(PlateBase):
+class EventUpdate(EventBase):
     pass
 
 
 # Properties shared by models stored in DB
-class PlateInDBBase(PlateBase):
+class EventInDBBase(EventBase):
     id: int
     created: Optional[datetime]
     modified: Optional[datetime]
@@ -57,20 +57,20 @@ class PlateInDBBase(PlateBase):
 
 
 # Properties to return to client
-class Plate(PlateInDBBase): ...
+class Event(EventInDBBase): ...
 
 
 # Properties properties stored in DB
-class PlateInDB(PlateInDBBase):
+class EventInDB(EventInDBBase):
     pass
 
 
-class GetPlates(BaseModel):
-    items: List[Plate]
+class GetEvents(BaseModel):
+    items: List[Event]
     all_items_count: int
 
 
-class ParamsPlates(BaseModel):
+class ParamsEvents(BaseModel):
     input_plate: str | None = None
     input_camera_serial: str | None = None
     input_time_min: datetime | None = None

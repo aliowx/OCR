@@ -147,20 +147,20 @@ def create_records_past(db: Session):
     db.commit()
 
 
-def create_plates(db: Session):
+def create_events(db: Session):
     image = create_image(db)
     camera = create_equipment(db)
     zone = create_zone(db)
-    plates = []
+    events = []
     for _ in range(1, 5):
-        plate = models.Plate(
+        event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=camera.id,
             zone_id=zone.id,
-            type_camera=schemas.plate.TypeCamera.entranceDoor.value,
+            type_camera=schemas.event.TypeCamera.entranceDoor.value,
             created=random.choice(
                 [
                     datetime.now(timezone.utc).replace(tzinfo=None)
@@ -169,26 +169,26 @@ def create_plates(db: Session):
                 ]
             ),
         )
-        plates.append(plate)
+        events.append(event)
         celery_app.send_task(
-            "add_plates",
-            args=[jsonable_encoder(plate)],
+            "add_events",
+            args=[jsonable_encoder(event)],
         )
 
     time.sleep(10)
-    for one_plate in plates:
-        plate = models.Plate(
-            plate=one_plate.plate,
+    for one_event in events:
+        event = models.Event(
+            plate=one_event.plate,
             record_time=datetime.now(timezone.utc).replace(tzinfo=None),
-            type_camera=schemas.plate.TypeCamera.exitDoor.value,
+            type_camera=schemas.event.TypeCamera.exitDoor.value,
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=camera.id,
             zone_id=zone.id,
         )
         celery_app.send_task(
-            "add_plates",
-            args=[jsonable_encoder(plate)],
+            "add_events",
+            args=[jsonable_encoder(event)],
         )
 
 
@@ -201,7 +201,7 @@ def init_db_fake_data(db: Session) -> None:
         # create_sub_zone(db)
         # create_records(db)
         # create_records_past(db)
-        create_plates(db)
+        create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")
 

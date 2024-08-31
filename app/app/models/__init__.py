@@ -7,5 +7,5 @@ from app.bill.models import Bill
 from app.payment.models.payment import Payment
 from .base import UserType
 from .image import Image
-from .plate import Plate
+from .event import Event
 from .record import Record

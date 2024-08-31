@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base, get_now_datetime_utc
 
 
-class Plate(Base):
+class Event(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     plate: Mapped[str] = mapped_column(String, index=True)
@@ -48,7 +48,7 @@ class Plate(Base):
         index=True,
         nullable=True,
     )
-    record = relationship("Record", back_populates="plates")
+    record = relationship("Record", back_populates="events")
 
     plate_image_id: Mapped[int] = mapped_column(
         Integer,

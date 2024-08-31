@@ -8,12 +8,12 @@ from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.schemas import PlateUpdate, RecordUpdate, TypeCamera, StatusRecord
+from app.schemas import EventUpdate, RecordUpdate, TypeCamera, StatusRecord
 
 from app.bill.services.bill import calculate_price
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
-from app.db.init_data_fake import create_plates
+from app.db.init_data_fake import create_events
 
 
 namespace = "job worker"
@@ -32,21 +32,21 @@ def test_celery(word: str) -> str:
     max_retries=4,
     soft_time_limit=240,
     time_limit=360,
-    name="add_plates",
+    name="add_events",
 )
-def add_plates(self, plate: dict) -> str:
+def add_events(self, event: dict) -> str:
 
     try:
-        plate = crud.plate.create(db=self.session, obj_in=plate)
+        event = crud.event.create(db=self.session, obj_in=event)
 
         celery_app.send_task(
             "update_record",
-            args=[plate.id],
+            args=[event.id],
         )
 
     except Exception as exc:
         countdown = int(random.uniform(1, 2) ** self.request.retries)
-        logger.info(f"Error adding plate:{exc} ,retrying in {countdown}s.")
+        logger.info(f"Error adding event:{exc} ,retrying in {countdown}s.")
         logger.exception(exc)
         raise self.retry(exc=exc, countdown=countdown)
 
@@ -60,60 +60,60 @@ def add_plates(self, plate: dict) -> str:
     time_limit=360,
     name="update_record",
 )
-def update_record(self, plate_id) -> str:
-    logger.info(f"******** update_record: {plate_id}")
+def update_record(self, event_id) -> str:
+    logger.info(f"******** update_record: {event_id}")
 
-    if plate_id == {}:
-        logger.warning(f"Invalid Plate id found: {plate_id}")
+    if event_id == {}:
+        logger.warning(f"Invalid event id found: {event_id}")
         return None
 
-    if isinstance(plate_id, dict) and "id" in plate_id:
-        plate_id = plate_id["id"]
+    if isinstance(event_id, dict) and "id" in event_id:
+        event_id = event_id["id"]
 
     try:
-        # lock plates table to prevent multiple record insertion
-        self.session.execute(text("LOCK TABLE plate IN EXCLUSIVE MODE"))
-        plate = crud.plate.get(self.session, plate_id)
-        record = crud.record.get_by_plate(
+        # lock events table to prevent multiple record insertion
+        self.session.execute(text("LOCK TABLE event IN EXCLUSIVE MODE"))
+        event = crud.event.get(self.session, event_id)
+        record = crud.record.get_by_event(
             db=self.session,
-            plate=plate,
+            plate=event,
             status=StatusRecord.unfinished.value,
             for_update=True,
         )
-        if record is None and plate.type_camera != TypeCamera.exitDoor.value:
+        if record is None and event.type_camera != TypeCamera.exitDoor.value:
             record = schemas.RecordCreate(
-                plate=plate.plate,
-                start_time=plate.record_time,
-                end_time=plate.record_time,
+                plate=event.plate,
+                start_time=event.record_time,
+                end_time=event.record_time,
                 score=0.01,
-                best_lpr_image_id=plate.lpr_image_id,
-                best_plate_image_id=plate.plate_image_id,
-                price_model_id=plate.price_model_id,
-                spot_id=plate.spot_id,
-                zone_id=plate.zone_id,
+                best_lpr_image_id=event.lpr_image_id,
+                best_plate_image_id=event.plate_image_id,
+                price_model_id=event.price_model_id,
+                spot_id=event.spot_id,
+                zone_id=event.zone_id,
                 latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
         else:
-            if record.start_time > plate.record_time:
+            if record.start_time > event.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
-                    start_time=plate.record_time,
+                    start_time=event.record_time,
                     latest_status=(
                         StatusRecord.finished.value
-                        if plate.type_camera == TypeCamera.exitDoor.value
+                        if event.type_camera == TypeCamera.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )
-            if record.end_time < plate.record_time:
+            if record.end_time < event.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
-                    end_time=plate.record_time,
-                    best_lpr_image_id=plate.lpr_image_id,
-                    best_plate_image_id=plate.plate_image_id,
+                    end_time=event.record_time,
+                    best_lpr_image_id=event.lpr_image_id,
+                    best_plate_image_id=event.plate_image_id,
                     latest_status=(
                         StatusRecord.finished.value
-                        if plate.type_camera == TypeCamera.exitDoor.value
+                        if event.type_camera == TypeCamera.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )
@@ -122,7 +122,7 @@ def update_record(self, plate_id) -> str:
                     score=math.sqrt(record.score),
                     latest_status=(
                         StatusRecord.finished
-                        if plate.type_camera == TypeCamera.exitDoor.value
+                        if event.type_camera == TypeCamera.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )
@@ -143,27 +143,28 @@ def update_record(self, plate_id) -> str:
                             start_time_in=record.start_time,
                             end_time_in=record.end_time,
                         ),
+                        record_id=record.id,
                     ),
                 )
                 logger.info(f"issue bill {record} by number {bill}")
 
-            update_plate = PlateUpdate(record_id=record.id)
-            # this refresh for update plate with out this not working ==> solution 1
-            self.session.refresh(plate)
+            update_event = EventUpdate(record_id=record.id)
+            # this refresh for update event with out this not working ==> solution 1
+            self.session.refresh(event)
             # or solution 2
-            # logger.info(f"latest value plate.record_id ===> {plate.record_id}")
+            # logger.info(f"latest value event.record_id ===> {event.record_id}")
             # or solution 3
-            # plate.record_id = record.id
-            # plate_update = crud.plate.update(
-            #     self.session, db_obj=plate
+            # event.record_id = record.id
+            # event_update = crud.event.update(
+            #     self.session, db_obj=event
             # )
 
-            plate_update = crud.plate.update(
-                self.session, db_obj=plate, obj_in=update_plate
+            event_update = crud.event.update(
+                self.session, db_obj=event, obj_in=update_event
             )
-            if plate_update:
+            if event_update:
                 logger.info(
-                    f"new value plate.record_id ===> {plate_update.record_id}"
+                    f"new value event.record_id ===> {event_update.record_id}"
                 )
 
     except Exception as exc:
@@ -183,9 +184,9 @@ def setup_periodic_tasks(sender, **kwargs):
     # )
     if settings.DATA_FAKE_SET:
         sender.add_periodic_task(
-            settings.AUTO_GEN_PLATE_FAKE,
+            settings.AUTO_GEN_EVENT_FAKE,
             set_fake_data.s(),
-            name=f"set fake data every {settings.AUTO_GEN_PLATE_FAKE}",
+            name=f"set fake data every {settings.AUTO_GEN_EVENT_FAKE}",
         )
 
     logger.info(
@@ -200,8 +201,8 @@ def setup_periodic_tasks(sender, **kwargs):
         )
         sender.add_periodic_task(
             settings.CLEANUP_PERIOD,
-            cleanup.s("plate"),
-            name="cleanup plate task",
+            cleanup.s("event"),
+            name="cleanup event task",
         )
         sender.add_periodic_task(
             settings.CLEANUP_PERIOD,
@@ -233,7 +234,7 @@ def set_status_record(self):
         if records:
             for record in records:
                 logger.info(
-                    f"this plate {record.plate} after {timedelta(seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR)} hour not exieted"
+                    f"this event {record.plate} after {timedelta(seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR)} hour not exieted"
                 )
                 record.latest_status = StatusRecord.unknown.value
                 crud.record.update(self.session, db_obj=record)
@@ -254,7 +255,7 @@ def set_status_record(self):
 def set_fake_data(self):
 
     try:
-        create_plates(self.session)
+        create_events(self.session)
     except Exception as e:
         print(f"error set data fake {e}")
 
@@ -300,12 +301,12 @@ def cleanup(self, table_name: str = "image"):
                     .filter(model_img.id.in_(subquery))
                     .delete(synchronize_session="fetch")
                 )
-        elif table_name == "plate":
+        elif table_name == "event":
             limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
-                days=settings.CLEANUP_PLATES_AGE
+                days=settings.CLEANUP_EVENTS_AGE
             )
-            filter = models.Plate.record_time
-            model = models.Plate
+            filter = models.Event.record_time
+            model = models.Event
         elif table_name == "record":
             limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
                 days=settings.CLEANUP_RECORDS_AGE

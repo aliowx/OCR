@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -38,7 +38,7 @@ class Referred(BaseModel):
 class MaxTimePark(BaseModel):
     plate: str | None = None
     created: datetime | None = None
-    time: str | None = None
+    time_as_minute: float | None = None
 
 
 class ListMaxTimePark(BaseModel):

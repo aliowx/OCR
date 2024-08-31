@@ -24,6 +24,12 @@ class EquipmentType(IntEnum):
     ROADBLOCK = 4
     DISPLAY = 5
     ERS = 6
+    KIOSK = 7
+    PAYMENT_DEVICE = 8
+    REGIONAL_SWITCH = 9
+    REGIONAL_COMPUTER = 10
+    REGIONAL_CONTROLLER = 11
+    POS = 12
 
 
 class EquipmentStatus(IntEnum):

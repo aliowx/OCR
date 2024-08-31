@@ -4,7 +4,7 @@ from typing import Awaitable, List, TypeVar
 from sqlalchemy import exists, false, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
@@ -19,6 +19,7 @@ from .models import (
     Rule,
     ZoneRule,
 )
+from app.pricing.models import Price
 from .schemas.equipment import (
     EquipmentCreate,
     EquipmentUpdate,
@@ -123,7 +124,9 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
         if except_id is not None:
             filters.append(self.model.id != except_id)
 
-        zone = await self._first(db.scalars(select(self.model).filter(*filters)))
+        zone = await self._first(
+            db.scalars(select(self.model).filter(*filters))
+        )
         return zone
 
     async def get_multi_child(self, db: Session | AsyncSession, ids: int):
@@ -305,6 +308,24 @@ class ZonePriceRepository(
             )
         )
         return result.scalar()
+
+    async def get_price_zone(self, db: AsyncSession, zone_id: int):
+
+        sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
+
+        query = select(ZonePrice, Price).join(Price)
+
+        filters = [
+            ZonePrice.is_deleted == False,
+            ZonePrice.zone_id == zone_id,
+            ZonePrice.priority == sub_query,
+        ]
+
+        query_execute = await db.execute(query.filter(*filters))
+
+        relation_price_zone_id, price_id = query_execute.fetchone()
+
+        return price_id
 
 
 class RuleRepository(CRUDBase[Rule, RuleCreate, None]):

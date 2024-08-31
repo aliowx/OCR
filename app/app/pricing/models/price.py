@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Integer, String
+from sqlalchemy import BigInteger, DateTime, Integer, String, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.mutable import MutableDict
@@ -14,9 +14,8 @@ class Price(Base):
 
     name: Mapped[str] = mapped_column(String(50), nullable=True)
     name_fa: Mapped[str] = mapped_column(String(50), nullable=True)
-    price_model: Mapped[dict] = mapped_column(
-        MutableDict.as_mutable(JSONB), nullable=True
-    )
+    entrance_fee: Mapped[float] = mapped_column(Float, nullable=True)
+    hourly_fee: Mapped[float] = mapped_column(Float, nullable=True)
 
     pricings = relationship(
         "ZonePrice", back_populates="price", lazy="immediate"

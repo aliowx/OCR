@@ -39,14 +39,11 @@ async def calculate_price(
 ) -> float:
 
     model_price = await zoneprice_repo.get_price_zone(db, zone_id=zone_id)
-
-    price = 
-
     duration_time = convert_time_to_hour(start_time_in, end_time_in)
 
-    # price = duration_time * price_in
+    price = model_price.entrance_fee + (duration_time * model_price.hourly_fee)
 
-    return
+    return round(price, 4)
 
 
 async def kiosk(db: AsyncSession, *, record, issue: bool = False):

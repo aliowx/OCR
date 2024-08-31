@@ -54,7 +54,7 @@ async def read_zones(
     return APIResponse(zones)
 
 
-@router.put("/")
+@router.patch("/")
 # @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def update_zone(
     *,
@@ -71,29 +71,42 @@ async def update_zone(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    zone_id: int,
-    params: schemasZone.ZoneUpdate,
+    zones: list[schemasZone.ZoneUpdate],
     current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[schemasZone.Zone]:
+) -> APIResponseType[list[schemasZone.Zone]]:
     """
     update parking zones.
 
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
 
     """
-    zone = await zone_repo.get(db, id=zone_id)
-    if not zone:
-        raise ServiceFailure(
-            detail="Zone Not Found",
-            msg_code=MessageCodes.not_found,
+    list_zone = []
+    for zone in zones:
+        zone_in_db = await zone_repo.get(db, id=zone.id)
+        if not zone_in_db:
+            raise ServiceFailure(
+                detail="Zone Not Found",
+                msg_code=MessageCodes.not_found,
+            )
+        name_zone_exist = await zone_repo.get_by_name(
+            db, name=zone.name, except_id=zone.id
         )
-    zone_update = await zone_repo.update(db, db_obj=zone, obj_in=params)
+        if name_zone_exist:
+            raise ServiceFailure(
+                detail="name zone exist",
+                msg_code=MessageCodes.duplicate_name,
+            )
 
-    zone_update = await zone_services.set_children_ancestors_capacity(
-        db, zone_update
-    )
+        zone_update = await zone_repo.update(
+            db, db_obj=zone_in_db, obj_in=zone
+        )
 
-    return APIResponse(zone_update)
+        zone_update = await zone_services.set_children_ancestors_capacity(
+            db, zone_update
+        )
+        list_zone.append(zone_update)
+
+    return APIResponse(list_zone)
 
 
 @router.get("/{zone_id}")

@@ -111,15 +111,19 @@ class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
 
 
 class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
-    async def get_by_name(self, db: AsyncSession, name: str) -> Zone | None:
-        zone = await self._first(
-            db.scalars(
-                select(self.model).filter(
-                    func.lower(self.model.name) == name.lower(),
-                    self.model.is_deleted == false(),
-                )
-            )
-        )
+    async def get_by_name(
+        self, db: AsyncSession, name: str, except_id: int = None
+    ) -> Zone | None:
+
+        filters = [
+            func.lower(self.model.name) == name.lower(),
+            self.model.is_deleted == false(),
+        ]
+        # find name except self for update
+        if except_id is not None:
+            filters.append(self.model.id != except_id)
+
+        zone = await self._first(db.scalars(select(self.model).filter(*filters)))
         return zone
 
     async def get_multi_child(self, db: Session | AsyncSession, ids: int):

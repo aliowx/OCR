@@ -28,8 +28,8 @@ class ZoneCreate(BaseModel):
     parent_id: int | None = None
 
 
-
-class ZoneUpdate(ZoneBase): ...
+class ZoneUpdate(ZoneBase):
+    id: int
 
 
 class ZoneInDBBase(ZoneComplete):

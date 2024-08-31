@@ -6,72 +6,11 @@ from enum import Enum, IntEnum
 from app.parking.schemas import ZonePrice
 
 
-class FreeFeeTiming(IntEnum):
-    zero = 0
-    fifteen = 15
-    thirty_minutes = 30
-    one_hour = 60
-    one_hour_thirty_minutes = 90
-
-
-class WeeklyDays(BaseModel):
-    saturday: int | None = None
-    sunday: int | None = None
-    monday: int | None = None
-    tuesday: int | None = None
-    wednesday: int | None = None
-    thursday: int | None = None
-    friday: int | None = None
-
-
-class TypeWeek(str, Enum):
-    dynamic = "dynamic"
-    static = "static"
-
-
-class Weekly(BaseModel):
-    week: WeeklyDays | None = None
-    type: TypeWeek = TypeWeek.dynamic
-
-
-class DurtionTime(BaseModel):
-    start_time: TIME | None = None
-    end_time: TIME | None = None
-    price: int | None = None
-
-
-class Staircase(BaseModel):
-    hour_durtion: list[DurtionTime] | None = None
-    minutes_durtion: list[DurtionTime] | None = None
-    free_cost_first_period_timing: bool | None = None
-    one_day_price: int | None = None
-
-
-class Proven(BaseModel):
-    week: Weekly
-    fee_to_timing: FreeFeeTiming = FreeFeeTiming.thirty_minutes
-    free_cost_first_period_timing: bool | None = None
-    one_day_price: int | None = None
-
-
-class Entrance(Weekly):
-    free_fee_timing: FreeFeeTiming = FreeFeeTiming.fifteen
-
-
-class Hourly(BaseModel):
-    staircase: Staircase | None = None
-    proven: Proven | None = None
-
-
-class ModelPrice(BaseModel):
-    entrance: Entrance | None = None
-    hourly: Hourly | None = None
-
-
 class PriceBase(BaseModel):
     name: str | None = None
     name_fa: str | None = None
-    price_model: ModelPrice | None = None
+    entrance_fee: float | None = None
+    hourly_fee: float | None = None
 
 
 class PriceBaseComplete(PriceBase):

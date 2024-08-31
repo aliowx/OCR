@@ -25,11 +25,8 @@ class ZoneCreate(BaseModel):
     floor_name: str | None = None
     floor_number: int | None = None
     capacity: int | None = None
+    parent_id: int | None = None
 
-
-class SubZoneCreate(BaseModel):
-    parent_id: int
-    sub_zone: list[ZoneCreate]
 
 
 class ZoneUpdate(ZoneBase): ...

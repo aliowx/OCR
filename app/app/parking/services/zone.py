@@ -51,22 +51,6 @@ async def set_children_ancestors_capacity(
     return zone
 
 
-async def create_zone(
-    db: AsyncSession,
-    zone_input: parking_schemas.ZoneCreate,
-) -> parking_schemas.Zone:
-
-    zone = await repo.zone_repo.get_by_name(db, name=zone_input.name)
-    if zone:
-        raise exc.ServiceFailure(
-            detail="zone with this name already exists",
-            msg_code=utils.MessageCodes.duplicate_zone_name,
-        )
-
-    zone = await repo.zone_repo.create(db, obj_in=zone_input)
-    return zone
-
-
 async def get_children(
     db: AsyncSession, zone: parking_schemas.Zone, max_depth: int = 8
 ):
@@ -111,47 +95,35 @@ async def get_ancestors(
     return all_ancestors
 
 
-async def create_sub_zone(
+async def create_zone(
     db: AsyncSession,
-    zone_input: parking_schemas.SubZoneCreate,
+    zones_in: list[parking_schemas.ZoneCreate],
 ) -> list[parking_schemas.Zone]:
 
-    for sub in zone_input.sub_zone:
-        zone = await repo.zone_repo.get_by_name(db, name=sub.name)
-        if zone:
+    zone_list = []
+    for zone in zones_in:
+        zone_exist = await repo.zone_repo.get_by_name(db, name=zone.name)
+        if zone_exist:
             raise exc.ServiceFailure(
                 detail="zone with this name already exists",
                 msg_code=utils.MessageCodes.duplicate_zone_name,
             )
 
-    parent_zone = None
-    if zone_input.parent_id is not None:
-        parent_zone = await repo.zone_repo.get(db, id=zone_input.parent_id)
-        if not parent_zone:
-            raise exc.ServiceFailure(
-                detail="Parking Not Found",
-                msg_code=utils.MessageCodes.not_found,
-            )
-    sub_zone_list = []
-    adapter = TypeAdapter(parking_schemas.Zone)
-    for multi_sub in zone_input.sub_zone:
-        zone = await repo.zone_repo.create(
+        if zone.parent_id is not None:
+            parent_zone = await repo.zone_repo.get(db, id=zone.parent_id)
+            if not parent_zone:
+                raise exc.ServiceFailure(
+                    detail="Parking Not Found",
+                    msg_code=utils.MessageCodes.not_found,
+                )
+
+        zone_create = await repo.zone_repo.create(
             db,
-            obj_in=parking_schemas.ZoneBase(
-                name=multi_sub.name,
-                tag=multi_sub.tag,
-                parent_id=zone_input.parent_id,
-                floor_name=multi_sub.floor_name,
-                floor_number=multi_sub.floor_number,
-            ),
+            obj_in=zone,
         )
 
-        sub_zone_list.append(
-            jsonable_encoder(
-                adapter.validate_python(zone, from_attributes=True)
-            )
-        )
-    return sub_zone_list
+        zone_list.append(jsonable_encoder(zone_create))
+    return zone_list
 
 
 async def set_price(

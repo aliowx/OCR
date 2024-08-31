@@ -136,7 +136,7 @@ async def read_zone_by_id(
 
 @router.post("/")
 @invalidate(namespace=namespace)
-async def create_parent_zone(
+async def create_zone(
     *,
     _: Annotated[
         bool,
@@ -150,38 +150,7 @@ async def create_parent_zone(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    zone_input: schemasZone.ZoneCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[schemasZone.Zone]:
-    """
-    Create a zone.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
-
-    """
-    zone = await zone_services.create_zone(
-        db,
-        zone_input=zone_input,
-    )
-    return APIResponse(zone)
-
-
-@router.post("/bulk-sub-zone")
-@invalidate(namespace=namespace)
-async def create_sub_zone(
-    *,
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    zone_input: schemasZone.SubZoneCreate,
+    zones_in: list[schemasZone.ZoneCreate],
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[schemasZone.Zone]]:
     """
@@ -189,9 +158,9 @@ async def create_sub_zone(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
 
     """
-    zone = await zone_services.create_sub_zone(
+    zone = await zone_services.create_zone(
         db,
-        zone_input=zone_input,
+        zones_in=zones_in,
     )
     return APIResponse(zone)
 

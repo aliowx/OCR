@@ -49,6 +49,18 @@ def convert_time_to_minutes(start_time, end_time):
     return time_diffrence
 
 
+def convert_days_to_time(time: datetime):
+    minute = 0
+    # seprating day from time
+    if time.days:
+        minute = time.days * 24 * 60
+        time = str(time).split(", ")[1]  # example 1 day, 00:00:00 -> 00:00:00
+    # Calculation hours, conversion minutes and seconds to hours
+    hours, minutes, seconds = map(float, str(time).split(":"))
+    total_minute = (hours * 60) + (minutes + minute) + (seconds / 60)
+    return round(total_minute, 3)
+
+
 def calculate_percentage(start_time, end_time):
     """Calculate the normalized percentage difference between start_time and end_time."""
     percentage_difference = 0
@@ -501,6 +513,8 @@ async def avrage_referrd(db: AsyncSession):
         )
     date_referred_cahnge.remove(date_referred_cahnge[0])
 
+    date_referred_cahnge.reverse()
+
     list_referred["comparing_today_with_yesterday_one_week"] = (
         date_referred_cahnge
     )
@@ -511,16 +525,12 @@ async def avrage_referrd(db: AsyncSession):
 async def max_time_park(db: AsyncSession):
 
     time_park, plate, created = await crud.record.max_time_record(db)
-    
+
+    # convert days to time
+    time_park = convert_days_to_time(time_park)
+
     return report_schemas.MaxTimePark(
-        plate=plate,
-        created=created,
-        time=str(
-            timedelta(
-                days=time_park.days if time_park.days else 0,
-                seconds=time_park.seconds,
-            )
-        ),
+        plate=plate, created=created, time_as_minute=time_park
     )
 
 
@@ -529,7 +539,7 @@ async def report_moment(db: AsyncSession):
 
     data = []
     for camera_zone in cameras_zone:
-        count = await crud.plate.count_entrance_exit_door(
+        count = await crud.event.count_entrance_exit_door(
             db, camera_id=camera_zone.id
         )
         if count:

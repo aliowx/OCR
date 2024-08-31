@@ -51,7 +51,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
         filters = [Event.is_deleted == False]
 
         if params.input_plate is not None:
-            filters.append(Event.plate == params.input_plate)
+            filters.append(Event.plate.ilike(f"%{params.input_plate}%"))
 
         if params.input_camera_id is not None:
             filters.append(Event.camera_id == params.input_camera_id)

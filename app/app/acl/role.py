@@ -11,4 +11,5 @@ class UserRoles(StrEnum):
     OPERATIONAL_STAFF = auto()
     REPORTING_ANALYSIS = auto()
     SECURITY_STAFF = auto()
+    EXIT_GATE_DOOR = auto()
     

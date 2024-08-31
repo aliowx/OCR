@@ -173,6 +173,38 @@ async def read_user_by_id(
     return APIResponse(user)
 
 
+@router.delete("/{user_id}")
+# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+async def delete_user(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    user_id: int,
+) -> APIResponseType[schemas.User]:
+    """
+    Get a specific user by id.
+    user access to this [ ADMINISTRATOR ]
+    """
+    user = await crud.user.get(db, id=user_id)
+    if not user:
+        raise exc.ServiceFailure(
+            detail="User not found",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    del_user = await crud.user.remove(db, id=user_id, commit=True)
+    return APIResponse(del_user)
+
+
 @router.put("/{user_id}")
 async def update_user(
     *,

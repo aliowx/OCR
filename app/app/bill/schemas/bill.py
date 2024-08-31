@@ -17,14 +17,17 @@ class BillBase(BaseModel):
     end_time: datetime | None = None
     price: float | None = None
     issued_by: Issued | None = None
+    record_id: int | None = None
 
 
 # Properties to receive on item creation
-class BillCreate(BillBase): ...
+class BillCreate(BillBase):
+    record_id: int
 
 
 class BillShowBykiosk(BillCreate):
     time_park_so_far: float | None = None
+    record_id: int | None = None
 
 
 # Properties to receive on item update

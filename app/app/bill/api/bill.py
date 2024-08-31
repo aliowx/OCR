@@ -125,7 +125,7 @@ async def create_bill_by_kiosk(
         price=calculate_price(
             start_time_in=record.start_time, end_time_in=end_time
         ),
-        time_park_so_far=convert_time_to_hour(record.start_time, end_time),
+        time_park_so_far=round(convert_time_to_hour(record.start_time, end_time)),
     )
     # isuue True create bill
     if issue:
@@ -137,6 +137,7 @@ async def create_bill_by_kiosk(
                 end_time=bill.end_time,
                 issued_by=bill.issued_by,
                 price=round(bill.price, 3),
+                record_id=record.id,
             ).model_dump(),
         )
         payment = await payment_repo.create(

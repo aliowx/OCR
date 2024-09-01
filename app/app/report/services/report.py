@@ -87,19 +87,22 @@ async def capacity(db: AsyncSession):
     )
     zones = await zone_repo.get_multi(db)
     total_count_in_parking = await crud.record.get_total_in_parking(db)
-    capacity_total = 0
+    capacity_total = empty = 0
 
     if zones:
         for zone in zones:
             capacity_total += zone.capacity if zone.capacity else 0
 
+    if total_count_in_parking:
+        empty = capacity_total - total_count_in_parking
+        if empty < 0:
+            empty = 0
+    else:
+        empty = capacity_total
+    
     return report_schemas.Capacity(
         total=capacity_total,
-        empty=(
-            capacity_total - total_count_in_parking
-            if total_count_in_parking
-            else capacity_total
-        ),
+        empty=empty,
         full=total_count_in_parking,
         total_today_park=count_today_except_status_unfinished
         + total_count_in_parking,
@@ -231,7 +234,7 @@ async def average_time(db: AsyncSession):
 
     return report_schemas.AverageTime(
         avrage_all_time=await crud.record.avarage_time_referred(db),
-        avrage_one_day_ago=report_schemas.AverageTimeDetail(
+        avrage_today=report_schemas.AverageTimeDetail(
             time=round(avrage_today),
             compare=calculate_percentage(
                 avrage_today, compare_avrage_one_day_ago

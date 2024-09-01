@@ -534,11 +534,13 @@ async def max_time_park(db: AsyncSession):
     )
 
 
-async def report_moment(db: AsyncSession):
-    cameras_zone = await equipment_repo.get_entrance_exit_camera(db)
+async def report_moment(db: AsyncSession, zone_id: int = None):
 
+    cameras_zones = await equipment_repo.get_entrance_exit_camera(
+        db, zone_id=zone_id
+    )
     data = []
-    for camera_zone in cameras_zone:
+    for camera_zone, zone in cameras_zones:
         count = await crud.event.count_entrance_exit_door(
             db, camera_id=camera_zone.id
         )
@@ -550,6 +552,7 @@ async def report_moment(db: AsyncSession):
                         camera_zone.equipment_type
                     ).name,
                     "camera_name": camera_zone.serial_number,
+                    "zone_name": zone.name,
                 }
             )
         else:
@@ -560,6 +563,7 @@ async def report_moment(db: AsyncSession):
                         camera_zone.equipment_type
                     ).name,
                     "camera_name": camera_zone.serial_number,
+                    "zone_name": zone.name,
                 }
             )
     return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)

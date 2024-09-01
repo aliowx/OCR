@@ -262,20 +262,28 @@ class EquipmentRepository(
         )
 
     async def get_entrance_exit_camera(
-        self, db: AsyncSession
+        self, db: AsyncSession, zone_id: int = None
     ) -> list[Equipment]:
 
-        query = select(Equipment).where(
-            (Equipment.is_deleted == false())
-            & or_(
-                Equipment.equipment_type
-                == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
-                Equipment.equipment_type
-                == EquipmentType.CAMERA_EXIT_DOOR.value,
+        query = (
+            select(Equipment, Zone)
+            .join(Zone)
+            .where(
+                (Equipment.is_deleted == false())
+                & or_(
+                    Equipment.equipment_type
+                    == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+                    Equipment.equipment_type
+                    == EquipmentType.CAMERA_EXIT_DOOR.value,
+                )
             )
         )
+        if zone_id is not None:
+            query = query.where((Equipment.zone_id == zone_id))
 
-        return await self._all(db.scalars(query))
+        execute_query = await db.execute(query)
+        query_fetch = execute_query.fetchall()
+        return query_fetch
 
     async def one_equipment(
         self, db: AsyncSession, *, serial_number: str

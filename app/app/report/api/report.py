@@ -133,9 +133,11 @@ async def zone_status(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    zone_id:int = None
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
 
-    return APIResponse(await report_services.report_moment(db))
+    return APIResponse(await report_services.report_moment(db, zone_id=zone_id))

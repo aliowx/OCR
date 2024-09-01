@@ -52,10 +52,10 @@ async def read_prices(
     prices, total_count = await price_repo.get_multi_with_filters(
         db, filters=params
     )
-    price_list = []
+    price_list = set()
     for price, zone in prices:
         price.zone_name = zone.name
-        price_list.append(price)
+        price_list.add(price)
     return PaginatedContent(
         data=price_list,
         total_count=total_count,

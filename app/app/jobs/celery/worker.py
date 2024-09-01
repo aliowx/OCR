@@ -140,6 +140,8 @@ def update_record(self, event_id) -> str:
                         end_time=record.end_time,
                         issued_by=billSchemas.Issued.exit_camera.value,
                         price=calculate_price(
+                            self.session,
+                            zone_id=record.zone_id,
                             start_time_in=record.start_time,
                             end_time_in=record.end_time,
                         ),

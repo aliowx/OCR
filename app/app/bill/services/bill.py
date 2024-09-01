@@ -31,14 +31,35 @@ def convert_time_to_hour(start_time, end_time):
     return time_diffrence
 
 
-async def calculate_price(
-    db: Session | AsyncSession,
+async def calculate_price_async(
+    db: AsyncSession,
+    *,
     zone_id: int,
     start_time_in: datetime,
     end_time_in: datetime,
 ) -> float:
 
-    model_price = await zoneprice_repo.get_price_zone(db, zone_id=zone_id)
+    model_price = await zoneprice_repo.get_price_zone_async(
+        db, zone_id=zone_id
+    )
+
+    duration_time = convert_time_to_hour(start_time_in, end_time_in)
+
+    price = model_price.entrance_fee + (duration_time * model_price.hourly_fee)
+
+    return round(price, 4)
+
+
+def calculate_price(
+    db: Session,
+    *,
+    zone_id: int,
+    start_time_in: datetime,
+    end_time_in: datetime,
+) -> float:
+
+    model_price = zoneprice_repo.get_price_zone(db, zone_id=zone_id)
+
     duration_time = convert_time_to_hour(start_time_in, end_time_in)
 
     price = model_price.entrance_fee + (duration_time * model_price.hourly_fee)
@@ -53,7 +74,7 @@ async def kiosk(db: AsyncSession, *, record, issue: bool = False):
         start_time=record.start_time,
         end_time=end_time,
         issued_by=billSchemas.Issued.kiosk.value,
-        price=await calculate_price(
+        price=await calculate_price_async(
             db,
             start_time_in=record.start_time,
             end_time_in=end_time,

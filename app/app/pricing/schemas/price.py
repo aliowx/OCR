@@ -13,8 +13,6 @@ class PriceBase(BaseModel):
     hourly_fee: float | None = None
 
 
-class PriceBaseComplete(PriceBase):
-    pricings: list[ZonePrice] = Field(default_factory=list)
 
 
 class PriceCreate(PriceBase):
@@ -32,14 +30,14 @@ class PriceUpdate(PriceBase):
 
 class PriceInDBBase(PriceBase):
     id: int
-    created: datetime
-    modified: datetime
+    created: datetime | None = None
+    modified: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class Price(PriceInDBBase):
-    pass
+    zone_name : str | None = None
 
 
 class CameraInDB(PriceInDBBase):

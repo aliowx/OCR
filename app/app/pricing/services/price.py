@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.exceptions import ServiceFailure
 from app.parking.repo import parking_repo
 from app.parking.schemas import SetZonePriceInput
@@ -53,8 +52,12 @@ async def read_prices(
     prices, total_count = await price_repo.get_multi_with_filters(
         db, filters=params
     )
+    price_list = []
+    for price, zone in prices:
+        price.zone_name = zone.name
+        price_list.append(price)
     return PaginatedContent(
-        data=prices,
+        data=price_list,
         total_count=total_count,
         size=params.size,
         page=params.page,

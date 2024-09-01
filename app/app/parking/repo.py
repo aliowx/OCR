@@ -206,6 +206,13 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
             await total_count,
         )
 
+    async def report_zone(
+        self,
+        db: AsyncSession,
+    ): 
+        query = select(Zone)
+        
+
 
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]

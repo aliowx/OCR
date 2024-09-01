@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, UTC
 from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
 from app.parking.repo import equipment_repo
-from app.parking.schemas import ReadEquipmentsFilter
+from app.parking.services import zone as zone_services
 
 
 # calculate  first date month
@@ -99,7 +99,6 @@ async def capacity(db: AsyncSession):
             empty = 0
     else:
         empty = capacity_total
-    
     return report_schemas.Capacity(
         total=capacity_total,
         empty=empty,
@@ -107,6 +106,16 @@ async def capacity(db: AsyncSession):
         total_today_park=count_today_except_status_unfinished
         + total_count_in_parking,
     )
+
+
+async def report_zone(db: AsyncSession):
+
+    zones = await zone_repo.report_zone(db)
+
+    for zone in zones:
+        zone = await zone_services.set_children_ancestors_capacity(db, zone)
+
+    return
 
 
 async def average_time(db: AsyncSession):
@@ -537,7 +546,7 @@ async def max_time_park(db: AsyncSession):
     )
 
 
-async def report_moment(db: AsyncSession, zone_id: int = None):
+async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):
 
     cameras_zones = await equipment_repo.get_entrance_exit_camera(
         db, zone_id=zone_id

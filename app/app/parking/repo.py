@@ -309,7 +309,7 @@ class ZonePriceRepository(
         )
         return result.scalar()
 
-    async def get_price_zone(self, db: AsyncSession, zone_id: int):
+    async def get_price_zone_async(self, db: AsyncSession, zone_id: int):
 
         sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
 
@@ -322,6 +322,23 @@ class ZonePriceRepository(
         ]
 
         query_execute = await db.execute(query.filter(*filters))
+
+        relation_price_zone_id, price_id = query_execute.fetchone()
+
+        return price_id
+
+    def get_price_zone(self, db: Session, zone_id: int):
+        sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
+
+        query = select(ZonePrice, Price).join(Price)
+
+        filters = [
+            ZonePrice.is_deleted == False,
+            ZonePrice.zone_id == zone_id,
+            ZonePrice.priority == sub_query,
+        ]
+
+        query_execute = db.execute(query.filter(*filters))
 
         relation_price_zone_id, price_id = query_execute.fetchone()
 

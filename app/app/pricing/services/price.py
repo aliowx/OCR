@@ -15,7 +15,7 @@ async def create_price(
     get_price, total_count = await price_repo.get_multi_with_filters(
         db,
         filters=price_schemas.ReadPricesParams(
-            name=price_in.name, name_fa=price_in.name_fa
+            name=price_in.name,
         ),
     )
     if get_price:

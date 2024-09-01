@@ -1,23 +1,16 @@
-from datetime import datetime, time as TIME
+from datetime import datetime
 
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
-from enum import Enum, IntEnum
-from app.parking.schemas import ZonePrice
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PriceBase(BaseModel):
     name: str | None = None
-    name_fa: str | None = None
     entrance_fee: float | None = None
     hourly_fee: float | None = None
 
 
-
-
 class PriceCreate(PriceBase):
     name: str
-    name_fa: str
 
     zone_ids: list[int] = Field(default_factory=list)
     priority: int = Field(1, ge=1, le=100)
@@ -37,7 +30,7 @@ class PriceInDBBase(PriceBase):
 
 
 class Price(PriceInDBBase):
-    zone_name : str | None = None
+    zone_name: str | None = None
 
 
 class CameraInDB(PriceInDBBase):
@@ -46,7 +39,6 @@ class CameraInDB(PriceInDBBase):
 
 class ReadPricesParams(BaseModel):
     name: str | None = None
-    name_fa: str | None = None
     zone_id: int | None = None
 
     size: int | None = 100

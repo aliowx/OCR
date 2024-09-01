@@ -53,8 +53,6 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
             query = query.where(Zone.id == filters.zone_id)
         if filters.name:
             query = query.where(Price.name == filters.name)
-        if filters.name_fa:
-            query = query.where(Price.name_fa == filters.name_fa)
 
         count = query.with_only_columns(func.count())
         total_count = await db.scalar(count)

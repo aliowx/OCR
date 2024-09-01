@@ -13,7 +13,6 @@ class Price(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     name: Mapped[str] = mapped_column(String(50), nullable=True)
-    name_fa: Mapped[str] = mapped_column(String(50), nullable=True)
     entrance_fee: Mapped[float] = mapped_column(Float, nullable=True)
     hourly_fee: Mapped[float] = mapped_column(Float, nullable=True)
 

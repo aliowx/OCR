@@ -9,14 +9,10 @@ from cache.redis import redis_connect_async
 from app import crud, models, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
-from app.core.celery_app import celery_app
 from app.utils import APIResponse, APIResponseType
-from app.bill.repo import bill_repo, payment_bill_repo
+from app.bill.repo import bill_repo
 from app.utils import PaginatedContent, MessageCodes
 from app.bill.schemas import bill as billSchemas
-from datetime import datetime, timedelta
-from app.bill.services.bill import calculate_price, convert_time_to_hour
-from app.payment.repo import payment_repo
 from app.payment.schemas import payment as paymentSchemas
 from app.bill.services import bill as servicesBill
 

@@ -206,13 +206,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
             await total_count,
         )
 
-    async def report_zone(
-        self,
-        db: AsyncSession,
-    ): 
-        query = select(Zone)
-        
-
 
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]
@@ -337,10 +330,7 @@ class ZonePriceRepository(
         ]
 
         query_execute = await db.execute(query.filter(*filters))
-
-        relation_price_zone_id, price_id = query_execute.fetchone()
-
-        return price_id
+        return query_execute.fetchone()
 
     def get_price_zone(self, db: Session, zone_id: int):
         sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
@@ -354,10 +344,7 @@ class ZonePriceRepository(
         ]
 
         query_execute = db.execute(query.filter(*filters))
-
-        relation_price_zone_id, price_id = query_execute.fetchone()
-
-        return price_id
+        return query_execute.fetchone()
 
 
 class RuleRepository(CRUDBase[Rule, RuleCreate, None]):

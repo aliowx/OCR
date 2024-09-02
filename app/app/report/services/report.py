@@ -109,13 +109,28 @@ async def capacity(db: AsyncSession):
 
 
 async def report_zone(db: AsyncSession):
-
-    zones = await zone_repo.report_zone(db)
-
+    zones = await zone_repo.get_multi_report_zone(db)
+    
     for zone in zones:
+        average_time = 0 
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
+        zone.todat_referred = (
+            await crud.record.get_today_count_referred_by_zone(
+                db, zone_id=zone.id
+            )
+        )
+        records = await crud.record.avrage_stop_time_today(db, input_zone_id=zone.id)
+        for record in records:
+            average_time = (record.end_time - record.start_time) 
+            
+            print(average_time)
+        zone.avrage_stop_time_today = average_time
 
-    return
+        
+    # zone_report.zone = zones
+
+    # print(zone_report)
+    return zones
 
 
 async def average_time(db: AsyncSession):

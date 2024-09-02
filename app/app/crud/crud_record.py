@@ -106,6 +106,44 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
+    async def get_today_count_referred_by_zone(
+        self, db: Session | AsyncSession, *, zone_id: int = None
+    ):
+
+        query = select(Record)
+
+        filters = [
+            Record.is_deleted == False,
+            Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
+        ]
+
+        filters.append(Record.zone_id == zone_id)
+
+        return await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
+
+    async def avrage_stop_time_today(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_zone_id: int = None,
+    ) -> list[Record] | Awaitable[list[Record]]:
+
+        query = select(Record)
+
+        filters = [
+            Record.is_deleted == False,
+            # Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
+            Record.created >= datetime(2024, 12, 26),
+            Record.zone_id == input_zone_id,
+        ]
+        # duration = Record.end_time - Record.start_time
+
+        # query = select(func.avg(duration)).filter(and_(*filters))
+
+        return await self._all(db.scalars(query.filter(*filters)))
+
     async def find_records(
         self,
         db: Session | AsyncSession,

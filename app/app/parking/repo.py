@@ -40,6 +40,7 @@ from .schemas.rule import (
     RuleCreate,
     ZoneRuleCreate,
 )
+from app.report.schemas import ZoneReport
 
 from app.models.base import EquipmentType
 
@@ -148,6 +149,14 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                     )
                 )
             )
+
+    async def get_multi_report_zone(
+        self, db: Session | AsyncSession
+    ) -> list[ZoneReport] | Awaitable[list[ZoneReport]]:
+
+        query = select(self.model)
+
+        return await self._all(db.scalars(query))
 
     async def get(
         self, db: Session | AsyncSession, id: int

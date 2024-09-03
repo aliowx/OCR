@@ -85,6 +85,19 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             )
         )
 
+    async def get_multi_bills(self, db: AsyncSession, *, record_ids: int):
+
+        return await self._all(
+            db.scalars(
+                select(Bill).filter(
+                    *[
+                        Bill.is_deleted == false(),
+                        Bill.record_id.in_(record_ids),
+                    ]
+                )
+            )
+        )
+
 
 class PaymentBillRepository(
     CRUDBase[PaymentBill, PaymentBillCreate, PaymentBillUpdate]

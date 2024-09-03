@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.bill.repo import bill_repo
+from app.bill.schemas import bill as billSchemas
 from app import schemas, crud, models
 from app.parking.repo import zone_repo
 from datetime import datetime, timedelta, UTC
@@ -110,26 +111,36 @@ async def capacity(db: AsyncSession):
 
 async def report_zone(db: AsyncSession):
     zones = await zone_repo.get_multi_report_zone(db)
-    
+    record_ids = []
+    avg_price = 0
+    total_price = 0
+    av_time = timedelta()
     for zone in zones:
-        average_time = 0 
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
         zone.todat_referred = (
             await crud.record.get_today_count_referred_by_zone(
                 db, zone_id=zone.id
             )
         )
-        records = await crud.record.avrage_stop_time_today(db, input_zone_id=zone.id)
+        records = await crud.record.avrage_stop_time_today(
+            db, input_zone_id=zone.id
+        )
         for record in records:
-            average_time = (record.end_time - record.start_time) 
-            
-            print(average_time)
-        zone.avrage_stop_time_today = average_time
+            record_ids.append(record.id)
+            average_time = record.end_time - record.start_time
+            av_time += average_time / len(records)
+        zone.avrage_stop_time_today = round(av_time.total_seconds() / 3600)
+        bills = await bill_repo.get_multi_bills(db, record_ids=record_ids)
+        for bill in bills:
+            avg_price += bill.price / len(bills)
+            total_price += bill.price
+        zone.avrage_amount_bill_today = round(avg_price)
+        zone.income_today_parking = round(total_price)
+        zone.pricings = []
+        zone.ancestors = []
+        zone.children = []
+        zone.rules = []
 
-        
-    # zone_report.zone = zones
-
-    # print(zone_report)
     return zones
 
 

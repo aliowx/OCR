@@ -156,7 +156,9 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
 
         query = select(self.model)
 
-        return await self._all(db.scalars(query))
+        filters = [self.model.is_deleted == False]
+
+        return await self._all(db.scalars(query.filter(*filters)))
 
     async def get(
         self, db: Session | AsyncSession, id: int

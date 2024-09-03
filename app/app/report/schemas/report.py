@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.parking.schemas import Zone
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class Capacity(BaseModel):

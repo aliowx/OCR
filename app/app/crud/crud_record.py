@@ -134,14 +134,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [
             Record.is_deleted == False,
-            # Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
-            Record.created >= datetime(2024, 12, 26),
+            Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
             Record.zone_id == input_zone_id,
         ]
-        # duration = Record.end_time - Record.start_time
-
-        # query = select(func.avg(duration)).filter(and_(*filters))
-
         return await self._all(db.scalars(query.filter(*filters)))
 
     async def find_records(

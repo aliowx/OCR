@@ -90,6 +90,29 @@ async def avrage_referrd(
 
     return APIResponse(await report_services.avrage_referrd(db))
 
+@router.get("/referrd")
+async def avrage_referrd(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(await report_services.get_count_referred_compare_everyday(db))
+
 
 @router.get("/max-time-park")
 async def max_time_park(

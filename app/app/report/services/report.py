@@ -505,32 +505,46 @@ async def avrage_referrd(db: AsyncSession):
                 )
     list_referred["report_referred"] = report_referred
 
+
+async def get_count_referred_compare_everyday(db: AsyncSession):
+
+    list_referred = {}
     time_eghit_day_referred = [
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
+        datetime.now(UTC).replace(
+            tzinfo=None, hour=00, minute=00, second=00, microsecond=000000
+        )
+        - timedelta(days=i)
         for i in range(0, 8)
     ]
+    today = (datetime.now(UTC).replace(tzinfo=None)).replace(
+        hour=00,
+        minute=00,
+        second=00,
+        microsecond=000000,
+    )
+    one_week = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
+    ).replace(
+        hour=23,
+        minute=59,
+        second=59,
+        microsecond=999999,
+    )
+    count_record = await crud.record.get_count_referred_compare_everyday(
+        db,
+        input_start_create_time=today,
+        input_end_create_time=one_week,
+    )
     date_referred = []
-    for day in time_eghit_day_referred:
-        start_date = day.replace(
-            hour=00,
-            minute=00,
-            second=00,
-            microsecond=000000,
-        )
-        end_date = day.replace(
-            hour=23,
-            minute=59,
-            second=59,
-            microsecond=999999,
-        )
-        count_record = await crud.record.get_count_referred(
-            db,
-            input_start_create_time=start_date,
-            input_end_create_time=end_date,
-        )
-        date_referred.append(
-            {"date": start_date.date(), "count_referred": count_record}
-        )
+    for date, count in count_record:
+        for time in time_eghit_day_referred:
+            if date == time:
+                print(date , time)
+                date_referred.append({"date": date, "count_referred": count})
+            else:
+                count = 0
+                date_referred.append({"date": time, "count_referred": count})
+    print(date_referred)
     date_referred_cahnge = []
 
     date_referred.reverse()
@@ -542,21 +556,23 @@ async def avrage_referrd(db: AsyncSession):
 
         percent_comparing = calculate_percentage(today, yesterday)
 
-        date_referred_cahnge.append(
-            {
-                "start_date": date_referred[referred]["date"],
-                "count_referred": date_referred[referred]["count_referred"],
-                "percent": round(percent_comparing),
-            }
-        )
-    date_referred_cahnge.remove(date_referred_cahnge[0])
 
-    date_referred_cahnge.reverse()
+        date_referred[referred]["compare"] = round(percent_comparing)
+        # date_referred_cahnge.append(
+        #     {
+        #         "start_date": date_referred[referred]["date"],
+        #         "count_referred": date_referred[referred]["count_referred"],
+        #         "percent": round(percent_comparing),
+        #     }
+        # )
+    # date_referred_cahnge.remove(date_referred_cahnge[0])
+
+    date_referred.reverse()
 
     list_referred["comparing_today_with_yesterday_one_week"] = (
         date_referred_cahnge
     )
-
+    return date_referred
     return report_schemas.Referred(list_referred=list_referred)
 
 

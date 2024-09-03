@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, and_, text
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -105,6 +105,34 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         return await db.scalar(
             query.with_only_columns(func.count()).filter(*filters)
         )
+
+    async def get_count_referred_compare_everyday(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_start_create_time: datetime = None,
+        input_end_create_time: datetime = None,
+    ):
+
+        query = (
+            select(
+                func.date_trunc('day', Record.created).label('day'),
+                func.count(Record.id).label("count"),
+            )
+            .where(
+                and_(
+                    Record.is_deleted == False,
+                    Record.created.between(
+                        input_end_create_time, input_start_create_time
+                    ),
+                )
+            )
+            .group_by(text('day'))
+        )
+        exec = await db.execute(query)
+        fetch = exec.fetchall()
+        
+        return fetch
 
     async def get_today_count_referred_by_zone(
         self, db: Session | AsyncSession, *, zone_id: int = None

@@ -88,14 +88,15 @@ async def update_zone(
                 detail="Zone Not Found",
                 msg_code=MessageCodes.not_found,
             )
-        name_zone_exist = await zone_repo.get_by_name(
-            db, name=zone.name, except_id=zone.id
-        )
-        if name_zone_exist:
-            raise ServiceFailure(
-                detail="name zone exist",
-                msg_code=MessageCodes.duplicate_name,
+        if zone.name is not None:
+            name_zone_exist = await zone_repo.get_by_name(
+                db, name=zone.name, except_id=zone.id
             )
+            if name_zone_exist:
+                raise ServiceFailure(
+                    detail="name zone exist",
+                    msg_code=MessageCodes.duplicate_name,
+                )
 
         zone_update = await zone_repo.update(
             db, db_obj=zone_in_db, obj_in=zone
@@ -176,4 +177,3 @@ async def create_zone(
         zones_in=zones_in,
     )
     return APIResponse(zone)
-

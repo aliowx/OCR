@@ -19,31 +19,44 @@ class PriceRepository(CRUDBase[Price, PriceCreate, PriceUpdate]):
         self,
         db: AsyncSession,
         *,
-        filters: ReadPricesParams,
-        asc: bool = False,
+        params: ReadPricesParams,
     ) -> tuple[list[Price], int]:
 
-        query = select(Price, Zone).where(self.model.is_deleted == false())
+        query = select(Price)
 
-        if filters.zone_id is not None:
-            query = query.where(Zone.id == filters.zone_id)
-        if filters.name:
-            query = query.where(Price.name == filters.name)
+        filters = [self.model.is_deleted == false()]
 
-        count = query.with_only_columns(func.count())
-        total_count = await db.scalar(count)
-        order_by = self.model.id.asc() if asc else self.model.id.desc()
+        if params.name is not None:
+            filters.append(Price.name == params.name)
+
+        count = self.count_by_filter(db, filters=filters)
+
+        order_by = self.model.id.asc() if params.asc else self.model.id.desc()
         query = query.order_by(order_by)
 
-        if filters.size is None:
-            query = query.offset(filters.skip)
+        if params.size is None:
+            return (
+                await self._all(
+                    db.scalars(
+                        query.filter(*filters)
+                        .offset(params.skip)
+                        .order_by(order_by)
+                    )
+                ),
+                await count,
+            )
 
-        if filters.skip:
-            query = query.offset(filters.skip).limit(filters.size)
-
-        execute_query = await db.execute(query)
-        query_fetch = execute_query.fetchall()
-        return query_fetch, total_count
+        return (
+            await self._all(
+                db.scalars(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .limit(params.size)
+                    .order_by(order_by)
+                )
+            ),
+            await count,
+        )
 
 
 price_repo = PriceRepository(Price)

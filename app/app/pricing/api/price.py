@@ -65,15 +65,32 @@ async def create_price(
             )
         ),
     ],
-    price_in: schemas.PriceCreate,
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    price_in: schemas.PriceCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.Price]:
     """
     Create New price.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    price = await price_repo.create(db, obj_in=price_in)
+    price_without_zone_ids = price_in.model_copy(
+        update={"zone_ids": None}
+    ).model_dump(exclude_none=True)
+    
+    price = await price_repo.create(db, obj_in=price_without_zone_ids)
+
+    if (price_in.zone_ids is not None) and (price_in.zone_ids != []):
+        for zone_id in price_in.zone_ids:
+            zone = await zone_repo.get(db, id=zone_id)
+            if not price:
+                raise exc.ServiceFailure(
+                    detail="The zone not created in the system.",
+                    msg_code=utils.MessageCodes.not_found,
+                )
+            zone.price_id = price.id
+            await zone_repo.update(db, db_obj=zone)
+
     return APIResponse(price)
 
 
@@ -126,7 +143,7 @@ async def get_price_by_id(
     *,
     current_user: models.User = Depends(deps.get_current_active_user),
     id: int,
-    ) -> APIResponseType[list[Zone]]:
+) -> APIResponseType[list[Zone]]:
     """
     Get zones .
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]

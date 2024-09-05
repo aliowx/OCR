@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class PriceBase(BaseModel):
@@ -11,9 +11,10 @@ class PriceBase(BaseModel):
 
 class PriceCreate(PriceBase):
     name: str
+    zone_ids: list[int] = None
 
 
-class PriceUpdate(PriceBase):...
+class PriceUpdate(PriceBase): ...
 
 
 class PriceInDBBase(PriceBase):
@@ -24,7 +25,7 @@ class PriceInDBBase(PriceBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Price(PriceInDBBase):...
+class Price(PriceInDBBase): ...
 
 
 class CameraInDB(PriceInDBBase):

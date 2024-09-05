@@ -14,10 +14,6 @@ from .models import (
     Parking,
     Spot,
     Zone,
-    ZonePrice,
-    PlateRule,
-    Rule,
-    ZoneRule,
 )
 from app.pricing.models import Price
 from .schemas.equipment import (
@@ -29,16 +25,8 @@ from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.spot import SpotCreate, SpotUpdate
 from .schemas.zone import (
     ZoneCreate,
-    ZonePriceCreate,
-    ZonePriceUpdate,
     ZoneUpdate,
     ZonePramsFilters,
-)
-from .schemas.rule import (
-    PlateRuleCreate,
-    ReadRulesFilter,
-    RuleCreate,
-    ZoneRuleCreate,
 )
 from app.report.schemas import ZoneReport
 
@@ -310,176 +298,7 @@ class EquipmentRepository(
         return await self._first(db.scalars(query.filter(*filters)))
 
 
-class ZonePriceRepository(
-    CRUDBase[ZonePrice, ZonePriceCreate, ZonePriceUpdate]
-):
-    async def pricing_exists(
-        self, db: AsyncSession, zone_id: int, price_id: int, priority: int
-    ) -> bool:
-        result = await db.execute(
-            select(
-                exists().where(
-                    self.model.zone_id == zone_id,
-                    self.model.price_id == price_id,
-                    self.model.priority == priority,
-                    self.model.is_deleted == false(),
-                )
-            )
-        )
-        return result.scalar()
-
-    async def get_price_zone_async(self, db: AsyncSession, zone_id: int):
-
-        sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
-
-        query = select(ZonePrice, Price).join(Price)
-
-        filters = [
-            ZonePrice.is_deleted == False,
-            ZonePrice.zone_id == zone_id,
-            ZonePrice.priority == sub_query,
-        ]
-
-        query_execute = await db.execute(query.filter(*filters))
-        return query_execute.fetchone()
-
-    def get_price_zone(self, db: Session, zone_id: int):
-        sub_query = select(func.min(ZonePrice.priority)).scalar_subquery()
-
-        query = select(ZonePrice, Price).join(Price)
-
-        filters = [
-            ZonePrice.is_deleted == False,
-            ZonePrice.zone_id == zone_id,
-            ZonePrice.priority == sub_query,
-        ]
-
-        query_execute = db.execute(query.filter(*filters))
-        return query_execute.fetchone()
-
-
-class RuleRepository(CRUDBase[Rule, RuleCreate, None]):
-    def update(self, *args, **kwargs) -> None:
-        raise NotImplementedError
-
-    def _build_filters(self, filters: ReadRulesFilter) -> list:
-        orm_filters = []
-        if filters.name_fa__eq:
-            orm_filters.append(self.model.name_fa == filters.name_fa__eq)
-        if filters.name_fa__contains:
-            orm_filters.append(
-                self.model.name_fa.contains(filters.name_fa__contains)
-            )
-        if filters.rule_type__eq:
-            orm_filters.append(self.model.rule_type == filters.rule_type__eq)
-        if filters.weekday__in:
-            orm_filters.append(
-                self.model.plan_days.contains(filters.weekday__in)
-            )
-        if filters.start_datetime__gte:
-            orm_filters.append(
-                self.model.start_datetime >= filters.start_datetime__gte
-            )
-        if filters.start_datetime__lte:
-            orm_filters.append(
-                self.model.start_datetime <= filters.start_datetime__lte
-            )
-        if filters.end_datetime__gte:
-            orm_filters.append(
-                self.model.end_datetime >= filters.end_datetime__gte
-            )
-        if filters.end_datetime__lte:
-            orm_filters.append(
-                self.model.end_datetime <= filters.end_datetime__lte
-            )
-        if filters.registeration_date__gte:
-            orm_filters.append(
-                self.model.registeration_date
-                >= filters.registeration_date__gte
-            )
-        if filters.registeration_date__lte:
-            orm_filters.append(
-                self.model.registeration_date
-                <= filters.registeration_date__lte
-            )
-
-        return orm_filters
-
-    async def get_multi_with_filters(
-        self,
-        db: AsyncSession,
-        *,
-        filters: ReadRulesFilter,
-        asc: bool = False,
-    ) -> tuple[list[Rule], int]:
-        orm_filters = self._build_filters(filters)
-        query = select(Rule).filter(
-            self.model.is_deleted == false(),
-            *orm_filters,
-        )
-
-        q = query.with_only_columns(func.count())
-        total_count = db.scalar(q)
-
-        order_by = self.model.id.asc() if asc else self.model.id.desc()
-        query = query.order_by(order_by)
-
-        if filters.limit is None:
-            return (
-                await self._all(db.scalars(query.offset(filters.skip))),
-                await total_count,
-            )
-        return (
-            await self._all(
-                db.scalars(query.offset(filters.skip).limit(filters.limit))
-            ),
-            await total_count,
-        )
-
-
-class ZoneRuleRepository(CRUDBase[ZoneRule, ZoneRuleCreate, None]):
-    def updates(self, *args, **kwargs) -> None:
-        raise NotImplementedError
-
-    async def find(
-        self, db: AsyncSession, rule_id: int, zone_id: int
-    ) -> Rule | None:
-        rule = await self._first(
-            db.scalars(
-                select(self.model).filter(
-                    self.model.rule_id == rule_id,
-                    self.model.zone_id == zone_id,
-                    self.model.is_deleted == false(),
-                )
-            )
-        )
-        return rule
-
-
-class PlateRuleRepository(CRUDBase[PlateRule, PlateRuleCreate, None]):
-    def update(self, *args, **kwargs) -> None:
-        raise NotImplementedError
-
-    async def find(
-        self, db: AsyncSession, rule_id: int, plate: str
-    ) -> PlateRule | None:
-        rule = await self._first(
-            db.scalars(
-                select(self.model).filter(
-                    self.model.rule_id == rule_id,
-                    self.model.plate == plate,
-                    self.model.is_deleted == false(),
-                )
-            )
-        )
-        return rule
-
-
 spot_repo = SpotRepository(Spot)
 parking_repo = ParkingRepository(Parking)
 zone_repo = ZoneRepository(Zone)
 equipment_repo = EquipmentRepository(Equipment)
-zoneprice_repo = ZonePriceRepository(ZonePrice)
-rule_repo = RuleRepository(Rule)
-zonerule_repo = ZoneRuleRepository(ZoneRule)
-platerule_repo = PlateRuleRepository(PlateRule)

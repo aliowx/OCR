@@ -16,6 +16,6 @@ class Price(Base):
     entrance_fee: Mapped[float] = mapped_column(Float, nullable=True)
     hourly_fee: Mapped[float] = mapped_column(Float, nullable=True)
 
-    pricings = relationship(
-        "ZonePrice", back_populates="price", lazy="immediate"
+    price_rel_zone = relationship(
+        "Zone", back_populates="price_rel"
     )

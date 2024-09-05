@@ -3,7 +3,6 @@ from app.parking.repo import (
     parking_repo,
     spot_repo,
     zone_repo,
-    zoneprice_repo,
 )
 from app.pricing.repo import price_repo
 from app.users.repo import user

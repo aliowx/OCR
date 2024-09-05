@@ -1,4 +1,5 @@
-from app.parking.models.parking import Parking, Zone
+from app.parking.models.parking import Parking
+from app.parking.models.zone import Zone
 from app.parking.models.spot import Spot
 from app.pricing.models import Price
 from app.users.models import User

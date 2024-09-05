@@ -1,4 +1,4 @@
 from .equipment import Equipment
-from .parking import Parking, Zone, ZonePrice
+from .parking import Parking
 from .spot import Spot
-from .rule import PlateRule, Rule, ZoneRule
+from .zone import Zone

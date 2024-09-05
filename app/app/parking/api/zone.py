@@ -177,36 +177,3 @@ async def create_zone(
     )
     return APIResponse(zone)
 
-
-@router.post("/{zone_id}/price")
-@invalidate(namespace=namespace)
-async def set_price_on_parking_zone(
-    *,
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.OPERATIONAL_STAFF,
-                ]
-            )
-        ),
-    ],
-    zone_id: int,
-    zoneprice_data: schemasZone.SetZonePriceInput,
-    db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[schemasZone.ZonePrice]:
-    """
-    Set price on a zone.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
-    """
-    zone = await zone_services.set_price(
-        db,
-        zone_id=zone_id,
-        zoneprice_data=zoneprice_data,
-    )
-    zone = await zone_services.set_children_ancestors_capacity(db, zone)
-    return APIResponse(zone)

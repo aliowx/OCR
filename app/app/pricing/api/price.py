@@ -13,6 +13,8 @@ from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
+from app.parking.schemas import Zone
+from app.parking.repo import zone_repo
 
 
 router = APIRouter()
@@ -34,15 +36,20 @@ async def read_price(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    params: price_schemas.ReadPricesParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    params: price_schemas.ReadPricesParams = Depends(),
 ) -> APIResponseType[PaginatedContent[list[price_schemas.Price]]]:
     """
     Get All price.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    prices = await pricing_services.read_prices(db, params=params)
-    return APIResponse(prices)
+    prices, count = await price_repo.get_multi_with_filters(db, params=params)
+    return APIResponse(
+        PaginatedContent(
+            data=prices, total_count=count, page=params.page, size=params.size
+        )
+    )
 
 
 @router.post("/")
@@ -66,7 +73,7 @@ async def create_price(
     Create New price.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    price = await pricing_services.create_price(db, price_in=price_in)
+    price = await price_repo.create(db, obj_in=price_in)
     return APIResponse(price)
 
 
@@ -100,6 +107,41 @@ async def get_price_by_id(
             msg_code=utils.MessageCodes.not_found,
         )
     return APIResponse(price)
+
+
+@router.get("/get-zone-by-price-id/")
+async def get_price_by_id(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    current_user: models.User = Depends(deps.get_current_active_user),
+    id: int,
+    ) -> APIResponseType[list[Zone]]:
+    """
+    Get zones .
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+
+    price = await crud.price_repo.get(db, id=id)
+    if not price:
+        raise exc.ServiceFailure(
+            detail="The price not created in the system.",
+            msg_code=utils.MessageCodes.not_found,
+        )
+
+    zones = await zone_repo.get_zones_by_price_id(db, price_id=id)
+
+    return APIResponse(zones)
 
 
 @router.put("/{id}")

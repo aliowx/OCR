@@ -12,13 +12,8 @@ class PriceBase(BaseModel):
 class PriceCreate(PriceBase):
     name: str
 
-    zone_ids: list[int] = Field(default_factory=list)
-    priority: int = Field(1, ge=1, le=100)
 
-
-class PriceUpdate(PriceBase):
-    zone_ids: list[int] = Field(default_factory=list)
-    priority: int = Field(1, ge=1, le=100)
+class PriceUpdate(PriceBase):...
 
 
 class PriceInDBBase(PriceBase):
@@ -29,8 +24,7 @@ class PriceInDBBase(PriceBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Price(PriceInDBBase):
-    zone_name: str | None = None
+class Price(PriceInDBBase):...
 
 
 class CameraInDB(PriceInDBBase):
@@ -39,7 +33,6 @@ class CameraInDB(PriceInDBBase):
 
 class ReadPricesParams(BaseModel):
     name: str | None = None
-    zone_id: int | None = None
 
     size: int | None = 100
     page: int = 1

@@ -19,14 +19,9 @@ class ZoneComplete(ZoneBase):
     unknown: int | None = None
 
 
-class ZoneCreate(BaseModel):
+class ZoneCreate(ZoneBase):
     name: str
-    tag: str | None = None
-    floor_name: str | None = None
-    floor_number: int | None = None
-    capacity: int | None = None
-    parent_id: int | None = None
-    price_id: int | None = None
+    capacity: int
 
 
 class ZoneUpdate(ZoneBase):

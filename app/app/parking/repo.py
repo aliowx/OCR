@@ -205,6 +205,17 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
             await total_count,
         )
 
+    async def get_zones_by_price_id(
+        self,
+        db: AsyncSession,
+        *,
+        price_id: int,
+    ) -> list[Zone]:
+
+        return await self._all(
+            db.scalars(select(Zone).filter(Zone.price_id.in_({price_id})))
+        )
+
 
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]

@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from app.pricing.repo import price_repo
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.db.base_class import get_now_datetime_utc
@@ -9,6 +8,7 @@ from app.payment.repo import payment_repo
 from app.payment.schemas import payment as paymentSchemas
 from app.core.exceptions import ServiceFailure
 from app.utils import MessageCodes
+from app.parking.repo import zone_repo
 import math
 
 
@@ -33,21 +33,16 @@ async def calculate_price_async(
     end_time_in: datetime,
 ) -> float:
 
-    # TODO FIX
-    ...
-    # zone_price, model_price = await zoneprice_repo.get_price_zone_async(
-    #     db, zone_id=zone_id
-    # )
+    price = await zone_repo.get_price_zone_async(db, zone_id=zone_id)
+    if not price:
+        raise ServiceFailure(
+            detail="not set model price for this zone",
+            msg_code=MessageCodes.not_found,
+        )
 
-    # if not model_price:
-    #     raise ServiceFailure(
-    #         detail="not set model price for this zone",
-    #         msg_code=MessageCodes.not_found,
-    #     )
-
-    # duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
-    # price = model_price.entrance_fee + (duration_time * model_price.hourly_fee)
-    # return price
+    duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
+    price = price.entrance_fee + (duration_time * price.hourly_fee)
+    return price
 
 
 def calculate_price(
@@ -57,23 +52,20 @@ def calculate_price(
     start_time_in: datetime,
     end_time_in: datetime,
 ) -> float:
-    # TODO FIX
-    ...
-    # zone_price, model_price = zoneprice_repo.get_price_zone(
-    #     db, zone_id=zone_id
-    # )
 
-    # if not model_price:
-    #     raise ServiceFailure(
-    #         detail="not set model price for this zone",
-    #         msg_code=MessageCodes.not_found,
-    #     )
+    price = zone_repo.get_price_zone(db, zone_id=zone_id)
 
-    # duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
+    if not price:
+        raise ServiceFailure(
+            detail="not set model price for this zone",
+            msg_code=MessageCodes.not_found,
+        )
 
-    # price = model_price.entrance_fee + (duration_time * model_price.hourly_fee)
+    duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
 
-    # return price
+    price = price.entrance_fee + (duration_time * price.hourly_fee)
+
+    return price
 
 
 async def kiosk(db: AsyncSession, *, record, issue: bool = False):

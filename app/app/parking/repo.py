@@ -1,7 +1,7 @@
 import logging
 from typing import Awaitable, List, TypeVar
 
-from sqlalchemy import exists, false, func, or_
+from sqlalchemy import false, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
@@ -215,6 +215,32 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
         return await self._all(
             db.scalars(select(Zone).filter(Zone.price_id.in_({price_id})))
         )
+
+    async def get_price_zone_async(
+        self,
+        db: AsyncSession,
+        *,
+        zone_id: int,
+    ) -> Price:
+
+        query = select(Price).join(Zone, Zone.id == zone_id)
+
+        filters = [Zone.is_deleted == False, Zone.price_id == Price.id]
+
+        return await self._first(db.scalars(query.filter(*filters)))
+
+    def get_price_zone(
+        self,
+        db: Session,
+        *,
+        zone_id: int,
+    ) -> Price:
+
+        query = select(Price).join(Zone, Zone.id == zone_id)
+
+        filters = [Zone.is_deleted == False, Zone.price_id == Price.id]
+
+        return self._first(db.scalars(query.filter(*filters)))
 
 
 class EquipmentRepository(

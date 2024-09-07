@@ -125,10 +125,10 @@ async def capacity(db: AsyncSession):
 
 async def report_zone(db: AsyncSession):
     zones = await zone_repo.get_multi_report_zone(db)
-    record_ids = []
-    avg_price = 0
-    total_price = 0
     for zone in zones:
+        record_ids = []
+        avg_price = 0
+        total_price = 0
         av_time = timedelta()
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
         zone.todat_referred = (

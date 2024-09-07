@@ -59,7 +59,7 @@ def convert_days_to_time(time: datetime):
     # Calculation hours, conversion minutes and seconds to hours
     hours, minutes, seconds = map(float, str(time).split(":"))
     total_minute = (hours * 60) + (minutes + minute) + (seconds / 60)
-    return round(total_minute, 3)
+    return round(total_minute)
 
 
 def calculate_percentage(start_time, end_time):

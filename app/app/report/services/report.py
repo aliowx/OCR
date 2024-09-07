@@ -82,10 +82,21 @@ def calculate_percentage(start_time, end_time):
 
 
 async def capacity(db: AsyncSession):
-
+    today = datetime.now(UTC).replace(tzinfo=None).date()
+    count_referred = await crud.record.get_count_referred_today(
+        db,
+        input_start_create_time=today,
+    )
     count_today_except_status_unfinished = (
         await crud.record.get_total_park_today_except_unfinished(db)
     )
+
+    total_amount_bill = await bill_repo.get_total_amount_bill(db)
+
+    avg_time_park = await crud.record.avarage_time_referred(
+        db, start_time_in=today
+    )
+
     zones = await zone_repo.get_multi(db)
     total_count_in_parking = await crud.record.get_total_in_parking(db)
     capacity_total = empty = 0
@@ -106,6 +117,9 @@ async def capacity(db: AsyncSession):
         full=total_count_in_parking,
         total_today_park=count_today_except_status_unfinished
         + total_count_in_parking,
+        count_referred=count_referred,
+        total_amount_bill=total_amount_bill,
+        avg_minute_park=convert_days_to_time(avg_time_park),
     )
 
 
@@ -268,7 +282,9 @@ async def average_time(db: AsyncSession):
                     )
 
     return report_schemas.AverageTime(
-        avrage_all_time=await crud.record.avarage_time_referred(db),
+        avrage_all_time=convert_days_to_time(
+            await crud.record.avarage_time_referred(db)
+        ),
         avrage_today=report_schemas.AverageTimeDetail(
             time=round(avrage_today),
             compare=calculate_percentage(
@@ -539,7 +555,6 @@ async def get_count_referred_compare_everyday(db: AsyncSession):
     for date, count in count_record:
         for time in time_eghit_day_referred:
             if date == time:
-                print(date , time)
                 date_referred.append({"date": date, "count_referred": count})
             else:
                 count = 0
@@ -555,7 +570,6 @@ async def get_count_referred_compare_everyday(db: AsyncSession):
         yesterday = date_referred[referred - 1]["count_referred"]
 
         percent_comparing = calculate_percentage(today, yesterday)
-
 
         date_referred[referred]["compare"] = round(percent_comparing)
         # date_referred_cahnge.append(

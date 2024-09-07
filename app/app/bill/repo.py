@@ -12,6 +12,8 @@ from app.bill.models import PaymentBill
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
+from datetime import datetime, UTC
 
 
 class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -95,6 +97,18 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                         Bill.record_id.in_(record_ids),
                     ]
                 )
+            )
+        )
+
+    async def get_total_amount_bill(self, db: AsyncSession):
+
+        return await db.scalar(
+            select(func.sum(Bill.price)).filter(
+                Bill.is_deleted == False,
+                Bill.created
+                >= datetime.now(UTC).replace(
+                    tzinfo=None, hour=0, minute=0, second=0, microsecond=0
+                ),
             )
         )
 

@@ -106,6 +106,24 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
+    async def get_count_referred_today(
+        self,
+        db: Session | AsyncSession,
+        *,
+        input_start_create_time: datetime = None,
+    ):
+
+        query = select(Record)
+
+        filters = [
+            Record.is_deleted == False,
+            Record.created >= input_start_create_time,
+        ]
+
+        return await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
+
     async def get_count_referred_compare_everyday(
         self,
         db: Session | AsyncSession,
@@ -116,7 +134,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         query = (
             select(
-                func.date_trunc('day', Record.created).label('day'),
+                func.date_trunc("day", Record.created).label("day"),
                 func.count(Record.id).label("count"),
             )
             .where(
@@ -127,11 +145,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                     ),
                 )
             )
-            .group_by(text('day'))
+            .group_by(text("day"))
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()
-        
+
         return fetch
 
     async def get_today_count_referred_by_zone(
@@ -280,17 +298,22 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return await db.scalar(query)
 
-    async def avarage_time_referred(self, db: AsyncSession):
+    async def avarage_time_referred(
+        self, db: AsyncSession, start_time_in: datetime = None
+    ):
 
         query = select(
             func.avg(
                 ((Record.end_time) - (Record.start_time)).label("time_park")
             )
         )
-        avg_time_park = await db.scalar(query)
-        avg_time_park_convert = str(timedelta(seconds=avg_time_park.seconds))
+        filters = [Record.is_deleted == False]
+        if start_time_in is not None:
+            filters.append(Record.created >= start_time_in)
+            
+        avg_time_park = await db.scalar(query.filter(*filters))
 
-        return avg_time_park_convert
+        return avg_time_park
 
     # for worker need func sync
     def get_multi_record(

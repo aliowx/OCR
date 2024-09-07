@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from datetime import datetime, UTC
+from app.models import Record
 
 
 class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -34,12 +35,15 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         self, db: AsyncSession, *, params: ParamsBill
     ) -> tuple[list[billschemas], int]:
 
-        query = select(Bill)
+        query = select(Bill).join(Record, Bill.record_id == Record.id)
 
         filters = [Bill.is_deleted == false()]
 
         if params.input_plate is not None:
             filters.append(Bill.plate == params.input_plate)
+
+        if params.input_zone_id is not None:
+            filters.append(Record.zone_id == params.input_zone_id)
 
         if params.input_start_time is not None:
             filters.append(Bill.created >= params.input_start_time)
@@ -57,6 +61,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         order_by = Bill.id.asc() if params.asc else Bill.id.desc()
 
+        # exec = await db.execute(query.filter(*filters))
+
+        # fetch = exec.fetchall()
+        # print(fetch)
         if params.size is None:
             items = await self._all(
                 db.scalars(
@@ -65,6 +73,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                     .filter(*filters)
                 )
             )
+
             return (items, count)
 
         items = await self._all(

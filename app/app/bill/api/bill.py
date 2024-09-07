@@ -44,6 +44,10 @@ async def read_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     bills = await bill_repo.get_multi_by_filters(db, params=params)
+    for bill in bills[0]:
+        bill.time_park = round(
+            (bill.end_time - bill.start_time).total_seconds() / 60
+        )
     return APIResponse(
         PaginatedContent(
             data=bills[0],

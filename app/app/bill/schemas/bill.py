@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
@@ -49,7 +48,8 @@ class BillInDBBase(BillBase):
 
 
 # Properties to return to client
-class Bill(BillInDBBase): ...
+class Bill(BillInDBBase):
+    time_park: int | None = None
 
 
 # Properties properties stored in DB

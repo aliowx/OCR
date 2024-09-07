@@ -50,7 +50,7 @@ def convert_time_to_minutes(start_time, end_time):
     return time_diffrence
 
 
-def convert_days_to_time(time: datetime):
+def convert_time_to_minute(time: datetime):
     minute = 0
     # seprating day from time
     if time.days:
@@ -119,7 +119,7 @@ async def capacity(db: AsyncSession):
         + total_count_in_parking,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
-        avg_minute_park=convert_days_to_time(avg_time_park),
+        avg_minute_park=convert_time_to_minute(avg_time_park),
     )
 
 
@@ -286,7 +286,7 @@ async def average_time(db: AsyncSession):
                     )
 
     return report_schemas.AverageTime(
-        avrage_all_time=convert_days_to_time(
+        avrage_all_time=convert_time_to_minute(
             await crud.record.avarage_time_referred(db)
         ),
         avrage_today=report_schemas.AverageTimeDetail(

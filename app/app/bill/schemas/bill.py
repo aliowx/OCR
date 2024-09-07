@@ -22,7 +22,7 @@ class BillBase(BaseModel):
     price: float | None = None
     issued_by: Issued | None = None
     record_id: int | None = None
-    status: StatusBill = StatusBill.unpaid
+    status: StatusBill | None = StatusBill.unpaid
 
 
 # Properties to receive on item creation

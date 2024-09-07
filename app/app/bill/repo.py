@@ -35,7 +35,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         self, db: AsyncSession, *, params: ParamsBill
     ) -> tuple[list[billschemas], int]:
 
-        query = select(Bill).join(Record, Bill.record_id == Record.id)
+        query = select(Bill)
 
         filters = [Bill.is_deleted == false()]
 
@@ -43,6 +43,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             filters.append(Bill.plate == params.input_plate)
 
         if params.input_zone_id is not None:
+            query = query.join(Record, Bill.record_id == Record.id)
             filters.append(Record.zone_id == params.input_zone_id)
 
         if params.input_start_time is not None:
@@ -57,14 +58,12 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_status is not None:
             filters.append(Bill.status == params.input_status)
 
-        count = await self.count_by_filter(db, filters=filters)
+        count = await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
 
         order_by = Bill.id.asc() if params.asc else Bill.id.desc()
 
-        # exec = await db.execute(query.filter(*filters))
-
-        # fetch = exec.fetchall()
-        # print(fetch)
         if params.size is None:
             items = await self._all(
                 db.scalars(

@@ -3,9 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.db.base_class import get_now_datetime_utc
 from app.bill.schemas import bill as billSchemas
-from app.bill.repo import bill_repo, payment_bill_repo
-from app.payment.repo import payment_repo
-from app.payment.schemas import payment as paymentSchemas
+from app.bill.repo import bill_repo
 from app.core.exceptions import ServiceFailure
 from app.utils import MessageCodes
 from app.parking.repo import zone_repo
@@ -98,16 +96,5 @@ async def kiosk(db: AsyncSession, *, record, issue: bool = False):
                 record_id=record.id,
             ).model_dump(),
         )
-        payment = await payment_repo.create(
-            db, obj_in=paymentSchemas.PaymentCreate(price=bill.price)
-        )
 
-        await payment_bill_repo.create(
-            db,
-            obj_in=billSchemas.PaymentBillCreate(
-                bill_id=bill.id, payment_id=payment.id
-            ),
-        )
-
-        # TODO send to payment gateway and call back update this
     return bill

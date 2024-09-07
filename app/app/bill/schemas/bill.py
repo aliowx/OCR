@@ -1,13 +1,17 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
-from app.payment.schemas import payment as paymentSchemas
+from pydantic import BaseModel, ConfigDict
 
 
 class Issued(str, Enum):
     kiosk = "kiosk"
     exit_camera = "exit_camera"
+
+
+class StatusBill(str, Enum):
+    paid = "paid"
+    unpaid = "unpaid"
 
 
 # Shared properties
@@ -18,6 +22,7 @@ class BillBase(BaseModel):
     price: float | None = None
     issued_by: Issued | None = None
     record_id: int | None = None
+    status: StatusBill = StatusBill.unpaid
 
 
 # Properties to receive on item creation
@@ -44,8 +49,7 @@ class BillInDBBase(BillBase):
 
 
 # Properties to return to client
-class Bill(BillInDBBase):
-    bill_payment: list["PaymentBill"] = Field(default_factory=list)
+class Bill(BillInDBBase): ...
 
 
 # Properties properties stored in DB
@@ -57,7 +61,7 @@ class ParamsBill(BaseModel):
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
     input_issued_by: Issued | None = None
-    input_payment: paymentSchemas.StatusPayment | None = None
+    input_status: StatusBill | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = False
@@ -68,29 +72,3 @@ class ParamsBill(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
-
-
-class PaymentBillBase(BaseModel):
-    payment_id: int | None = None
-    bill_id: int | None = None
-
-
-class PaymentBillCreate(PaymentBillBase): ...
-
-
-class PaymentBillUpdate(PaymentBillBase): ...
-
-
-class PaymentBillInDBBase(PaymentBillBase):
-    id: int
-
-    created: datetime | None = None
-    modified: datetime | None = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PaymentBill(PaymentBillInDBBase): ...
-
-
-class PaymentBillInDB(PaymentBillInDBBase): ...

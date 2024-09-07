@@ -1,1 +1,1 @@
-from .bill import Bill, PaymentBill
+from .bill import Bill

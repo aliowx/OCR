@@ -1,19 +1,16 @@
 import logging
-from typing import Any
 
 from fastapi import APIRouter, Depends
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 
-from app import crud, models, schemas, utils
+from app import crud, schemas
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
 from app.bill.repo import bill_repo
 from app.utils import PaginatedContent, MessageCodes
 from app.bill.schemas import bill as billSchemas
-from app.payment.schemas import payment as paymentSchemas
 from app.bill.services import bill as servicesBill
 
 from app.acl.role_checker import RoleChecker

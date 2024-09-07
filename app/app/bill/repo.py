@@ -5,10 +5,7 @@ from .schemas.bill import (
     BillUpdate,
     ParamsBill,
     Bill as billschemas,
-    PaymentBillCreate,
-    PaymentBillUpdate,
 )
-from app.bill.models import PaymentBill
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -52,6 +49,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if params.input_issued_by is not None:
             filters.append(Bill.issued_by == params.input_issued_by)
+
+        if params.input_status is not None:
+            filters.append(Bill.status == params.input_status)
 
         count = await self.count_by_filter(db, filters=filters)
 
@@ -113,10 +113,4 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         )
 
 
-class PaymentBillRepository(
-    CRUDBase[PaymentBill, PaymentBillCreate, PaymentBillUpdate]
-): ...
-
-
-payment_bill_repo = PaymentBillRepository(PaymentBill)
 bill_repo = BillRepository(Bill)

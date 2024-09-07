@@ -5,7 +5,6 @@ from app.pricing.models import Price
 from app.users.models import User
 from app.parking.models import Equipment
 from app.bill.models import Bill
-from app.payment.models.payment import Payment
 from .base import UserType
 from .image import Image
 from .event import Event

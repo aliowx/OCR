@@ -128,8 +128,8 @@ async def report_zone(db: AsyncSession):
     record_ids = []
     avg_price = 0
     total_price = 0
-    av_time = timedelta()
     for zone in zones:
+        av_time = timedelta()
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
         zone.todat_referred = (
             await crud.record.get_today_count_referred_by_zone(

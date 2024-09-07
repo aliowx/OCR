@@ -161,9 +161,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [
             Record.is_deleted == False,
             Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
+            Record.zone_id == zone_id,
         ]
-
-        filters.append(Record.zone_id == zone_id)
 
         return await db.scalar(
             query.with_only_columns(func.count()).filter(*filters)
@@ -310,7 +309,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
         if start_time_in is not None:
             filters.append(Record.created >= start_time_in)
-            
+
         avg_time_park = await db.scalar(query.filter(*filters))
 
         return avg_time_park

@@ -139,11 +139,15 @@ async def report_zone(db: AsyncSession):
         records = await crud.record.avrage_stop_time_today(
             db, input_zone_id=zone.id
         )
-        for record in records:
-            record_ids.append(record.id)
-            average_time = record.end_time - record.start_time
-            av_time += average_time / len(records)
-        zone.avrage_stop_time_today = round(av_time.total_seconds() / 3600)
+        if records:
+            for record in records:
+                record_ids.append(record.id)
+                av_time += record.end_time - record.start_time
+            zone.avrage_stop_minute_today = round(
+                (av_time.total_seconds() / len(records)) / 60
+            )
+        else:
+            zone.avrage_stop_time_today = 0
         bills = await bill_repo.get_multi_bills(db, record_ids=record_ids)
         for bill in bills:
             avg_price += bill.price / len(bills)

@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column,relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
 
 from app.db.base_class import Base
@@ -16,4 +16,4 @@ class Image(Base):
         nullable=True,
         index=True,
     )
-    camera_rel = relationship("Equipment",back_populates="image_rel")
+    camera_rel = relationship("Equipment", foreign_keys=camera_id)

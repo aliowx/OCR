@@ -38,4 +38,3 @@ class Equipment(Base):
     )
     zone = relationship("Zone", foreign_keys=zone_id)
 
-    image_rel = relationship("Image", back_populates="camera_rel")

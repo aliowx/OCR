@@ -14,7 +14,7 @@ from app.bill.services.bill import calculate_price
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
 
-# from app.db.init_data_fake import create_events
+from app.db.init_data_fake import create_events
 
 
 namespace = "job worker"
@@ -247,21 +247,21 @@ def set_status_record(self):
         print("func set status")
 
 
-# @celery_app.task(
-#     base=DatabaseTask,
-#     bind=True,
-#     acks_late=True,
-#     max_retries=1,
-#     soft_time_limit=240,
-#     time_limit=360,
-#     name="set_status_record",
-# )
-# def set_fake_data(self):
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
+    name="set_status_record",
+)
+def set_fake_data(self):
 
-#     try:
-#         create_events(self.session)
-#     except Exception as e:
-#         print(f"error set data fake {e}")
+    try:
+        create_events(self.session)
+    except Exception as e:
+        print(f"error set data fake {e}")
 
 
 @celery_app.task(

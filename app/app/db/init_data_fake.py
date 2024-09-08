@@ -100,8 +100,8 @@ def create_records(db: Session):
 
     image = create_image(db)
     for record in records_data:
-        record.best_lpr_image_id = image.id
-        record.best_plate_image_id = image.id
+        record.img_exit_id = image.id
+        record.img_entrance_id = image.id
         record.zone_id = create_zone(db).id
         db.add(record)
     db.commit()
@@ -125,8 +125,8 @@ def create_records_past(db: Session):
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
             end_time=datetime.now(timezone.utc).replace(tzinfo=None)
             + timedelta(hours=random.randint(1, 23)),
-            best_lpr_image_id=None,
-            best_plate_image_id=None,
+            img_entrance_id=None,
+            img_exit_id=None,
             score=0.01,
             zone_id=None,
             latest_status=random.choice(list_status_record),
@@ -136,8 +136,8 @@ def create_records_past(db: Session):
                 day=random.randint(1, 28),
             ).isoformat(),
         )
-        record.best_lpr_image_id = image.id
-        record.best_plate_image_id = image.id
+        record.img_entrance_id = image.id
+        record.img_exit_id = image.id
         record.zone_id = zone_id
         db.add(record)
         redis_client.publish(

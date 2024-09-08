@@ -30,8 +30,6 @@ class Bill(Base):
 
     img_exit_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
-    name_zone: Mapped[str] = mapped_column(String, nullable=True, index=True)
-
     record_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("record.id", ondelete="SET NULL", onupdate="CASCADE"),

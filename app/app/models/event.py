@@ -66,10 +66,3 @@ class Event(Base):
     )
     lpr_image = relationship("Image", foreign_keys=lpr_image_id)
 
-    price_model_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("price.id", onupdate="CASCADE", ondelete="SET NULL"),
-        index=True,
-        nullable=True,
-    )
-    price = relationship("Price", foreign_keys=price_model_id)

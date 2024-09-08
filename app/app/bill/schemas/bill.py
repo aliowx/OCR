@@ -22,6 +22,11 @@ class BillBase(BaseModel):
     issued_by: Issued | None = None
     record_id: int | None = None
     status: StatusBill | None = StatusBill.unpaid
+    bill_number: int | None = None
+    zone_name: str | None = None
+    zone_id: int | None = None
+    img_entrance_id: int | None = None
+    img_exit_id: int | None = None
 
 
 # Properties to receive on item creation

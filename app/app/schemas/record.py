@@ -15,9 +15,10 @@ class RecordBase(BaseModel):
     plate: str | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
-    best_lpr_image_id: int | None = None
-    best_plate_image_id: int | None = None
-    price_model_id: int | None = None
+    img_entrance_id: int | None = None
+    img_exit_id: int | None = None
+    img_plate_entrance_id: int | None = None
+    img_plate_exit_id: int | None = None
     score: float | None = None
     spot_id: int | None = None
     zone_id: int | None = None
@@ -29,8 +30,6 @@ class RecordCreate(RecordBase):
     plate: str
     start_time: datetime
     end_time: datetime
-    price_model_id: int | None = None
-    spot_id: int | None = None
     zone_id: int
     latest_status: StatusRecord
 
@@ -52,7 +51,6 @@ class RecordInDBBase(RecordBase):
 # Properties to return to client
 class Record(RecordInDBBase):
     total_time: str | None = None
-    # total_price: float | None = None
 
 
 # Properties properties stored in DB

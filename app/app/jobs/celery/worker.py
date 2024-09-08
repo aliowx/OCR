@@ -13,7 +13,8 @@ from app.schemas import EventUpdate, RecordUpdate, TypeCamera, StatusRecord
 from app.bill.services.bill import calculate_price
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
-from app.db.init_data_fake import create_events
+
+# from app.db.init_data_fake import create_events
 
 
 namespace = "job worker"
@@ -86,9 +87,8 @@ def update_record(self, event_id) -> str:
                 start_time=event.record_time,
                 end_time=event.record_time,
                 score=0.01,
-                best_lpr_image_id=event.lpr_image_id,
-                best_plate_image_id=event.plate_image_id,
-                price_model_id=event.price_model_id,
+                img_entrance_id=event.lpr_image_id,
+                img_exit_id=event.plate_image_id,
                 spot_id=event.spot_id,
                 zone_id=event.zone_id,
                 latest_status=StatusRecord.unfinished.value,
@@ -109,8 +109,8 @@ def update_record(self, event_id) -> str:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     end_time=event.record_time,
-                    best_lpr_image_id=event.lpr_image_id,
-                    best_plate_image_id=event.plate_image_id,
+                    img_entrance_id=event.lpr_image_id,
+                    img_plate_exit_id=event.plate_image_id,
                     latest_status=(
                         StatusRecord.finished.value
                         if event.type_camera == TypeCamera.exitDoor.value
@@ -146,6 +146,8 @@ def update_record(self, event_id) -> str:
                             end_time_in=record.end_time,
                         ),
                         record_id=record.id,
+                        zone_id=record.zone_id,
+                        status=billSchemas.StatusBill.unpaid.value,
                     ),
                 )
                 logger.info(f"issue bill {record} by number {bill}")
@@ -245,21 +247,21 @@ def set_status_record(self):
         print("func set status")
 
 
-@celery_app.task(
-    base=DatabaseTask,
-    bind=True,
-    acks_late=True,
-    max_retries=1,
-    soft_time_limit=240,
-    time_limit=360,
-    name="set_status_record",
-)
-def set_fake_data(self):
+# @celery_app.task(
+#     base=DatabaseTask,
+#     bind=True,
+#     acks_late=True,
+#     max_retries=1,
+#     soft_time_limit=240,
+#     time_limit=360,
+#     name="set_status_record",
+# )
+# def set_fake_data(self):
 
-    try:
-        create_events(self.session)
-    except Exception as e:
-        print(f"error set data fake {e}")
+#     try:
+#         create_events(self.session)
+#     except Exception as e:
+#         print(f"error set data fake {e}")
 
 
 @celery_app.task(

@@ -26,21 +26,37 @@ class Record(Base):
         Float, nullable=True, default=None, index=True
     )
 
-    best_lpr_image_id: Mapped[int] = mapped_column(
+    img_entrance_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    best_lpr_image = relationship("Image", foreign_keys=best_lpr_image_id)
+    img_entrance = relationship("Image", foreign_keys=img_entrance_id)
 
-    best_plate_image_id: Mapped[int] = mapped_column(
+    img_exit_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
         nullable=True,
     )
-    best_plate_image = relationship("Image", foreign_keys=best_plate_image_id)
+    img_exit = relationship("Image", foreign_keys=img_exit_id)
+
+    img_plate_entrance_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    img_plate_entrance = relationship("Image", foreign_keys=img_plate_entrance_id)
+
+    img_plate_exit_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("image.id", onupdate="CASCADE", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
+    )
+    img_plate_exit = relationship("Image", foreign_keys=img_plate_exit_id)
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
@@ -59,13 +75,5 @@ class Record(Base):
     spot = relationship("Spot", foreign_keys=spot_id)
 
     events = relationship("Event", back_populates="record")
-
-    price_model_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("price.id", onupdate="CASCADE", ondelete="SET NULL"),
-        index=True,
-        nullable=True,
-    )
-    price_model = relationship("Price", foreign_keys=price_model_id)
 
     latest_status: Mapped[str] = mapped_column(String, nullable=True)

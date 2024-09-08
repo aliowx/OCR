@@ -66,6 +66,28 @@ def calculate_price(
     return price
 
 
+async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
+
+    bill.time_park = round(
+        (bill.end_time - bill.start_time).total_seconds() / 60
+    )
+    if bill.zone_id:
+        zone = await zone_repo.get(db, id=bill.zone_id)
+        bill.zone_name = zone.name
+
+    if bill.img_entrance_id:
+        bill.camera_entrance = await bill_repo.get_camera_by_image_id(
+            db, img_id=bill.img_entrance_id
+        )
+
+    if bill.img_exit_id:
+        bill.camera_exit = await bill_repo.get_camera_by_image_id(
+            db, img_id=bill.img_exit_id
+        )
+
+    return bill
+
+
 async def kiosk(db: AsyncSession, *, record, issue: bool = False):
     end_time = get_now_datetime_utc()
     bill = billSchemas.BillShowBykiosk(

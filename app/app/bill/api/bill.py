@@ -12,7 +12,6 @@ from app.bill.repo import bill_repo
 from app.utils import PaginatedContent, MessageCodes
 from app.bill.schemas import bill as billSchemas
 from app.bill.services import bill as servicesBill
-
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
@@ -45,9 +44,7 @@ async def read_bill(
     """
     bills = await bill_repo.get_multi_by_filters(db, params=params)
     for bill in bills[0]:
-        bill.time_park = round(
-            (bill.end_time - bill.start_time).total_seconds() / 60
-        )
+        await servicesBill.set_detail(db, bill=bill)
     return APIResponse(
         PaginatedContent(
             data=bills[0],
@@ -79,6 +76,12 @@ async def get_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     bill = await bill_repo.get(db, id=id)
+    if not bill:
+        raise exc.ServiceFailure(
+            detail="bill not found",
+            msg_code=MessageCodes.not_found,
+        )
+    bill = await servicesBill.set_detail(db, bill=bill)
     return APIResponse(bill)
 
 

@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from datetime import datetime, UTC
-from app.models import Record
+from app.models import Record, Image
+from app.parking.models import Equipment
 
 
 class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -43,7 +44,6 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             filters.append(Bill.plate == params.input_plate)
 
         if params.input_zone_id is not None:
-            query = query.join(Record, Bill.record_id == Record.id)
             filters.append(Record.zone_id == params.input_zone_id)
 
         if params.input_start_time is not None:
@@ -119,6 +119,17 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 ),
             )
         )
+
+    async def get_camera_by_image_id(self, db: AsyncSession, img_id: int):
+
+        query = (
+            select(Equipment.serial_number)
+            .select_from(Bill)
+            .join(Image, img_id == Image.id)
+            .join(Equipment, Image.camera_id == Equipment.id)
+        )
+
+        return await db.scalar(query.filter(*[Bill.is_deleted == False]))
 
 
 bill_repo = BillRepository(Bill)

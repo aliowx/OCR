@@ -12,7 +12,7 @@ from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
-
+from datetime import datetime
 
 router = APIRouter()
 namespace = "report"
@@ -90,6 +90,7 @@ async def avrage_referrd(
 
     return APIResponse(await report_services.avrage_referrd(db))
 
+
 @router.get("/referrd")
 async def avrage_referrd(
     _: Annotated[
@@ -105,13 +106,24 @@ async def avrage_referrd(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime | None = None,
+    end_time_in: datetime | None = None,
+    timing: report_schemas.Timing | None = report_schemas.Timing.day,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
-
-    return APIResponse(await report_services.get_count_referred_compare_everyday(db))
+    
+    return APIResponse(
+        await report_services.get_count_referred(
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+        )
+    )
 
 
 @router.get("/max-time-park")
@@ -155,7 +167,7 @@ async def count_entrance_exit_zone(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
     *,
-    zone_id: int = None
+    zone_id: int = None,
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]

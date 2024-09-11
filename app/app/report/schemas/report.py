@@ -1,6 +1,14 @@
 from datetime import datetime
 from app.parking.schemas import Zone
 from pydantic import BaseModel
+from enum import Enum
+
+
+class Timing(str, Enum):
+    day = "day"
+    week = "week"
+    month = "month"
+    year = "year"
 
 
 class Capacity(BaseModel):

@@ -14,6 +14,7 @@ from app.models.record import Record
 from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
+from app.report.schemas import Timing
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -124,31 +125,38 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-    async def get_count_referred_compare_everyday(
+    async def get_count_referred_timing(
         self,
-        db: Session | AsyncSession,
+        db: AsyncSession,
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
+        timing: Timing,
     ):
+        
 
         query = (
             select(
-                func.date_trunc("day", Record.created).label("day"),
+                func.date_trunc(timing, Record.created).label(timing),
                 func.count(Record.id).label("count"),
             )
             .where(
                 and_(
                     Record.is_deleted == False,
+                    # Record.created.between(
+                    #     input_end_create_time, input_start_create_time
+                    # ),
                     Record.created.between(
-                        input_end_create_time, input_start_create_time
+                        input_start_create_time, input_end_create_time
                     ),
                 )
             )
-            .group_by(text("day"))
+            .group_by(timing)
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()
+
+        print("fr",fetch)
 
         return fetch
 

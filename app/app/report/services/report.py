@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
 from app.parking.repo import equipment_repo
 from app.parking.services import zone as zone_services
+import time
 
 
 # calculate  first date month
@@ -526,84 +527,149 @@ async def avrage_referrd(db: AsyncSession):
     list_referred["report_referred"] = report_referred
 
 
-async def get_count_referred_compare_everyday(db: AsyncSession):
+from datetime import datetime, timedelta
 
-    list_referred = {}
-    time_eghit_day_referred = [
-        datetime.now(UTC).replace(
-            tzinfo=None, hour=00, minute=00, second=00, microsecond=000000
-        )
-        - timedelta(days=i)
-        for i in range(0, 8)
-    ]
-    today = (datetime.now(UTC).replace(tzinfo=None)).replace(
-        hour=00,
-        minute=00,
-        second=00,
-        microsecond=000000,
+
+def create_ranges_date(
+    end_date: datetime, start_date: datetime, timing: report_schemas.Timing
+):
+
+    start_date = start_date.replace(hour=0, minute=0, second=0)
+    end_date = end_date.replace(hour=0, minute=0, second=0)
+
+    day_ranges = []
+    current_date = start_date
+    while current_date <= end_date:
+        # Create a range
+        start_time = current_date
+        if timing == report_schemas.Timing.day:
+            current_date += timedelta(days=1)
+            day_ranges.append((start_time, 0))
+
+        # if timing == report_schemas.Timing.week:
+        #     print("injo")
+        #     print(current_date)
+        #     start_time = current_date + timedelta(days=7)
+        #     print(start_time)
+        #     current_date += timedelta(days=7)
+        #     day_ranges.append(start_time)
+        # if timing == report_schemas.Timing.month:
+        #     end_time = current_date + timedelta(days=30) - timedelta(seconds=1)
+        #     current_date += timedelta(days=1)
+        # if timing == report_schemas.Timing.year:
+        #     end_time = current_date + timedelta(days=365) - timedelta(seconds=1)
+        #     current_date += timedelta(days=1)
+        # if time.sleep(5) == 5:
+        #     break
+
+    return day_ranges
+
+
+async def get_count_referred(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+) -> list:
+
+    group_by = create_ranges_date(
+        start_date=start_time_in, end_date=end_time_in, timing=timing
     )
-    one_week = (
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
-    ).replace(
-        hour=23,
-        minute=59,
-        second=59,
-        microsecond=999999,
-    )
-    count_record = await crud.record.get_count_referred_compare_everyday(
+    print(group_by)
+
+    count_record = await crud.record.get_count_referred_timing(
         db,
-        input_start_create_time=today,
-        input_end_create_time=one_week,
+        input_start_create_time=start_time_in,
+        input_end_create_time=end_time_in,
+        timing=timing,
     )
-    date_referred = []
-    for date, count in count_record:
-        for time in time_eghit_day_referred:
-            if date == time:
-                date_referred.append({"date": date, "count_referred": count})
-            else:
-                count = 0
-                date_referred.append({"date": time, "count_referred": count})
-    print(date_referred)
-    date_referred_cahnge = []
+    convert_to_dict_record = {time: count for time, count in count_record}
 
-    date_referred.reverse()
-    for referred in range(len(date_referred)):
+    for i, (time, _) in enumerate(group_by):
+        if time in convert_to_dict_record:
+            group_by[i] = {"time": time, "count": convert_to_dict_record[time]}
+    # print(group_by)
 
-        today = date_referred[referred]["count_referred"]
-
-        yesterday = date_referred[referred - 1]["count_referred"]
-
-        percent_comparing = calculate_percentage(today, yesterday)
-
-        date_referred[referred]["compare"] = round(percent_comparing)
-        # date_referred_cahnge.append(
-        #     {
-        #         "start_date": date_referred[referred]["date"],
-        #         "count_referred": date_referred[referred]["count_referred"],
-        #         "percent": round(percent_comparing),
-        #     }
-        # )
-    # date_referred_cahnge.remove(date_referred_cahnge[0])
-
-    date_referred.reverse()
-
-    list_referred["comparing_today_with_yesterday_one_week"] = (
-        date_referred_cahnge
-    )
-    return date_referred
-    return report_schemas.Referred(list_referred=list_referred)
+    # results = [{"time": time, "count": count} for time, count in group_by]
+    return group_by
 
 
-async def max_time_park(db: AsyncSession):
+#     list_referred = {}
+#     time_eghit_day_referred = [
+#         datetime.now(UTC).replace(
+#             tzinfo=None, hour=00, minute=00, second=00, microsecond=000000
+#         )
+#         - timedelta(days=i)
+#         for i in range(0, 8)
+#     ]
+#     today = (datetime.now(UTC).replace(tzinfo=None)).replace(
+#         hour=00,
+#         minute=00,
+#         second=00,
+#         microsecond=000000,
+#     )
+#     one_week = (
+#         datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
+#     ).replace(
+#         hour=23,
+#         minute=59,
+#         second=59,
+#         microsecond=999999,
+#     )
+#     count_record = await crud.record.get_count_referred_timing(
+#         db,
+#         input_start_create_time=today,
+#         input_end_create_time=one_week,
+#     )
+#     date_referred = []
+#     for date, count in count_record:
+#         for time in time_eghit_day_referred:
+#             if date == time:
+#                 date_referred.append({"date": date, "count_referred": count})
+#             else:
+#                 count = 0
+#                 date_referred.append({"date": time, "count_referred": count})
+#     print(date_referred)
+#     date_referred_cahnge = []
 
-    time_park, plate, created = await crud.record.max_time_record(db)
+#     date_referred.reverse()
+#     for referred in range(len(date_referred)):
 
-    # convert days to time
-    time_park = convert_days_to_time(time_park)
+#         today = date_referred[referred]["count_referred"]
 
-    return report_schemas.MaxTimePark(
-        plate=plate, created=created, time_as_minute=time_park
-    )
+#         yesterday = date_referred[referred - 1]["count_referred"]
+
+#         percent_comparing = calculate_percentage(today, yesterday)
+
+#         date_referred[referred]["compare"] = round(percent_comparing)
+#         # date_referred_cahnge.append(
+#         #     {
+#         #         "start_date": date_referred[referred]["date"],
+#         #         "count_referred": date_referred[referred]["count_referred"],
+#         #         "percent": round(percent_comparing),
+#         #     }
+#         # )
+#     # date_referred_cahnge.remove(date_referred_cahnge[0])
+
+#     date_referred.reverse()
+
+#     list_referred["comparing_today_with_yesterday_one_week"] = (
+#         date_referred_cahnge
+#     )
+#     return date_referred
+#     return report_schemas.Referred(list_referred=list_referred)
+
+
+# async def max_time_park(db: AsyncSession):
+
+#     time_park, plate, created = await crud.record.max_time_record(db)
+
+#     # convert days to time
+#     time_park = convert_days_to_time(time_park)
+
+#     return report_schemas.MaxTimePark(
+#         plate=plate, created=created, time_as_minute=time_park
+#     )
 
 
 async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):

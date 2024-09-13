@@ -171,6 +171,7 @@ async def park_time(
 ):
     list_avg_zone_time_park = []
     total_time_park = 0
+    convert_to_minute_time_park = 0
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
         avrage_park_time = await crud.record.get_avg_time_park(
@@ -179,10 +180,11 @@ async def park_time(
             start_time_in=start_time_in,
             end_time_in=end_time_in,
         )
-        convert_to_minute_time_park = round(
-            avrage_park_time.total_seconds() / 60
-        )
-        total_time_park += convert_to_minute_time_park
+        if avrage_park_time:
+            convert_to_minute_time_park = round(
+                avrage_park_time.total_seconds() / 60
+            )
+            total_time_park += convert_to_minute_time_park
         list_avg_zone_time_park.append(
             {
                 "zone_name": zone.name,

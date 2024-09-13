@@ -379,3 +379,31 @@ async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):
                 }
             )
     return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)
+
+
+async def report_bill(
+    db: AsyncSession,
+    *,
+    zone_id: int,
+    start_time_in: datetime,
+    end_time_in: datetime,
+):
+
+    total_bills, bills_paid, bills_unpaid = (
+        await bill_repo.get_total_price_count(db, zone_id=zone_id)
+    )
+
+    return {
+        "total_bills": {
+            "price": total_bills[0],
+            "count": total_bills[1],
+        },
+        "bills_paid": {
+            "price": bills_paid[0],
+            "count": bills_paid[1],
+        },
+        "bills_unpaid": {
+            "price": bills_unpaid[0],
+            "count": bills_unpaid[1],
+        },
+    }

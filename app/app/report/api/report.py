@@ -185,3 +185,38 @@ async def report_zone(
     """
 
     return APIResponse(await report_services.report_zone(db))
+
+
+@router.get("/bill")
+async def report_bill(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    zone_id: int | None = None,
+    start_time_in: datetime | None = None,
+    end_time_in: datetime | None = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(
+        await report_services.report_bill(
+            db,
+            zone_id=zone_id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+        )
+    )

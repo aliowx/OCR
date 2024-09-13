@@ -5,6 +5,7 @@ from .schemas.bill import (
     BillUpdate,
     ParamsBill,
     Bill as billschemas,
+    StatusBill,
 )
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -130,6 +131,53 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         )
 
         return await db.scalar(query.filter(*[Bill.is_deleted == False]))
+
+    async def get_total_price_count(self, db: AsyncSession, zone_id: int):
+
+        filters = [Bill.is_deleted == False]
+
+        if zone_id is not None:
+            filters.append(Bill.zone_id == zone_id)
+
+        query_total_count_price = select(
+            func.sum(Bill.price),
+            func.count(Bill.id),
+        ).filter(*filters)
+
+        excute_query_total_count_price = await db.execute(
+            query_total_count_price
+        )
+        fetch_query_total_count_price = (
+            excute_query_total_count_price.fetchone()
+        )
+
+        query_get_paid_price_count = select(
+            func.sum(Bill.price), func.count()
+        ).filter(*filters, Bill.status == StatusBill.paid)
+
+        excute_query_get_paid_price_count = await db.execute(
+            query_get_paid_price_count
+        )
+        fetch_query_get_paid_price_count = (
+            excute_query_get_paid_price_count.fetchone()
+        )
+
+        query_get_unpaid_price_count = select(
+            func.sum(Bill.price), func.count()
+        ).filter(*filters, Bill.status == StatusBill.unpaid)
+
+        excute_query_get_unpaid_price_count = await db.execute(
+            query_get_unpaid_price_count
+        )
+        fetch_query_get_unpaid_price_count = (
+            excute_query_get_unpaid_price_count.fetchone()
+        )
+
+        return (
+            fetch_query_total_count_price,
+            fetch_query_get_paid_price_count,
+            fetch_query_get_unpaid_price_count,
+        )
 
 
 bill_repo = BillRepository(Bill)

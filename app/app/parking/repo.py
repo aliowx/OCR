@@ -138,15 +138,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                 )
             )
 
-    async def get_multi_report_zone(
-        self, db: Session | AsyncSession
-    ) -> list[ZoneReport] | Awaitable[list[ZoneReport]]:
-
-        query = select(self.model)
-
-        filters = [self.model.is_deleted == False]
-
-        return await self._all(db.scalars(query.filter(*filters)))
 
     async def get(
         self, db: Session | AsyncSession, id: int

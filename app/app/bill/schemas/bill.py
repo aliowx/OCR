@@ -27,6 +27,8 @@ class BillBase(BaseModel):
     zone_id: int | None = None
     img_entrance_id: int | None = None
     img_exit_id: int | None = None
+    rrn_number: str | None = None
+    time_paid: datetime | None = None
 
 
 # Properties to receive on item creation

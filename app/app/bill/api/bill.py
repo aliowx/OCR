@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 
@@ -14,7 +14,7 @@ from app.bill.schemas import bill as billSchemas
 from app.bill.services import bill as servicesBill
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated
+from typing import Annotated, Any
 
 
 router = APIRouter()
@@ -120,3 +120,87 @@ async def create_bill_by_kiosk(
     bill = await servicesBill.kiosk(db, record=record, issue=issue)
 
     return APIResponse(bill)
+
+
+@router.get("/get_by_ids/")
+async def get_by_ids(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    ids_in: Annotated[list[int], Query(...)],
+) -> APIResponseType[list[billSchemas.BillNotAdditionalDetail] | Any]:
+    """
+    create bill.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    bills = []
+    msg_code = 0
+    for id in ids_in:
+        bill = await bill_repo.get(db, id=id)
+        if bill:
+            bills.append(bill)
+            if bill.rrn_number is not None:
+                msg_code = 14
+        if not bill:
+            bills.append({"bill by this id not found": id})
+    response = APIResponse(data=bills, msg_code=msg_code)
+    return response
+
+
+@router.put("/update_bills")
+async def update_bills(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    bills_update: list[billSchemas.BillUpdate],
+) -> APIResponseType[Any]:
+    """
+    create bill.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    resualt = {}
+    list_bills_update = []
+    list_bills_not_update = []
+    msg_code = 0
+    for bill_in in bills_update:
+        bill = await bill_repo.get(db, id=bill_in.id, for_update=True)
+        if bill:
+            if bill.rrn_number is not None:
+                msg_code = 14
+                list_bills_not_update.append(bill)
+            if bill.rrn_number is None:
+                bill_update = await bill_repo.update(
+                    db, db_obj=bill, obj_in=bill_in.model_dump()
+                )
+                await db.commit()
+                list_bills_update.append(bill_update)
+
+        if not bill:
+            list_bills_not_update.append(
+                {"bill by this id not found": bill_in.id}
+            )
+    resualt.update({"list_bills_update": list_bills_update})
+    if list_bills_not_update != []:
+        resualt.update({"list_bills_not_update": list_bills_not_update})
+
+    return APIResponse(resualt, msg_code=msg_code)

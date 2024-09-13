@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 from datetime import datetime, UTC
+from typing import Awaitable
 from app.models import Record, Image
 from app.parking.models import Equipment
 
@@ -85,16 +86,6 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             )
         )
         return (items, count)
-
-    async def get_all_by_ids(self, db: AsyncSession, *, ids: int):
-
-        return await self._all(
-            db.scalars(
-                select(Bill).filter(
-                    *[Bill.is_deleted == false(), Bill.id.in_(ids)]
-                )
-            )
-        )
 
     async def get_multi_bills(self, db: AsyncSession, *, record_ids: int):
 
@@ -178,6 +169,18 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             fetch_query_get_paid_price_count,
             fetch_query_get_unpaid_price_count,
         )
+
+    async def get(
+        self, db: AsyncSession, id: int, for_update: bool = False
+    ) -> Bill | Awaitable[Bill]:
+
+        query = select(self.model).filter(
+            self.model.id == id, self.model.is_deleted == False
+        )
+        if for_update:
+            return await self._first(db.scalars(query.with_for_update()))
+        
+        return await self._first(db.scalars(query))
 
 
 bill_repo = BillRepository(Bill)

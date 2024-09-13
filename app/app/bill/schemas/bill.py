@@ -42,7 +42,11 @@ class BillShowBykiosk(BillCreate):
 
 
 # Properties to receive on item update
-class BillUpdate(BaseModel): ...
+class BillUpdate(BaseModel):
+    id: int
+    rrn_number: str
+    time_paid: datetime
+    status: StatusBill
 
 
 # Properties shared by models stored in DB
@@ -60,6 +64,8 @@ class Bill(BillInDBBase):
     zone_name: str | None = None
     camera_entrance: str | None = None
     camera_exit: str | None = None
+
+class BillNotAdditionalDetail(BillInDBBase):...
 
 
 # Properties properties stored in DB

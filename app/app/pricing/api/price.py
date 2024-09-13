@@ -225,4 +225,4 @@ async def delete_price(
             msg_code=utils.MessageCodes.not_found,
         )
 
-    return APIResponse(await crud.price_repo.remove(db, id_in=price.id))
+    return APIResponse(await crud.price_repo.remove(db, id=price.id))

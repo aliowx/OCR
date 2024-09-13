@@ -45,6 +45,8 @@ async def set_children_ancestors_capacity(
         if total_count_full
         else zone.capacity
     )
+    if zone.empty < 0:
+        zone.empty = 0
     zone.unknown = await curdRecord.get_count_capacity(
         db, zone=zone, status_in=StatusRecord.unknown.value
     )

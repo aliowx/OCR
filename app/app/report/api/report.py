@@ -43,56 +43,8 @@ async def capacity(
     return APIResponse(await report_services.capacity(db))
 
 
-@router.get("/average-time")
-async def average_time(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.REPORTING_ANALYSIS,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[Any]:
-    """
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
-    """
-
-    return APIResponse(await report_services.average_time(db))
-
-
-@router.get("/avrage-referrd")
-async def avrage_referrd(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.REPORTING_ANALYSIS,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[Any]:
-    """
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
-    """
-
-    return APIResponse(await report_services.avrage_referrd(db))
-
-
-@router.get("/referrd")
-async def avrage_referrd(
+@router.get("/park-time")
+async def park_time(
     _: Annotated[
         bool,
         Depends(
@@ -109,19 +61,52 @@ async def avrage_referrd(
     *,
     start_time_in: datetime | None = None,
     end_time_in: datetime | None = None,
-    timing: report_schemas.Timing | None = report_schemas.Timing.day,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
-    
+
+    return APIResponse(
+        await report_services.park_time(
+            db, start_time_in=start_time_in, end_time_in=end_time_in
+        )
+    )
+
+
+@router.get("/referred")
+async def avrage_referred(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
     return APIResponse(
         await report_services.get_count_referred(
             db,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
             timing=timing,
+            zone_id=zone_id,
         )
     )
 

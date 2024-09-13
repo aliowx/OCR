@@ -125,7 +125,7 @@ async def capacity(db: AsyncSession):
 
 
 async def report_zone(db: AsyncSession):
-    zones = await zone_repo.get_multi_report_zone(db)
+    zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
         record_ids = []
         avg_price = 0
@@ -163,406 +163,112 @@ async def report_zone(db: AsyncSession):
     return zones
 
 
-async def average_time(db: AsyncSession):
-
-    today = datetime.now(UTC).replace(tzinfo=None).date()
-    one_week_ago = (
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
-    ).date()
-    one_month_ago = (
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=30)
-    ).date()
-    six_month_ago = (
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=180)
-    ).date()
-    one_year_ago = (
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=365)
-    ).date()
-
-    timing_park = [
-        today,
-        one_week_ago,
-        one_month_ago,
-        six_month_ago,
-        one_year_ago,
-    ]
-
-    comparing_today_pervious_day = today - timedelta(days=1)
-    comparing_one_week_ago_pervious_week = one_week_ago - timedelta(days=7)
-    comparing_one_month_ago_pervious_month = one_month_ago - timedelta(days=30)
-    comparing_six_month_ago_pervious_six_month = six_month_ago - timedelta(
-        days=180
-    )
-    comparing_one_year_ago_pervious_year = one_year_ago - timedelta(days=365)
-
-    comparing_time = [
-        comparing_today_pervious_day,
-        comparing_one_week_ago_pervious_week,
-        comparing_one_month_ago_pervious_month,
-        comparing_six_month_ago_pervious_six_month,
-        comparing_one_year_ago_pervious_year,
-    ]
-
-    compare_avrage_one_day_ago = 0
-    compare_avrage_one_week_ago = 0
-    compare_avrage_one_month_ago = 0
-    compare_avrage_six_month_ago = 0
-    compare_avrage_one_year_ago = 0
-
-    for compare_time, time_park in zip(comparing_time, timing_park):
-        records_compare, total_count_record_compare = (
-            await crud.record.find_records(
-                db,
-                input_start_create_time=compare_time,
-                input_end_create_time=time_park,
-            )
-        )
-        if records_compare:
-            for record in records_compare:
-                # Calculation time park
-                compare_total_time_park = convert_time_to_minutes(
-                    record.start_time, record.end_time
-                )
-                if compare_time == comparing_today_pervious_day:
-
-                    compare_avrage_one_day_ago += (
-                        compare_total_time_park / total_count_record_compare
-                    )
-                if compare_time == comparing_one_week_ago_pervious_week:
-
-                    compare_avrage_one_week_ago += (
-                        compare_total_time_park / total_count_record_compare
-                    )
-                if compare_time == comparing_one_month_ago_pervious_month:
-
-                    compare_avrage_one_month_ago += (
-                        compare_total_time_park / total_count_record_compare
-                    )
-                if compare_time == comparing_six_month_ago_pervious_six_month:
-
-                    compare_avrage_six_month_ago += (
-                        compare_total_time_park / total_count_record_compare
-                    )
-                if compare_time == comparing_one_year_ago_pervious_year:
-
-                    compare_avrage_one_year_ago += (
-                        compare_total_time_park / total_count_record_compare
-                    )
-
-    avrage_today = 0
-    avrage_one_week_ago = 0
-    avrage_one_month_ago = 0
-    avrage_six_month_ago = 0
-    avrage_one_year_ago = 0
-
-    for time in timing_park:
-        records, total_count_record_timing = await crud.record.find_records(
+async def park_time(
+    db: AsyncSession,
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+):
+    list_avg_zone_time_park = []
+    total_time_park = 0
+    zones = await zone_repo.get_multi(db, limit=None)
+    for zone in zones:
+        avrage_park_time = await crud.record.get_avg_time_park(
             db,
-            input_start_create_time=time,
+            zone_id=zone.id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
         )
-        if records:
-            for record in records:
-                # Calculation time park
-                total_time_park = convert_time_to_minutes(
-                    record.start_time, record.end_time
-                )
+        convert_to_minute_time_park = round(
+            avrage_park_time.total_seconds() / 60
+        )
+        total_time_park += convert_to_minute_time_park
+        list_avg_zone_time_park.append(
+            {
+                "zone_name": zone.name,
+                "avg_time_park": convert_to_minute_time_park,
+            }
+        )
+    list_avg_zone_time_park.append({"total_time_park": total_time_park})
 
-                if time == today:
-                    avrage_today += total_time_park / total_count_record_timing
-                if time == one_week_ago:
-                    avrage_one_week_ago += (
-                        total_time_park / total_count_record_timing
-                    )
-                if time == one_month_ago:
-                    avrage_one_month_ago += (
-                        total_time_park / total_count_record_timing
-                    )
-                if time == six_month_ago:
-                    avrage_six_month_ago += (
-                        total_time_park / total_count_record_timing
-                    )
-                if time == one_year_ago:
-                    avrage_one_year_ago += (
-                        total_time_park / total_count_record_timing
-                    )
-
-    return report_schemas.AverageTime(
-        avrage_all_time=convert_time_to_minute(
-            await crud.record.avarage_time_referred(db)
-        ),
-        avrage_today=report_schemas.AverageTimeDetail(
-            time=round(avrage_today),
-            compare=calculate_percentage(
-                avrage_today, compare_avrage_one_day_ago
-            ),
-        ),
-        avrage_one_week_ago=report_schemas.AverageTimeDetail(
-            time=round(avrage_one_week_ago),
-            compare=calculate_percentage(
-                avrage_one_week_ago, compare_avrage_one_week_ago
-            ),
-        ),
-        avrage_one_month_ago=report_schemas.AverageTimeDetail(
-            time=round(avrage_one_month_ago),
-            compare=calculate_percentage(
-                avrage_one_month_ago, compare_avrage_one_month_ago
-            ),
-        ),
-        avrage_six_month_ago=report_schemas.AverageTimeDetail(
-            time=round(avrage_six_month_ago),
-            compare=calculate_percentage(
-                avrage_six_month_ago, compare_avrage_six_month_ago
-            ),
-        ),
-        avrage_one_year_ago=report_schemas.AverageTimeDetail(
-            time=round(avrage_one_year_ago),
-            compare=calculate_percentage(
-                avrage_one_year_ago, compare_avrage_one_year_ago
-            ),
-        ),
-    )
+    return list_avg_zone_time_park
 
 
-async def avrage_referrd(db: AsyncSession):
-    list_referred = {}
+# Helper function to get the last day of a given month
+def last_day_of_month(date: datetime):
+    next_month = date.replace(day=28) + timedelta(
+        days=4
+    )  # this will be in the next month
+    return next_month - timedelta(days=next_month.day)
 
-    # Counting the one week ago
-    time_weekly_referred = [
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
-        for i in range(0, 7)
+
+def get_month_range(start_date: datetime, end_date: datetime):
+
+    # List to store the month ranges
+    month_ranges = []
+
+    # Start iterating from the first month
+    current_start = start_date.replace(day=1)
+
+    # Loop through each month until the end_date
+    while current_start <= end_date:
+        current_end = last_day_of_month(current_start)
+        if current_end > end_date:
+            current_end = end_date
+
+        month_ranges.append((current_start, current_end))
+
+        # Move to the next month
+        next_month = current_start + timedelta(days=31)
+        current_start = next_month.replace(day=1)
+
+    return month_ranges
+
+
+def get_year_range(start_date: datetime, end_date: datetime):
+
+    start_year = start_date.year
+    end_year = end_date.year
+
+    return [
+        datetime(year, 1, 1).date() for year in range(start_year, end_year + 1)
     ]
-    # Counting the one month ago
-    time_month_referred = [
-        datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
-        for i in range(0, 30)
-    ]
-    # Counting the six month ago
-    time_six_month_referred = get_month_dates(
-        datetime.now(UTC).replace(tzinfo=None), 6
-    )
-    # Counting the one year ago
-    time_one_year_referred = get_month_dates(
-        datetime.now(UTC).replace(tzinfo=None), 12
-    )
-
-    timing_referred = [
-        (time_weekly_referred, "week"),
-        (time_month_referred, "month"),
-        (time_six_month_referred, "six_month"),
-        (time_one_year_referred, "year"),
-    ]
-
-    # Counting the first day one week ago and counting from that one week ago before
-    compare_time_weekly_referred = [
-        time_weekly_referred[-1] - timedelta(days=i) for i in range(0, 8)
-    ]
-
-    # Counting the first day one month ago and counting from that one month ago before
-    compare_time_month_referred = [
-        time_month_referred[-1] - timedelta(days=i) for i in range(0, 30)
-    ]
-
-    # Counting the first month six month ago and counting from that month to six month before
-    compare_time_six_month_referred = get_month_dates(
-        time_six_month_referred[-1][-1], 6
-    )
-
-    # Counting the first month one year ago and counting from that month to one year before
-    compare_time_one_year_referred = get_month_dates(
-        time_one_year_referred[-1][-1], 12
-    )
-
-    timing_referred_compare = [
-        (compare_time_weekly_referred, "week"),
-        (compare_time_month_referred, "month"),
-        (compare_time_six_month_referred, "six_month"),
-        (compare_time_one_year_referred, "year"),
-    ]
-
-    report_referred_compare = {
-        "week": [],
-        "month": [],
-        "six_month": [],
-        "year": [],
-    }
-
-    for referred_time_compare, key_compare in timing_referred_compare:
-
-        if key_compare in [
-            "week",
-            "month",
-        ]:
-            for referred_timeing in referred_time_compare:
-                start_time = referred_timeing.replace(
-                    hour=00,
-                    minute=00,
-                    second=00,
-                    microsecond=000000,
-                )
-                end_time = referred_timeing.replace(
-                    hour=23,
-                    minute=59,
-                    second=59,
-                    microsecond=999999,
-                )
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred_compare[key_compare].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-        elif key_compare == "six_month":
-            for start_time, end_time in compare_time_six_month_referred:
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred_compare[key_compare].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-        elif key_compare == "year":
-            for start_time, end_time in compare_time_one_year_referred:
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred_compare[key_compare].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-
-    list_referred["report_referred_compare"] = report_referred_compare
-
-    report_referred = {
-        "week": [],
-        "month": [],
-        "six_month": [],
-        "year": [],
-    }
-    for referred_time, key in timing_referred:
-
-        if key in ["week", "month"]:
-            for referred_timeing in referred_time:
-                start_time = referred_timeing.replace(
-                    hour=00,
-                    minute=00,
-                    second=00,
-                    microsecond=000000,
-                )
-                end_time = referred_timeing.replace(
-                    hour=23,
-                    minute=59,
-                    second=59,
-                    microsecond=999999,
-                )
-
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred[key].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-        elif key == "six_month":
-            for start_time, end_time in time_six_month_referred:
-
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred[key].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-        elif key == "year":
-            for start_time, end_time in time_one_year_referred:
-                total_count_record_timing = (
-                    await crud.record.get_count_referred(
-                        db,
-                        input_start_create_time=start_time,
-                        input_end_create_time=end_time,
-                    )
-                )
-                report_referred[key].append(
-                    {
-                        "start_date": start_time.date(),
-                        "end_date": end_time.date(),
-                        "count_referred": total_count_record_timing,
-                    },
-                )
-    list_referred["report_referred"] = report_referred
-
-
-from datetime import datetime, timedelta
 
 
 def create_ranges_date(
     end_date: datetime, start_date: datetime, timing: report_schemas.Timing
 ):
 
-    start_date = start_date.replace(hour=0, minute=0, second=0)
-    end_date = end_date.replace(hour=0, minute=0, second=0)
+    start_date = start_date.date()
+    end_date = end_date.date()
 
-    day_ranges = []
+    ranges = []
     current_date = start_date
     while current_date <= end_date:
         # Create a range
         start_time = current_date
         if timing == report_schemas.Timing.day:
             current_date += timedelta(days=1)
-            day_ranges.append((start_time, 0))
+            ranges.append({"time": start_time, "count": 0})
 
-        # if timing == report_schemas.Timing.week:
-        #     print("injo")
-        #     print(current_date)
-        #     start_time = current_date + timedelta(days=7)
-        #     print(start_time)
-        #     current_date += timedelta(days=7)
-        #     day_ranges.append(start_time)
-        # if timing == report_schemas.Timing.month:
-        #     end_time = current_date + timedelta(days=30) - timedelta(seconds=1)
-        #     current_date += timedelta(days=1)
-        # if timing == report_schemas.Timing.year:
-        #     end_time = current_date + timedelta(days=365) - timedelta(seconds=1)
-        #     current_date += timedelta(days=1)
-        # if time.sleep(5) == 5:
-        #     break
+        if timing == report_schemas.Timing.week:
+            ranges.append({"time": start_time, "count": 0})
+            start_time = current_date + timedelta(days=7)
+            current_date += timedelta(days=7)
 
-    return day_ranges
+        if timing == report_schemas.Timing.month:
+            range_month = get_month_range(start_date, end_date)
+            for start, end in range_month:
+                ranges.append({"time": start, "count": 0})
+            return ranges
+
+        if timing == report_schemas.Timing.year:
+            years = get_year_range(start_date, end_date)
+            for year in years:
+                ranges.append({"time": year, "count": 0})
+            return ranges
+
+    return ranges
 
 
 async def get_count_referred(
@@ -570,106 +276,74 @@ async def get_count_referred(
     start_time_in: datetime,
     end_time_in: datetime,
     timing: report_schemas.Timing,
+    zone_id: int | None = None,
 ) -> list:
 
-    group_by = create_ranges_date(
+    range_date = create_ranges_date(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
-    print(group_by)
 
-    count_record = await crud.record.get_count_referred_timing(
+    count_record = await crud.record.get_count_referred_by_timing(
         db,
         input_start_create_time=start_time_in,
         input_end_create_time=end_time_in,
-        timing=timing,
+        timing=(
+            timing
+            if timing != report_schemas.Timing.week
+            else report_schemas.Timing.day
+        ),
+        zone_id=zone_id,
     )
-    convert_to_dict_record = {time: count for time, count in count_record}
+    convert_to_dict_record = {
+        time.date(): count for time, count in count_record
+    }
+    for item in range_date:
+        if timing == report_schemas.Timing.day:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+        if timing == report_schemas.Timing.week:
+            # For weekly grouping, sum over a 7-day period
+            start_date = item[
+                "time"
+            ]  # Assuming `item["time"]` is the start of the week
+            end_date = start_date + timedelta(days=7)
+            week_count = 0
 
-    for i, (time, _) in enumerate(group_by):
-        if time in convert_to_dict_record:
-            group_by[i] = {"time": time, "count": convert_to_dict_record[time]}
-    # print(group_by)
+            # Iterate through each day in the 7-day period and sum up the count
+            current_date = start_date
+            while current_date < end_date:
+                if current_date in convert_to_dict_record:
+                    week_count += convert_to_dict_record[current_date]
+                current_date += timedelta(days=1)
 
-    # results = [{"time": time, "count": count} for time, count in group_by]
-    return group_by
+            item["start_time"] = item.pop("time")
+            item.update({"end_date": end_date})
+            item["count"] = week_count
+        if timing == report_schemas.Timing.month:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+                item.update({"end_time": last_day_of_month(item["time"])})
+                item["start_time"] = item.pop("time")
+            range_date.pop()
 
+        if timing == report_schemas.Timing.year:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+                item["start_time"] = item.pop("time").year
 
-#     list_referred = {}
-#     time_eghit_day_referred = [
-#         datetime.now(UTC).replace(
-#             tzinfo=None, hour=00, minute=00, second=00, microsecond=000000
-#         )
-#         - timedelta(days=i)
-#         for i in range(0, 8)
-#     ]
-#     today = (datetime.now(UTC).replace(tzinfo=None)).replace(
-#         hour=00,
-#         minute=00,
-#         second=00,
-#         microsecond=000000,
-#     )
-#     one_week = (
-#         datetime.now(UTC).replace(tzinfo=None) - timedelta(days=7)
-#     ).replace(
-#         hour=23,
-#         minute=59,
-#         second=59,
-#         microsecond=999999,
-#     )
-#     count_record = await crud.record.get_count_referred_timing(
-#         db,
-#         input_start_create_time=today,
-#         input_end_create_time=one_week,
-#     )
-#     date_referred = []
-#     for date, count in count_record:
-#         for time in time_eghit_day_referred:
-#             if date == time:
-#                 date_referred.append({"date": date, "count_referred": count})
-#             else:
-#                 count = 0
-#                 date_referred.append({"date": time, "count_referred": count})
-#     print(date_referred)
-#     date_referred_cahnge = []
-
-#     date_referred.reverse()
-#     for referred in range(len(date_referred)):
-
-#         today = date_referred[referred]["count_referred"]
-
-#         yesterday = date_referred[referred - 1]["count_referred"]
-
-#         percent_comparing = calculate_percentage(today, yesterday)
-
-#         date_referred[referred]["compare"] = round(percent_comparing)
-#         # date_referred_cahnge.append(
-#         #     {
-#         #         "start_date": date_referred[referred]["date"],
-#         #         "count_referred": date_referred[referred]["count_referred"],
-#         #         "percent": round(percent_comparing),
-#         #     }
-#         # )
-#     # date_referred_cahnge.remove(date_referred_cahnge[0])
-
-#     date_referred.reverse()
-
-#     list_referred["comparing_today_with_yesterday_one_week"] = (
-#         date_referred_cahnge
-#     )
-#     return date_referred
-#     return report_schemas.Referred(list_referred=list_referred)
+    return range_date
 
 
-# async def max_time_park(db: AsyncSession):
+async def max_time_park(db: AsyncSession):
 
-#     time_park, plate, created = await crud.record.max_time_record(db)
+    time_park, plate, created = await crud.record.max_time_record(db)
 
-#     # convert days to time
-#     time_park = convert_days_to_time(time_park)
+    # convert days to time
+    time_park = convert_time_to_minute(time_park)
 
-#     return report_schemas.MaxTimePark(
-#         plate=plate, created=created, time_as_minute=time_park
-#     )
+    return report_schemas.MaxTimePark(
+        plate=plate, created=created, time_as_minute=time_park
+    )
 
 
 async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):

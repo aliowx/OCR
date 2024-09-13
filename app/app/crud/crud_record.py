@@ -125,38 +125,35 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-    async def get_count_referred_timing(
+    async def get_count_referred_by_timing(
         self,
         db: AsyncSession,
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
         timing: Timing,
+        zone_id: int | None = None,
     ):
-        
+        filters = [
+            Record.is_deleted == False,
+            Record.created.between(
+                input_start_create_time, input_end_create_time
+            ),
+        ]
+
+        if zone_id is not None:
+            filters.append(Record.zone_id == zone_id)
 
         query = (
             select(
                 func.date_trunc(timing, Record.created).label(timing),
                 func.count(Record.id).label("count"),
             )
-            .where(
-                and_(
-                    Record.is_deleted == False,
-                    # Record.created.between(
-                    #     input_end_create_time, input_start_create_time
-                    # ),
-                    Record.created.between(
-                        input_start_create_time, input_end_create_time
-                    ),
-                )
-            )
+            .where(and_(*filters))
             .group_by(timing)
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()
-
-        print("fr",fetch)
 
         return fetch
 
@@ -317,6 +314,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
         if start_time_in is not None:
             filters.append(Record.created >= start_time_in)
+
+        avg_time_park = await db.scalar(query.filter(*filters))
+
+        return avg_time_park
+
+    async def get_avg_time_park(
+        self,
+        db: AsyncSession,
+        *,
+        start_time_in: datetime = None,
+        end_time_in: datetime = None,
+        zone_id: int,
+    ):
+
+        query = select(
+            func.avg(
+                ((Record.end_time) - (Record.start_time)).label("time_park")
+            ),
+        )
+
+        filters = [Record.is_deleted == False, Record.zone_id == zone_id]
+
+        if start_time_in is not None:
+            filters.append(Record.created >= start_time_in)
+
+        if end_time_in is not None:
+            filters.append(Record.created <= end_time_in)
 
         avg_time_park = await db.scalar(query.filter(*filters))
 

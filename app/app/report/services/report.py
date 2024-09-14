@@ -325,7 +325,6 @@ async def get_count_referred(
                 item["count"] = convert_to_dict_record[item["time"]]
                 item.update({"end_time": last_day_of_month(item["time"])})
                 item["start_time"] = item.pop("time")
-            range_date.pop()
 
         if timing == report_schemas.Timing.year:
             if item["time"] in convert_to_dict_record:

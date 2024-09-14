@@ -316,19 +316,16 @@ async def get_count_referred(
                 if current_date in convert_to_dict_record:
                     week_count += convert_to_dict_record[current_date]
                 current_date += timedelta(days=1)
-
-            item["start_time"] = item.pop("time")
             item.update({"end_date": end_date})
             item["count"] = week_count
         if timing == report_schemas.Timing.month:
             if item["time"] in convert_to_dict_record:
                 item["count"] = convert_to_dict_record[item["time"]]
                 item.update({"end_time": last_day_of_month(item["time"])})
-                item["start_time"] = item.pop("time")
-
         if timing == report_schemas.Timing.year:
             if item["time"] in convert_to_dict_record:
                 item["count"] = convert_to_dict_record[item["time"]]
+        item["start_time"] = item.pop("time")
 
     return range_date
 
@@ -408,7 +405,12 @@ async def report_bill(
 ):
 
     total_bills, bills_paid, bills_unpaid = (
-        await bill_repo.get_total_price_count(db, zone_id=zone_id)
+        await bill_repo.get_total_price_count(
+            db,
+            zone_id=zone_id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+        )
     )
 
     return {
@@ -425,3 +427,66 @@ async def report_bill(
             "count": bills_unpaid[1],
         },
     }
+
+
+async def report_bill_by_timing(
+    db: AsyncSession,
+    *,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    start_time_in: datetime,
+    end_time_in: datetime,
+):
+    range_dates = create_ranges_date(
+        start_date=start_time_in, end_date=end_time_in, timing=timing
+    )
+
+    total_bills = await bill_repo.get_total_price_by_timing(
+        db,
+        timing=(
+            timing
+            if timing != report_schemas.Timing.week
+            else report_schemas.Timing.day
+        ),
+        zone_id=zone_id,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+    )
+
+    convert_total_bills = {date.date(): price for date, price in total_bills}
+
+    for range_date in range_dates:
+        if timing == report_schemas.Timing.day:
+            if range_date["time"] in convert_total_bills:
+                range_date["count"] = convert_total_bills[range_date["time"]]
+        if timing == report_schemas.Timing.week:
+            # For weekly grouping, sum over a 7-day period
+            start_date = range_date[
+                "time"
+            ]  # Assuming `item["time"]` is the start of the week
+            end_date = start_date + timedelta(days=7)
+            week_price = 0
+
+            # Iterate through each day in the 7-day period and sum up the count
+            current_date = start_date
+            while current_date < end_date:
+                if current_date in convert_total_bills:
+                    week_price += convert_total_bills[current_date]
+                current_date += timedelta(days=1)
+            range_date.update({"end_date": end_date})
+            range_date["count"] = week_price
+        if timing == report_schemas.Timing.month:
+            if range_date["time"] in convert_total_bills:
+                range_date["count"] = convert_total_bills[range_date["time"]]
+                range_date.update(
+                    {"end_time": last_day_of_month(range_date["time"])}
+                )
+
+        if timing == report_schemas.Timing.year:
+            if range_date["time"] in convert_total_bills:
+                range_date["count"] = convert_total_bills[range_date["time"]]
+
+        range_date["start_time"] = range_date.pop("time")
+        range_date["price"] = range_date.pop("count")
+
+    return range_dates

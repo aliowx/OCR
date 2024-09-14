@@ -170,7 +170,9 @@ async def avg_price_per_referred(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
 
-    return APIResponse({"avg_price": await bill_repo.avg_price_per_referred(db)})
+    return APIResponse(
+        {"avg_price": await bill_repo.avg_price_per_referred(db)}
+    )
 
 
 @router.get("/count-entrance-exit-zone")
@@ -253,6 +255,43 @@ async def report_bill(
     return APIResponse(
         await report_services.report_bill(
             db,
+            zone_id=zone_id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+        )
+    )
+
+
+@router.get("/bill-by-timing")
+async def report_bill_by_timing(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(
+        await report_services.report_bill_by_timing(
+            db,
+            timing=timing,
             zone_id=zone_id,
             start_time_in=start_time_in,
             end_time_in=end_time_in,

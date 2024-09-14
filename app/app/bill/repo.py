@@ -7,6 +7,7 @@ from .schemas.bill import (
     Bill as billschemas,
     StatusBill,
 )
+from app.report.schemas import Timing
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -123,12 +124,23 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         return await db.scalar(query.filter(*[Bill.is_deleted == False]))
 
-    async def get_total_price_count(self, db: AsyncSession, zone_id: int):
+    async def get_total_price_count(
+        self,
+        db: AsyncSession,
+        *,
+        zone_id: int,
+        start_time_in: datetime,
+        end_time_in: datetime
+    ):
 
         filters = [Bill.is_deleted == False]
 
         if zone_id is not None:
             filters.append(Bill.zone_id == zone_id)
+        if start_time_in is not None:
+            filters.append(Bill.created >= start_time_in)
+        if end_time_in is not None:
+            filters.append(Bill.created <= end_time_in)
 
         query_total_count_price = select(
             func.sum(Bill.price),
@@ -170,6 +182,35 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             fetch_query_get_unpaid_price_count,
         )
 
+    async def get_total_price_by_timing(
+        self,
+        db: AsyncSession,
+        *,
+        timing: Timing,
+        zone_id: int,
+        start_time_in: datetime,
+        end_time_in: datetime
+    ):
+
+        filters = [Bill.is_deleted == False]
+
+        if zone_id is not None:
+            filters.append(Bill.zone_id == zone_id)
+        if start_time_in is not None:
+            filters.append(Bill.created >= start_time_in)
+        if end_time_in is not None:
+            filters.append(Bill.created <= end_time_in)
+
+        query = select(
+            func.date_trunc(timing, Bill.created).label(timing),
+            func.sum(Bill.price),
+        ).filter(*filters).group_by(timing)
+
+        excute_query_total_count_price = await db.execute(query)
+        fetch_query_total_price = excute_query_total_count_price.fetchall()
+
+        return fetch_query_total_price
+
     async def get(
         self, db: AsyncSession, id: int, for_update: bool = False
     ) -> Bill | Awaitable[Bill]:
@@ -192,11 +233,11 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         execute = await db.execute(query)
 
         count, total_price = execute.fetchone()
-        
+
         if count is None or count == 0:
-            return 0 
-        
-        return total_price/count
+            return 0
+
+        return total_price / count
 
 
 bill_repo = BillRepository(Bill)

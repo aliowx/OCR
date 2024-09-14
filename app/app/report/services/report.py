@@ -6,9 +6,8 @@ from app.parking.repo import zone_repo
 from datetime import datetime, timedelta, UTC
 from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
-from app.parking.repo import equipment_repo
+from app.parking.repo import equipment_repo, zone_repo
 from app.parking.services import zone as zone_services
-import time
 
 
 # calculate  first date month
@@ -331,9 +330,39 @@ async def get_count_referred(
         if timing == report_schemas.Timing.year:
             if item["time"] in convert_to_dict_record:
                 item["count"] = convert_to_dict_record[item["time"]]
-                item["start_time"] = item.pop("time").year
 
     return range_date
+
+
+async def get_count_referred_by_zone(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+    zone_id: int | None = None,
+) -> list:
+
+    if zone_id:
+        return await get_count_referred(
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+            zone_id=zone_id,
+        )
+    list_zone = []
+    if zone_id is None:
+        zones_ids = await zone_repo.get_multi(db, limit=None)
+        for zone in zones_ids:
+            zone_data = await get_count_referred(
+                db,
+                start_time_in=start_time_in,
+                end_time_in=end_time_in,
+                timing=timing,
+                zone_id=zone.id,
+            )
+            list_zone.append({"zone_name": zone.name, "data": zone_data})
+    return list_zone
 
 
 async def max_time_park(db: AsyncSession):

@@ -10,7 +10,7 @@ from .schemas.bill import (
 from sqlalchemy import false
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from datetime import datetime, UTC
 from typing import Awaitable
 from app.models import Record, Image
@@ -179,8 +179,24 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         )
         if for_update:
             return await self._first(db.scalars(query.with_for_update()))
-        
+
         return await self._first(db.scalars(query))
+
+    async def avg_price_per_referred(self, db: AsyncSession):
+
+        query = select(
+            func.count(Bill.record_id).label("count"),
+            func.sum(Bill.price).label("price"),
+        ).where(and_(Bill.record_id != None, Bill.is_deleted == False))
+
+        execute = await db.execute(query)
+
+        count, total_price = execute.fetchone()
+        
+        if count is None or count == 0:
+            return 0 
+        
+        return total_price/count
 
 
 bill_repo = BillRepository(Bill)

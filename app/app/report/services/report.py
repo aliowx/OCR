@@ -364,18 +364,6 @@ async def get_count_referred_by_zone(
     return list_zone
 
 
-async def max_time_park(db: AsyncSession):
-
-    time_park, plate, created = await crud.record.max_time_record(db)
-
-    # convert days to time
-    time_park = convert_time_to_minute(time_park)
-
-    return report_schemas.MaxTimePark(
-        plate=plate, created=created, time_as_minute=time_park
-    )
-
-
 async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):
 
     cameras_zones = await equipment_repo.get_entrance_exit_camera(

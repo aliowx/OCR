@@ -13,6 +13,7 @@ from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
 from datetime import datetime
+from app.bill.repo import bill_repo
 
 router = APIRouter()
 namespace = "report"
@@ -110,6 +111,7 @@ async def avrage_referred(
         )
     )
 
+
 @router.get("/referred-by-zone")
 async def avrage_referred(
     _: Annotated[
@@ -147,8 +149,8 @@ async def avrage_referred(
     )
 
 
-@router.get("/max-time-park")
-async def max_time_park(
+@router.get("/avg-price-per-referred")
+async def avg_price_per_referred(
     _: Annotated[
         bool,
         Depends(
@@ -168,7 +170,7 @@ async def max_time_park(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
 
-    return APIResponse(await report_services.max_time_park(db))
+    return APIResponse({"avg_price": await bill_repo.avg_price_per_referred(db)})
 
 
 @router.get("/count-entrance-exit-zone")

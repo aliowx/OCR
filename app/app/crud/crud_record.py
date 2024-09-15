@@ -5,8 +5,8 @@ import rapidjson
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, text
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy import func, and_
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -195,11 +195,25 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
     ) -> list[Record] | Awaitable[list[Record]]:
 
-        query = select(
-            Record,
-            ((Record.end_time) - (Record.start_time)).label("time_park"),
-            Zone.name,
-        ).join(Zone, Record.zone_id == Zone.id)
+
+        img_entrance = aliased(Image)
+        equipment_entance = aliased(Equipment)
+        img_exit = aliased(Image)
+        equipment_exit = aliased(Equipment)
+        query = (
+            select(
+                Record,
+                ((Record.end_time) - (Record.start_time)).label("time_park"),
+                Zone.name,
+                Equipment.serial_number.label("camera_entrance"),
+                Equipment.serial_number.label("camera_exit"),
+            )
+            .join(Zone, Record.zone_id == Zone.id)
+            .join(img_entrance, Record.img_entrance_id == img_entrance.id)
+            .join(equipment_entance, img_entrance.camera_id == equipment_entance.id)
+            .join(img_exit, Record.img_exit_id == img_exit.id)
+            .join(equipment_exit, img_exit.camera_id == equipment_exit.id)
+        )
 
         filters = [Record.is_deleted == False]
 
@@ -237,6 +251,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
+
 
         return [result, all_items_count]
 

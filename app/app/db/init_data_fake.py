@@ -211,7 +211,6 @@ def create_events(db: Session):
             camera_id=one_event.camera_id,
             zone_id=one_event.zone_id,
         )
-        print(event.camera_id)
         celery_app.send_task(
             "add_events",
             args=[jsonable_encoder(event)],

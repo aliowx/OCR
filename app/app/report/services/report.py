@@ -36,8 +36,8 @@ def convert_time_to_minutes(start_time, end_time):
     time_diffrence = end_time - start_time
 
     # seprating day from time
-    if time_diffrence.days:
-        days = time_diffrence.days * 24 * 60
+    if time_diffrence.day:
+        days = time_diffrence.day * 24 * 60
         time_diffrence = str(time_diffrence).split(", ")[
             1
         ]  # example 1 day, 00:00:00 -> 00:00:00
@@ -53,8 +53,8 @@ def convert_time_to_minutes(start_time, end_time):
 def convert_time_to_minute(time: datetime):
     minute = 0
     # seprating day from time
-    if time.days:
-        minute = time.days * 24 * 60
+    if time.day:
+        minute = time.day * 24 * 60
         time = str(time).split(", ")[1]  # example 1 day, 00:00:00 -> 00:00:00
     # Calculation hours, conversion minutes and seconds to hours
     hours, minutes, seconds = map(float, str(time).split(":"))

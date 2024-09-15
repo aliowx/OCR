@@ -306,7 +306,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         start_time_in: datetime = None,
         end_time_in: datetime = None,
-        zone_id: int,
+        zone_id: int | None = None,
     ):
 
         query = select(
@@ -315,7 +315,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             ),
         )
 
-        filters = [Record.is_deleted == False, Record.zone_id == zone_id]
+        filters = [Record.is_deleted == False]
+
+        if zone_id is not None:
+            filters.append(Record.zone_id == zone_id)
 
         if start_time_in is not None:
             filters.append(Record.created >= start_time_in)

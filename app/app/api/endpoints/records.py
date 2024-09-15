@@ -41,7 +41,7 @@ async def read_records(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    records = await records_services.calculator_time(db, params=record_in)
+    records = await records_services.get_multi_by_filters(db, params=record_in)
 
     return APIResponse(records)
 

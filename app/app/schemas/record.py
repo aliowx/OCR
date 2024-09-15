@@ -50,7 +50,10 @@ class RecordInDBBase(RecordBase):
 
 # Properties to return to client
 class Record(RecordInDBBase):
-    total_time: str | None = None
+    time_park: int | None = None
+    zone_name: str | None = None
+    camera_entrance: str | None = None
+    camera_exit: str | None = None
 
 
 # Properties properties stored in DB

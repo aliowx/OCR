@@ -15,6 +15,8 @@ from app.schemas.record import RecordCreate, RecordUpdate
 from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
+from app.parking.models import Zone, Equipment
+from app.models.image import Image
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -189,58 +191,53 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         ]
         return await self._all(db.scalars(query.filter(*filters)))
 
-    async def find_records(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_plate: str = None,
-        input_zone_id: int = None,
-        input_status_record: StatusRecord = None,
-        input_start_create_time: datetime = None,
-        input_end_create_time: datetime = None,
-        input_score: float = None,
-        skip: int = 0,
-        limit: int | None = None,
-        asc: bool = False,
+    async def get_multi_by_filters(
+        self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
     ) -> list[Record] | Awaitable[list[Record]]:
 
-        query = select(Record)
+        query = select(
+            Record,
+            ((Record.end_time) - (Record.start_time)).label("time_park"),
+            Zone.name,
+        ).join(Zone, Record.zone_id == Zone.id)
 
         filters = [Record.is_deleted == False]
 
-        if input_plate is not None:
-            filters.append(Record.plate.ilike(f"%{input_plate}%"))
+        if params.input_plate is not None:
+            filters.append(Record.plate.ilike(f"%{params.input_plate}%"))
 
-        if input_zone_id is not None:
-            filters.append(Record.zone_id == input_zone_id)
+        if params.input_zone_id is not None:
+            filters.append(Record.zone_id == params.input_zone_id)
 
-        if input_start_create_time is not None:
-            filters.append(Record.created >= input_start_create_time)
+        if params.input_start_time is not None:
+            filters.append(Record.created >= params.input_start_time)
 
-        if input_end_create_time is not None:
-            filters.append(Record.created <= input_end_create_time)
+        if params.input_end_time is not None:
+            filters.append(Record.created <= params.input_end_time)
 
-        if input_status_record is not None:
-            filters.append(Record.latest_status == input_status_record)
+        if params.input_status_record is not None:
+            filters.append(Record.latest_status == params.input_status_record)
 
-        if input_score is not None:
-            filters.append(Record.score >= input_score)
+        if params.input_score is not None:
+            filters.append(Record.score >= params.input_score)
 
         all_items_count = await self.count_by_filter(db, filters=filters)
-        if limit is None:
-            result = await self._all(
-                db.scalars(query.filter(*filters).offset(skip))
-            )
+
+        if params.limit is None:
+            result = (
+                await db.execute(query.filter(*filters).offset(params.skip))
+            ).fetchall()
 
             return [result, all_items_count]
-        result = await self._all(
-            db.scalars(
+        result = (
+            await db.execute(
                 query.filter(*filters)
-                .offset(skip)
-                .limit(limit)
-                .order_by(Record.id.asc() if asc else Record.id.desc())
+                .offset(params.skip)
+                .limit(params.limit)
+                .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
-        )
+        ).fetchall()
+
         return [result, all_items_count]
 
     async def get_record(
@@ -261,7 +258,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.latest_status == input_status)
 
         return await self._first(db.scalars(query.filter(*filters)))
-
 
     async def get_count_capacity(
         self,

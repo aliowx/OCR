@@ -6,6 +6,7 @@ from datetime import timedelta
 async def calculator_time(db: AsyncSession, *, params: schemas.ParamsRecord):
     records = await crud.record.find_records(
         db=db,
+        input_zone_id=params.input_zone_id,
         input_status_record=params.input_status_record,
         input_score=params.input_score,
         input_plate=params.input_plate,

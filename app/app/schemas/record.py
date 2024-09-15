@@ -62,6 +62,7 @@ class ParamsRecord(BaseModel):
     input_plate: str | None = None
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
+    input_zone_id: int | None = None
     input_score: float | None = None
     input_status_record: StatusRecord | None = None
     skip: int | None = 0

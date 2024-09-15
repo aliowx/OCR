@@ -371,7 +371,12 @@ async def get_count_referred_by_zone(
     return list_zone
 
 
-async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):
+async def count_entrance_exit_zone(
+    db: AsyncSession,
+    zone_id: int = None,
+    start_time_in: datetime| None = None,
+    end_time_in: datetime| None = None,
+):
 
     cameras_zones = await equipment_repo.get_entrance_exit_camera(
         db, zone_id=zone_id
@@ -379,7 +384,10 @@ async def count_entrance_exit_zone(db: AsyncSession, zone_id: int = None):
     data = []
     for camera_zone, zone in cameras_zones:
         count = await crud.event.count_entrance_exit_door(
-            db, camera_id=camera_zone.id
+            db,
+            camera_id=camera_zone.id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
         )
         if count:
             data.append(

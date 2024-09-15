@@ -193,13 +193,20 @@ async def count_entrance_exit_zone(
     current_user: models.User = Depends(deps.get_current_active_user),
     *,
     zone_id: int = None,
+    start_time_in: datetime | None = None,
+    end_time_in: datetime | None = None,
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
 
     return APIResponse(
-        await report_services.count_entrance_exit_zone(db, zone_id=zone_id)
+        await report_services.count_entrance_exit_zone(
+            db,
+            zone_id=zone_id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+        )
     )
 
 

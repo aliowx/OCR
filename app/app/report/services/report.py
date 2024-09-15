@@ -32,12 +32,12 @@ def get_month_dates(reference_date, months_ago):
 def convert_time_to_minutes(start_time, end_time):
     if start_time > end_time:
         return 0
-    days = 0
+    day = 0
     time_diffrence = end_time - start_time
 
     # seprating day from time
-    if time_diffrence.day:
-        days = time_diffrence.day * 24 * 60
+    if time_diffrence.days:
+        day = time_diffrence.days * 24 * 60
         time_diffrence = str(time_diffrence).split(", ")[
             1
         ]  # example 1 day, 00:00:00 -> 00:00:00
@@ -46,15 +46,15 @@ def convert_time_to_minutes(start_time, end_time):
     hours = hours * 60 if hours > 0 else 0
     minutes = minutes if minutes > 0 else 0
     seconds = seconds / 60 if seconds > 0 else 0
-    time_diffrence = hours + minutes + seconds + days
+    time_diffrence = hours + minutes + seconds + day
     return time_diffrence
 
 
 def convert_time_to_minute(time: datetime):
     minute = 0
     # seprating day from time
-    if time.day:
-        minute = time.day * 24 * 60
+    if time.days:
+        minute = time.days * 24 * 60
         time = str(time).split(", ")[1]  # example 1 day, 00:00:00 -> 00:00:00
     # Calculation hours, conversion minutes and seconds to hours
     hours, minutes, seconds = map(float, str(time).split(":"))

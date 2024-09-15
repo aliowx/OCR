@@ -61,7 +61,7 @@ class CountEntranceExitDoor(BaseModel):
 
 
 class ZoneReport(Zone):
-    totat_referred: int | None = 0
+    total_referred: int | None = 0
     avrage_stop_minute_today: int | None = 0
     avrage_amount_bill_today: float | None = 0
     income_today_parking: float | None = 0

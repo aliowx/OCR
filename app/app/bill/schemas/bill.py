@@ -23,7 +23,6 @@ class BillBase(BaseModel):
     record_id: int | None = None
     status: StatusBill | None = StatusBill.unpaid
     bill_number: int | None = None
-    zone_name: str | None = None
     zone_id: int | None = None
     img_entrance_id: int | None = None
     img_exit_id: int | None = None
@@ -65,7 +64,8 @@ class Bill(BillInDBBase):
     camera_entrance: str | None = None
     camera_exit: str | None = None
 
-class BillNotAdditionalDetail(BillInDBBase):...
+
+class BillNotAdditionalDetail(BillInDBBase): ...
 
 
 # Properties properties stored in DB

@@ -67,13 +67,24 @@ def create_image(db: Session):
         return commit_to_db(db, data=image, name="image")
     return image
 
+def create_price(db: Session):
+    price = db.query(models.Price).filter(*[models.Price.hourly_fee == 0,models.Price.entrance_fee == 20000]).first()
+    if not price:
+        return commit_to_db(db, data=models.Price(name="first simple price",entrance_fee=20000,hourly_fee=0), name="image")
+    return price
 
 def create_zone(db: Session):
-    zone = db.query(models.Zone).first()
+    zones = db.query(models.Zone).all()
+    zone_ids = []
+    price = create_price(db)
+    for zone in zones:
+        if not zone.price_id:
+            zone.price_id = price.id
+        zone_ids.append(zone.id)
     if not zone:
         zone = fake_data.ZONE
         commit_to_db(db, data=zone, name="zone")
-    return zone
+    return zone_ids
 
 
 def create_sub_zone(db: Session):
@@ -112,14 +123,14 @@ def create_records(db: Session):
 list_status_record = [
     schemas.StatusRecord.finished.value,
     schemas.StatusRecord.unfinished.value,
-    schemas.StatusRecord.unknown.value,
+    # schemas.StatusRecord.unknown.value,
 ]
 
 
 def create_records_past(db: Session):
     image = create_image(db)
-    zone_id = create_zone(db).id
-    for _ in range(1, 100):
+    zone_ids = create_zone(db)
+    for _ in range(1, 350):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -128,17 +139,16 @@ def create_records_past(db: Session):
             img_entrance_id=None,
             img_exit_id=None,
             score=0.01,
-            zone_id=None,
+            zone_id=random.choice(zone_ids),
             latest_status=random.choice(list_status_record),
             created=datetime(
-                year=random.randint(2022, 2024),
+                year=random.randint(2023, 2024),
                 month=random.randint(1, 12),
                 day=random.randint(1, 28),
             ).isoformat(),
         )
         record.img_entrance_id = image.id
         record.img_exit_id = image.id
-        record.zone_id = zone_id
         db.add(record)
         redis_client.publish(
             "records:1", rapidjson.dumps(jsonable_encoder(record))
@@ -150,16 +160,16 @@ def create_records_past(db: Session):
 def create_events(db: Session):
     image = create_image(db)
     camera = create_equipment(db)
-    zone = create_zone(db)
+    zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 5):
+    for _ in range(1, 500):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=camera.id,
-            zone_id=zone.id,
+            zone_id=random.choice(zone_ids),
             type_camera=schemas.event.TypeCamera.entranceDoor.value,
             created=random.choice(
                 [
@@ -175,7 +185,8 @@ def create_events(db: Session):
             args=[jsonable_encoder(event)],
         )
 
-    time.sleep(10)
+    # time.sleep(random.randint(120,1000))
+    time.sleep(20)
     for one_event in events:
         event = models.Event(
             plate=one_event.plate,
@@ -184,7 +195,7 @@ def create_events(db: Session):
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=camera.id,
-            zone_id=zone.id,
+            zone_id=one_event.zone_id,
         )
         celery_app.send_task(
             "add_events",
@@ -200,7 +211,7 @@ def init_db_fake_data(db: Session) -> None:
         # create_zone(db)
         # create_sub_zone(db)
         # create_records(db)
-        # create_records_past(db)
+        create_records_past(db)
         create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

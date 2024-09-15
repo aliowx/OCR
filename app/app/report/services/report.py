@@ -120,6 +120,7 @@ async def capacity(db: AsyncSession):
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
         avg_minute_park=convert_time_to_minute(avg_time_park),
+        len_zone=len(zones),
     )
 
 
@@ -374,8 +375,8 @@ async def get_count_referred_by_zone(
 async def count_entrance_exit_zone(
     db: AsyncSession,
     zone_id: int = None,
-    start_time_in: datetime| None = None,
-    end_time_in: datetime| None = None,
+    start_time_in: datetime | None = None,
+    end_time_in: datetime | None = None,
 ):
 
     cameras_zones = await equipment_repo.get_entrance_exit_camera(

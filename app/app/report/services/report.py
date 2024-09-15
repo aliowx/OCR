@@ -151,7 +151,8 @@ async def report_zone(db: AsyncSession):
         bills = await bill_repo.get_multi_bills(db, record_ids=record_ids)
         for bill in bills:
             avg_price += bill.price / len(bills)
-            total_price += bill.price
+            if bill.status == billSchemas.StatusBill.paid:
+                total_price += bill.price
         zone.avrage_amount_bill_today = round(avg_price)
         zone.income_today_parking = round(total_price)
         zone.pricings = []

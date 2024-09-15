@@ -195,7 +195,11 @@ async def park_time(
             }
         )
     list_avg_zone_time_park.append(
-        {"total_time_park": round(total_avrage_park_time.total_seconds() / 60)}
+        {
+            "avg_total_time_park": round(
+                total_avrage_park_time.total_seconds() / 60
+            )
+        }
     )
 
     return list_avg_zone_time_park

@@ -56,12 +56,12 @@ def create_equipment(db: Session):
         db.query(models.Equipment)
         .where(
             models.Equipment.is_deleted == False,
-            models.Equipment.equipment_type == 1,
+            models.Equipment.equipment_type == 2,
         )
         .all()
     )
     equipment = []
-    for entrance,exit in zip(equipment_entrance,equipment_exit):
+    for entrance, exit in zip(equipment_entrance, equipment_exit):
         equipment.append(entrance.id)
         equipment.append(exit.id)
     return equipment
@@ -74,11 +74,25 @@ def create_image(db: Session):
         return commit_to_db(db, data=image, name="image")
     return image
 
+
 def create_price(db: Session):
-    price = db.query(models.Price).filter(*[models.Price.hourly_fee == 0,models.Price.entrance_fee == 20000]).first()
+    price = (
+        db.query(models.Price)
+        .filter(
+            *[models.Price.hourly_fee == 0, models.Price.entrance_fee == 20000]
+        )
+        .first()
+    )
     if not price:
-        return commit_to_db(db, data=models.Price(name="first simple price",entrance_fee=20000,hourly_fee=0), name="image")
+        return commit_to_db(
+            db,
+            data=models.Price(
+                name="first simple price", entrance_fee=20000, hourly_fee=0
+            ),
+            name="image",
+        )
     return price
+
 
 def create_zone(db: Session):
     zones = db.query(models.Zone).all()
@@ -137,7 +151,7 @@ list_status_record = [
 def create_records_past(db: Session):
     image = create_image(db)
     zone_ids = create_zone(db)
-    for _ in range(1, 200):
+    for _ in range(1, 5):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -169,7 +183,7 @@ def create_events(db: Session):
     cameras = create_equipment(db)
     zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 200):
+    for _ in range(1, 5):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
@@ -178,13 +192,6 @@ def create_events(db: Session):
             camera_id=random.choice(cameras),
             zone_id=random.choice(zone_ids),
             type_camera=schemas.event.TypeCamera.entranceDoor.value,
-            created=random.choice(
-                [
-                    datetime.now(timezone.utc).replace(tzinfo=None)
-                    - timedelta(days=i)
-                    for i in range(0, 8)
-                ]
-            ),
         )
         events.append(event)
         celery_app.send_task(
@@ -204,6 +211,7 @@ def create_events(db: Session):
             camera_id=one_event.camera_id,
             zone_id=one_event.zone_id,
         )
+        print(event.camera_id)
         celery_app.send_task(
             "add_events",
             args=[jsonable_encoder(event)],

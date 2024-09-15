@@ -151,7 +151,7 @@ list_status_record = [
 def create_records_past(db: Session):
     image = create_image(db)
     zone_ids = create_zone(db)
-    for _ in range(1, 5):
+    for _ in range(1, 120):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -183,7 +183,7 @@ def create_events(db: Session):
     cameras = create_equipment(db)
     zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 5):
+    for _ in range(1, 250):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),

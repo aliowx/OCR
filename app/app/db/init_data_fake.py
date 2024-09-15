@@ -44,19 +44,26 @@ def create_parking(db: Session) -> None:
 
 
 def create_equipment(db: Session):
-    equipment = (
+    equipment_entrance = (
         db.query(models.Equipment)
         .where(
             models.Equipment.is_deleted == False,
-            models.Equipment.serial_number
-            == fake_data.EQUIPMENT.serial_number,
+            models.Equipment.equipment_type == 1,
         )
-        .first()
+        .all()
     )
-    if not equipment:
-        equipment = fake_data.EQUIPMENT
-        equipment.zone_id = create_zone(db).id
-        commit_to_db(db, data=equipment, name="equipment")
+    equipment_exit = (
+        db.query(models.Equipment)
+        .where(
+            models.Equipment.is_deleted == False,
+            models.Equipment.equipment_type == 1,
+        )
+        .all()
+    )
+    equipment = []
+    for entrance,exit in zip(equipment_entrance,equipment_exit):
+        equipment.append(entrance.id)
+        equipment.append(exit.id)
     return equipment
 
 
@@ -130,7 +137,7 @@ list_status_record = [
 def create_records_past(db: Session):
     image = create_image(db)
     zone_ids = create_zone(db)
-    for _ in range(1, 350):
+    for _ in range(1, 200):
         record = models.Record(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
@@ -159,16 +166,16 @@ def create_records_past(db: Session):
 
 def create_events(db: Session):
     image = create_image(db)
-    camera = create_equipment(db)
+    cameras = create_equipment(db)
     zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 500):
+    for _ in range(1, 200):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
             plate_image_id=image.id,
             lpr_image_id=image.id,
-            camera_id=camera.id,
+            camera_id=random.choice(cameras),
             zone_id=random.choice(zone_ids),
             type_camera=schemas.event.TypeCamera.entranceDoor.value,
             created=random.choice(
@@ -194,7 +201,7 @@ def create_events(db: Session):
             type_camera=schemas.event.TypeCamera.exitDoor.value,
             plate_image_id=image.id,
             lpr_image_id=image.id,
-            camera_id=camera.id,
+            camera_id=one_event.camera_id,
             zone_id=one_event.zone_id,
         )
         celery_app.send_task(

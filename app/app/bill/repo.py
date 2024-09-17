@@ -238,10 +238,14 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 Bill.created.between(start_time_in, end_time_in),
                 Record.created.between(start_time_in, end_time_in),
             )
-        query = select(
-            func.count(Record.id).label("count"),
-            func.sum(Bill.price).label("price"),
-        ).where(and_(*filters))
+        query = (
+            select(
+                func.count(Record.id).label("count"),
+                func.sum(Bill.price).label("price"),
+            )
+            .where(and_(*filters))
+            .join(Record)
+        )
 
         execute = await db.execute(query)
 

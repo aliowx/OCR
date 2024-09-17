@@ -138,7 +138,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                 )
             )
 
-
     async def get(
         self, db: Session | AsyncSession, id: int
     ) -> ModelType | Awaitable[ModelType] | None:
@@ -232,6 +231,16 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
         filters = [Zone.is_deleted == False, Zone.price_id == Price.id]
 
         return self._first(db.scalars(query.filter(*filters)))
+
+    async def get_capacity_count_zone(self, db: AsyncSession):
+
+        query = select(func.sum(Zone.capacity), func.count(Zone.id)).filter(
+            Zone.is_deleted == False
+        )
+
+        exe_fetch_query = (await db.execute(query)).fetchone()
+
+        return exe_fetch_query
 
 
 class EquipmentRepository(

@@ -82,11 +82,16 @@ def calculate_percentage(start_time, end_time):
 
 
 async def capacity(db: AsyncSession):
-    today = datetime.now(UTC).replace(tzinfo=None).date()
+    start_today = datetime.now(UTC).replace(
+        tzinfo=None, hour=0, minute=0, second=0, microsecond=0
+    )
+    end_today = datetime.now(UTC).replace(
+        tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
+    )
     count_referred = await crud.record.get_count_referred(
         db,
-        input_start_create_time=today,
-        input_end_create_time=today
+        input_start_create_time=start_today,
+        input_end_create_time=end_today,
     )
     count_today_except_status_unfinished = (
         await crud.record.get_total_park_today_except_unfinished(db)
@@ -94,26 +99,23 @@ async def capacity(db: AsyncSession):
 
     total_amount_bill = await bill_repo.get_total_amount_bill(db)
 
-    avg_time_park = await crud.record.avarage_time_referred(
-        db, start_time_in=today
+    avg_time_park = await crud.record.get_avg_time_park(
+        db, start_time_in=start_today, end_time_in=end_today
     )
 
-    zones = await zone_repo.get_multi(db)
-    total_count_in_parking = await crud.record.get_total_in_parking(db)
-    capacity_total = empty = 0
+    capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
-    if zones:
-        for zone in zones:
-            capacity_total += zone.capacity if zone.capacity else 0
+    total_count_in_parking = await crud.record.get_total_in_parking(db)
+    empty = 0
 
     if total_count_in_parking:
-        empty = capacity_total - total_count_in_parking
+        empty = capacity_zones - total_count_in_parking
         if empty < 0:
             empty = 0
     else:
-        empty = capacity_total
+        empty = capacity_zones
     return report_schemas.Capacity(
-        total=capacity_total,
+        total=capacity_zones,
         empty=empty,
         full=total_count_in_parking,
         total_today_park=count_today_except_status_unfinished
@@ -121,7 +123,7 @@ async def capacity(db: AsyncSession):
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
         avg_minute_park=convert_time_to_minute(avg_time_park),
-        len_zone=len(zones),
+        len_zone=count_zone,
     )
 
 

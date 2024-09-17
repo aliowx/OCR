@@ -278,22 +278,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return await db.scalar(query)
 
-    async def avarage_time_referred(
-        self, db: AsyncSession, start_time_in: datetime = None
-    ):
-
-        query = select(
-            func.avg(
-                ((Record.end_time) - (Record.start_time)).label("time_park")
-            )
-        )
-        filters = [Record.is_deleted == False]
-        if start_time_in is not None:
-            filters.append(Record.created >= start_time_in)
-
-        avg_time_park = await db.scalar(query.filter(*filters))
-
-        return avg_time_park
 
     async def get_avg_time_park(
         self,

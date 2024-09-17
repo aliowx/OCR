@@ -102,9 +102,10 @@ def create_zone(db: Session):
         if not zone.price_id:
             zone.price_id = price.id
         zone_ids.append(zone.id)
-    if not zone:
+    if not zones:
         zone = fake_data.ZONE
-        commit_to_db(db, data=zone, name="zone")
+        zone.zone_id = price.id
+        return commit_to_db(db, data=zone, name="zone")
     return zone_ids
 
 
@@ -162,11 +163,6 @@ def create_records_past(db: Session):
             score=0.01,
             zone_id=random.choice(zone_ids),
             latest_status=random.choice(list_status_record),
-            created=datetime(
-                year=random.randint(2023, 2024),
-                month=random.randint(1, 12),
-                day=random.randint(1, 28),
-            ).isoformat(),
         )
         record.img_entrance_id = image.id
         record.img_exit_id = image.id

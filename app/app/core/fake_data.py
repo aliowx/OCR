@@ -60,6 +60,12 @@ class FakeData(BaseSettings):
 
     IMAGE: ClassVar = models.Image()
 
+    PRICE: ClassVar = models.Price(
+        name="first name",
+        entrance_fee=20000,
+        hourly_fee=0,
+    )
+
     ZONE: ClassVar = models.Zone(
         name="zone",
         tag="z-p",
@@ -67,6 +73,7 @@ class FakeData(BaseSettings):
         floor_number=1,
         capacity=10,
         parent_id=None,
+        price_id=None
     )
     SUB_ZONE: ClassVar = models.Zone(
         name="sub_zone",

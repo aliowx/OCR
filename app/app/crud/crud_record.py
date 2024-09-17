@@ -109,7 +109,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-
     async def get_count_referred_by_timing(
         self,
         db: AsyncSession,
@@ -143,14 +142,19 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         return fetch
 
     async def get_today_count_referred_by_zone(
-        self, db: Session | AsyncSession, *, zone_id: int = None
+        self,
+        db: Session | AsyncSession,
+        *,
+        zone_id: int = None,
+        start_time_in: datetime,
+        end_time_in: datetime,
     ):
 
         query = select(Record)
 
         filters = [
             Record.is_deleted == False,
-            Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
+            Record.created.between(start_time_in, end_time_in),
             Record.zone_id == zone_id,
         ]
 
@@ -277,7 +281,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
         return await db.scalar(query)
-
 
     async def get_avg_time_park(
         self,

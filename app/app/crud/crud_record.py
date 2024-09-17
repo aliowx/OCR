@@ -41,12 +41,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         plate: schemas.Event,
         status: StatusRecord,
-        offset: timedelta = timedelta(
-            seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
-        ),
         for_update: bool = False,
     ) -> Optional[Record]:
 
+        offset = timedelta(
+            seconds=settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR
+        )
         q = (
             db.query(Record)
             .filter(
@@ -195,7 +195,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
     ) -> list[Record] | Awaitable[list[Record]]:
 
-
         img_entrance = aliased(Image)
         equipment_entance = aliased(Equipment)
         img_exit = aliased(Image)
@@ -210,7 +209,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             )
             .join(Zone, Record.zone_id == Zone.id)
             .join(img_entrance, Record.img_entrance_id == img_entrance.id)
-            .join(equipment_entance, img_entrance.camera_id == equipment_entance.id)
+            .join(
+                equipment_entance,
+                img_entrance.camera_id == equipment_entance.id,
+            )
             .join(img_exit, Record.img_exit_id == img_exit.id)
             .join(equipment_exit, img_exit.camera_id == equipment_exit.id)
         )
@@ -251,7 +253,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
-
 
         return [result, all_items_count]
 

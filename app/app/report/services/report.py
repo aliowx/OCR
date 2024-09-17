@@ -189,7 +189,7 @@ async def park_time(
     for zone in zones:
         avrage_park_time = await crud.record.get_avg_time_park(
             db,
-            zone_id=zone.id,
+            zone_id_in=zone.id,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
         )

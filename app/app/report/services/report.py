@@ -83,9 +83,10 @@ def calculate_percentage(start_time, end_time):
 
 async def capacity(db: AsyncSession):
     today = datetime.now(UTC).replace(tzinfo=None).date()
-    count_referred = await crud.record.get_count_referred_today(
+    count_referred = await crud.record.get_count_referred(
         db,
         input_start_create_time=today,
+        input_end_create_time=today
     )
     count_today_except_status_unfinished = (
         await crud.record.get_total_park_today_except_unfinished(db)

@@ -109,23 +109,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-    async def get_count_referred_today(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_start_create_time: datetime = None,
-    ):
-
-        query = select(Record)
-
-        filters = [
-            Record.is_deleted == False,
-            Record.created >= input_start_create_time,
-        ]
-
-        return await db.scalar(
-            query.with_only_columns(func.count()).filter(*filters)
-        )
 
     async def get_count_referred_by_timing(
         self,

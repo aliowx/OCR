@@ -77,7 +77,7 @@ async def create_price(
     price_without_zone_ids = price_in.model_copy(
         update={"zone_ids": None}
     ).model_dump(exclude_none=True)
-    
+
     price = await price_repo.create(db, obj_in=price_without_zone_ids)
 
     if (price_in.zone_ids is not None) and (price_in.zone_ids != []):
@@ -190,10 +190,26 @@ async def update_price(
             detail="The price not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
+    update_price_without_zone_ids = price_in.model_copy(
+        update={"zone_ids": None}
+    ).model_dump(exclude_none=True)
 
-    return APIResponse(
-        await crud.price_repo.update(db, db_obj=price, obj_in=price_in)
+    updated_price = await crud.price_repo.update(
+        db, db_obj=price, obj_in=update_price_without_zone_ids
     )
+
+    if (price_in.zone_ids is not None) and (price_in.zone_ids != []):
+        for zone_id in price_in.zone_ids:
+            zone = await zone_repo.get(db, id=zone_id)
+            if not price:
+                raise exc.ServiceFailure(
+                    detail="The zone not created in the system.",
+                    msg_code=utils.MessageCodes.not_found,
+                )
+            zone.price_id = updated_price.id
+            await zone_repo.update(db, db_obj=zone)
+
+    return APIResponse(updated_price)
 
 
 @router.delete("/{id}")

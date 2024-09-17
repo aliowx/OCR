@@ -14,7 +14,8 @@ class PriceCreate(PriceBase):
     zone_ids: list[int] = None
 
 
-class PriceUpdate(PriceBase): ...
+class PriceUpdate(PriceBase):
+    zone_ids: list[int] = None
 
 
 class PriceInDBBase(PriceBase):

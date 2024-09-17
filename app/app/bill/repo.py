@@ -228,16 +228,23 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         return await self._first(db.scalars(query))
 
     async def avg_price_per_referred(
-        self, db: AsyncSession, start_time_in: datetime, end_time_in: datetime
+        self,
+        db: AsyncSession,
+        start_time_in: datetime,
+        end_time_in: datetime,
+        zone_id: int,
     ):
 
         filters = [Bill.is_deleted == False]
 
-        if start_time_in != None and end_time_in != None:
+        if start_time_in is not None and end_time_in is not None:
             filters.append(
                 Bill.created.between(start_time_in, end_time_in),
                 Record.created.between(start_time_in, end_time_in),
             )
+        if zone_id is not None:
+            filters.append(Bill.zone_id == zone_id)
+            filters.append(Record.zone_id == zone_id)
         query = (
             select(
                 func.count(Record.id).label("count"),

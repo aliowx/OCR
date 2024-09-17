@@ -201,10 +201,14 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if end_time_in is not None:
             filters.append(Bill.created <= end_time_in)
 
-        query = select(
-            func.date_trunc(timing, Bill.created).label(timing),
-            func.sum(Bill.price),
-        ).filter(*filters).group_by(timing)
+        query = (
+            select(
+                func.date_trunc(timing, Bill.created).label(timing),
+                func.sum(Bill.price),
+            )
+            .filter(*filters)
+            .group_by(timing)
+        )
 
         excute_query_total_count_price = await db.execute(query)
         fetch_query_total_price = excute_query_total_count_price.fetchall()
@@ -223,12 +227,21 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         return await self._first(db.scalars(query))
 
-    async def avg_price_per_referred(self, db: AsyncSession):
+    async def avg_price_per_referred(
+        self, db: AsyncSession, start_time_in: datetime, end_time_in: datetime
+    ):
 
+        filters = [Bill.is_deleted == False]
+
+        if start_time_in != None and end_time_in != None:
+            filters.append(
+                Bill.created.between(start_time_in, end_time_in),
+                Record.created.between(start_time_in, end_time_in),
+            )
         query = select(
-            func.count(Bill.record_id).label("count"),
+            func.count(Record.id).label("count"),
             func.sum(Bill.price).label("price"),
-        ).where(and_(Bill.record_id != None, Bill.is_deleted == False))
+        ).where(and_(*filters))
 
         execute = await db.execute(query)
 
@@ -237,7 +250,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if count is None or count == 0:
             return 0
 
-        return total_price / count
+        return round(total_price / count)
 
 
 bill_repo = BillRepository(Bill)

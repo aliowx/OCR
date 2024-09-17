@@ -164,6 +164,9 @@ async def avg_price_per_referred(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime | None = None,
+    end_time_in: datetime | None = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
@@ -171,7 +174,11 @@ async def avg_price_per_referred(
     """
 
     return APIResponse(
-        {"avg_price": await bill_repo.avg_price_per_referred(db)}
+        {
+            "avg_price": await bill_repo.avg_price_per_referred(
+                db, start_time_in=start_time_in, end_time_in=end_time_in
+            )
+        }
     )
 
 

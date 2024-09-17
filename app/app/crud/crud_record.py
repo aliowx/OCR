@@ -162,21 +162,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-    async def avrage_stop_time_today(
-        self,
-        db: Session | AsyncSession,
-        *,
-        input_zone_id: int = None,
-    ) -> list[Record] | Awaitable[list[Record]]:
-
-        query = select(Record)
-
-        filters = [
-            Record.is_deleted == False,
-            Record.created >= datetime.now(UTC).replace(tzinfo=None).date(),
-            Record.zone_id == input_zone_id,
-        ]
-        return await self._all(db.scalars(query.filter(*filters)))
 
     async def get_multi_by_filters(
         self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
@@ -288,7 +273,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         start_time_in: datetime = None,
         end_time_in: datetime = None,
-        zone_id: int | None = None,
+        zone_id_in: int | None = None,
     ):
 
         query = select(
@@ -299,8 +284,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [Record.is_deleted == False]
 
-        if zone_id is not None:
-            filters.append(Record.zone_id == zone_id)
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
 
         if start_time_in is not None:
             filters.append(Record.created >= start_time_in)

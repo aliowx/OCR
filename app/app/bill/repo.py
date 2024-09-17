@@ -88,18 +88,53 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         )
         return (items, count)
 
-    async def get_multi_bills(self, db: AsyncSession, *, record_ids: int):
+    async def get_price_income(
+        self,
+        db: AsyncSession,
+        *,
+        start_time_in: datetime = None,
+        end_time_in: datetime = None,
+        zone_id: int = None
+    ):
+        filters = [Bill.is_deleted == false()]
 
-        return await self._all(
-            db.scalars(
-                select(Bill).filter(
-                    *[
-                        Bill.is_deleted == false(),
-                        Bill.record_id.in_(record_ids),
-                    ]
-                )
-            )
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(Bill.created.between(start_time_in, end_time_in))
+
+        if zone_id is not None:
+            filters.append(Bill.zone_id.in_(zone_id))
+
+        query_sum_price_bill = select(
+            func.count(), func.sum(Bill.price)
+        ).filter(*filters)
+
+        filters_income = filters
+
+        filters_income.append(Bill.status == StatusBill.paid)
+
+        query_sum_income_bill = select(func.sum(Bill.price)).filter(
+            *filters_income
         )
+
+        count, total_price = (
+            await db.execute(query_sum_price_bill)
+        ).fetchone()
+        avg_price = total_price / count
+
+        total_income = await db.scalar(query_sum_income_bill)
+
+        if total_income == None or total_income == 0:
+            total_income = 0
+
+        if (
+            total_price is None
+            or total_price == 0
+            or count is None
+            or count == 0
+        ):
+            avg_price = 0
+
+        return avg_price, total_income
 
     async def get_total_amount_bill(self, db: AsyncSession):
 

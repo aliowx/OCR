@@ -136,10 +136,7 @@ async def report_zone(db: AsyncSession):
     )
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
-        record_ids = []
-        avg_price = 0
-        total_price = 0
-        av_time = timedelta()
+        zone_id = {zone.id}
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
         zone.total_referred = (
             await crud.record.get_today_count_referred_by_zone(
@@ -149,25 +146,24 @@ async def report_zone(db: AsyncSession):
                 end_time_in=end_today,
             )
         )
-        records = await crud.record.avrage_stop_time_today(
-            db, input_zone_id=zone.id
+        av_time = await crud.record.get_avg_time_park(
+            db,
+            zone_id_in=zone.id,
+            start_time_in=start_today,
+            end_time_in=end_today,
         )
-        if records:
-            for record in records:
-                record_ids.append(record.id)
-                av_time += record.end_time - record.start_time
-            zone.avrage_stop_minute_today = round(
-                (av_time.total_seconds() / len(records)) / 60
-            )
-        else:
-            zone.avrage_stop_time_today = 0
-        bills = await bill_repo.get_multi_bills(db, record_ids=record_ids)
-        for bill in bills:
-            avg_price += bill.price / len(bills)
-            if bill.status == billSchemas.StatusBill.paid:
-                total_price += bill.price
-        zone.avrage_amount_bill_today = round(avg_price)
-        zone.income_today_parking = round(total_price)
+
+        zone.avrage_stop_minute_today = round(av_time.total_seconds() / 60)
+
+        total_price, total_income = await bill_repo.get_price_income(
+            db,
+            zone_id=zone_id,
+            start_time_in=start_today,
+            end_time_in=end_today,
+        )
+
+        zone.avrage_amount_bill_today = round(total_price)
+        zone.income_today_parking = round(total_income)
         zone.pricings = []
         zone.ancestors = []
         zone.children = []

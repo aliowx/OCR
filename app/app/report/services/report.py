@@ -442,15 +442,15 @@ async def report_bill(
 
     return {
         "total_bills": {
-            "price": total_bills[0],
+            "price": round(total_bills[0]),
             "count": total_bills[1],
         },
         "bills_paid": {
-            "price": bills_paid[0],
+            "price": round(bills_paid[0]),
             "count": bills_paid[1],
         },
         "bills_unpaid": {
-            "price": bills_unpaid[0],
+            "price": round(bills_unpaid[0]),
             "count": bills_unpaid[1],
         },
     }

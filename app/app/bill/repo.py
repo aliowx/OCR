@@ -116,15 +116,16 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             *filters_income
         )
 
-        count, total_price = (
-            await db.execute(query_sum_price_bill)
-        ).fetchone()
-        avg_price = total_price / count
-
         total_income = await db.scalar(query_sum_income_bill)
 
         if total_income == None or total_income == 0:
             total_income = 0
+
+        count, total_price = (
+            await db.execute(query_sum_price_bill)
+        ).fetchone()
+        if total_price and count:
+            avg_price = total_price / count
 
         if (
             total_price is None

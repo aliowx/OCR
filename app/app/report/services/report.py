@@ -440,26 +440,17 @@ async def report_bill(
         )
     )
 
-    if total_bills[0] is None or total_bills[1] is None:
-        total_bills[0] = total_bills[1] = 0
-
-    if bills_paid[0] is None or bills_paid[1] is None:
-        bills_paid[0] = bills_paid[1] = 0
-
-    if bills_unpaid[0] is None or bills_unpaid[1] is None:
-        bills_unpaid[0] = bills_unpaid[1] = 0
-
     return {
         "total_bills": {
-            "price": round(total_bills[0]),
+            "price": round(total_bills[0]) if total_bills[0] else 0,
             "count": total_bills[1],
         },
         "bills_paid": {
-            "price": round(bills_paid[0]),
+            "price": round(bills_paid[0]) if bills_paid[0] else 0,
             "count": bills_paid[1],
         },
         "bills_unpaid": {
-            "price": round(bills_unpaid[0]),
+            "price": round(bills_unpaid[0]) if bills_unpaid else 0,
             "count": bills_unpaid[1],
         },
     }

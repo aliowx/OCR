@@ -74,6 +74,15 @@ async def create_price(
     Create New price.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
+
+    get_price_by_name = await price_repo.get_by_name(db, name=price_in.name)
+
+    if get_price_by_name:
+        raise exc.ServiceFailure(
+            detail="early exist in system",
+            msg_code=utils.MessageCodes.duplicate_name,
+        )
+
     price_without_zone_ids = price_in.model_copy(
         update={"zone_ids": None}
     ).model_dump(exclude_none=True)
@@ -184,6 +193,17 @@ async def update_price(
     Update Price.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
+
+    get_price_by_name = await price_repo.get_by_name(
+        db, name=price_in.name, except_id=id
+    )
+
+    if get_price_by_name:
+        raise exc.ServiceFailure(
+            detail="early exist in system",
+            msg_code=utils.MessageCodes.duplicate_name,
+        )
+
     price = await crud.price_repo.get(db, id=id)
     if not price:
         raise exc.ServiceFailure(

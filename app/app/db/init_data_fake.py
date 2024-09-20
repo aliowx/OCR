@@ -15,6 +15,10 @@ import rapidjson
 from datetime import datetime, timedelta, timezone
 import time
 
+from app.bill.services.bill import calculate_price
+from app.bill.schemas import bill as billSchemas
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -130,16 +134,17 @@ def create_records(db: Session):
         fake_data.RECORD1,
         fake_data.RECORD2,
     ]
-
+    zone_ids = create_zone(db)
     image = create_image(db)
     for record in records_data:
         record.img_exit_id = image.id
         record.img_entrance_id = image.id
-        record.zone_id = create_zone(db).id
+        record.zone_id = random.choice(zone_ids)
         db.add(record)
     db.commit()
     db.refresh(record)
     logger.info("create record")
+    create_records_past(db)
 
 
 list_status_record = [
@@ -148,12 +153,23 @@ list_status_record = [
     # schemas.StatusRecord.unknown.value,
 ]
 
+status_bills = [
+    billSchemas.StatusBill.unpaid.value,
+    billSchemas.StatusBill.paid.value,
+]
+
 
 def create_records_past(db: Session):
     image = create_image(db)
     zone_ids = create_zone(db)
-    for _ in range(1, 120):
+    for _ in range(1, 1000):
         record = models.Record(
+            id=(
+                db.query(models.Record)
+                .order_by(models.Record.id.desc())
+                .first()
+            ).id
+            + 1,
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
             end_time=datetime.now(timezone.utc).replace(tzinfo=None)
@@ -163,10 +179,34 @@ def create_records_past(db: Session):
             score=0.01,
             zone_id=random.choice(zone_ids),
             latest_status=random.choice(list_status_record),
+            created=datetime(
+                year=random.randint(2023, 2024),
+                month=random.randint(1, 9),
+                day=random.randint(1, 20),
+            ),
         )
         record.img_entrance_id = image.id
         record.img_exit_id = image.id
         db.add(record)
+
+        if record.latest_status == schemas.StatusRecord.finished:
+            bill = models.Bill(
+                plate=record.plate,
+                start_time=record.start_time,
+                end_time=record.end_time,
+                issued_by=billSchemas.Issued.exit_camera.value,
+                price=calculate_price(
+                    db,
+                    zone_id=record.zone_id,
+                    start_time_in=record.start_time,
+                    end_time_in=record.end_time,
+                ),
+                record_id=record.id,
+                zone_id=record.zone_id,
+                status=random.choice(status_bills),
+            )
+            db.add(bill)
+
         redis_client.publish(
             "records:1", rapidjson.dumps(jsonable_encoder(record))
         )
@@ -179,10 +219,16 @@ def create_events(db: Session):
     cameras = create_equipment(db)
     zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 250):
+    for _ in range(1, 20):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-            record_time=(datetime.now(timezone.utc).replace(tzinfo=None)),
+            record_time=(
+                datetime(
+                    year=random.randint(2023, 2024),
+                    month=random.randint(1, 9),
+                    day=random.randint(1, 28),
+                )
+            ),
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=random.choice(cameras),
@@ -195,12 +241,12 @@ def create_events(db: Session):
             args=[jsonable_encoder(event)],
         )
 
-    # time.sleep(random.randint(120,1000))
-    time.sleep(20)
+    time.sleep(3)
     for one_event in events:
         event = models.Event(
             plate=one_event.plate,
-            record_time=datetime.now(timezone.utc).replace(tzinfo=None),
+            record_time=one_event.record_time
+            + timedelta(hours=random.randint(1, 16)),
             type_camera=schemas.event.TypeCamera.exitDoor.value,
             plate_image_id=image.id,
             lpr_image_id=image.id,
@@ -220,8 +266,8 @@ def init_db_fake_data(db: Session) -> None:
         # create_image(db)
         # create_zone(db)
         # create_sub_zone(db)
-        # create_records(db)
-        create_records_past(db)
+        create_records(db)
+        # create_records_past(db)
         create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

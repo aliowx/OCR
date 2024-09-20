@@ -92,7 +92,7 @@ class FakeData(BaseSettings):
         img_entrance_id=None,
         score=0.01,
         zone_id=None,
-        latest_status=MainSchema.StatusRecord.finished.value,
+        latest_status=MainSchema.StatusRecord.unfinished.value,
     )
 
     PLATE1: ClassVar = models.Event(
@@ -122,7 +122,7 @@ class FakeData(BaseSettings):
         img_entrance_id=None,
         score=0.01,
         zone_id=None,
-        latest_status=MainSchema.StatusRecord.finished.value,
+        latest_status=MainSchema.StatusRecord.unfinished.value,
         created=random.choice(
             [
                 datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)

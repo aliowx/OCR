@@ -178,7 +178,7 @@ def create_records_past(db: Session):
             img_exit_id=None,
             score=0.01,
             zone_id=random.choice(zone_ids),
-            latest_status=random.choice(list_status_record),
+            latest_status=schemas.StatusRecord.finished.value,
             created=datetime(
                 year=random.randint(2023, 2024),
                 month=random.randint(1, 9),
@@ -214,6 +214,12 @@ def create_records_past(db: Session):
     db.commit()
 
 
+type_camera_event = [
+    schemas.event.TypeCamera.entranceDoor.value,
+    schemas.event.TypeCamera.exitDoor.value,
+]
+
+
 def create_events(db: Session):
     image = create_image(db)
     cameras = create_equipment(db)
@@ -247,7 +253,7 @@ def create_events(db: Session):
             plate=one_event.plate,
             record_time=one_event.record_time
             + timedelta(hours=random.randint(1, 16)),
-            type_camera=schemas.event.TypeCamera.exitDoor.value,
+            type_camera=random.choice(type_camera_event),
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=one_event.camera_id,

@@ -153,7 +153,11 @@ async def report_zone(db: AsyncSession):
             end_time_in=end_today,
         )
 
-        zone.avrage_stop_minute_today = round(av_time.total_seconds() / 60)
+        if av_time:
+            convert_av_time = av_time.total_seconds() / 60
+        convert_av_time = 0
+        
+        zone.avrage_stop_minute_today = round(convert_av_time)
 
         total_price, total_income = await bill_repo.get_price_income(
             db,

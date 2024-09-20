@@ -94,7 +94,7 @@ def update_record(self, event_id) -> str:
                 latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-        else:
+        elif record:
             if record.start_time > event.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),

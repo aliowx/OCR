@@ -181,11 +181,11 @@ def update_record(self, event_id) -> str:
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
 
-    # sender.add_periodic_task(
-    #     settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
-    #     set_status_record.s(),
-    #     name="set status unknown for record after 24 hours becuse not exit",
-    # )
+    sender.add_periodic_task(
+        settings.AUTO_GEN_EVENT_FAKE,
+        set_status_record.s(),
+        name="set status unknown for record after 24 hours becuse not exit",
+    )
     if settings.DATA_FAKE_SET:
         sender.add_periodic_task(
             settings.AUTO_GEN_EVENT_FAKE,
@@ -254,7 +254,7 @@ def set_status_record(self):
     max_retries=1,
     soft_time_limit=240,
     time_limit=360,
-    name="set_status_record",
+    name="gen_fake_data",
 )
 def set_fake_data(self):
 

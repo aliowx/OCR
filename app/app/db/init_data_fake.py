@@ -225,7 +225,7 @@ def create_events(db: Session):
     cameras = create_equipment(db)
     zone_ids = create_zone(db)
     events = []
-    for _ in range(1, 20):
+    for _ in range(1, 50):
         event = models.Event(
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             record_time=(

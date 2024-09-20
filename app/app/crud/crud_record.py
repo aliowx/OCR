@@ -176,8 +176,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 Record,
                 ((Record.end_time) - (Record.start_time)).label("time_park"),
                 Zone.name,
-                equipment_entance.label("camera_entrance"),
-                equipment_exit.label("camera_exit"),
+                equipment_entance.serial_number.label("camera_entrance"),
+                equipment_exit.serial_number.label("camera_exit"),
             )
             .join(Zone, Record.zone_id == Zone.id)
             .join(img_entrance, Record.img_entrance_id == img_entrance.id)

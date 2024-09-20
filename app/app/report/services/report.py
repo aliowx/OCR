@@ -102,6 +102,10 @@ async def capacity(db: AsyncSession):
     avg_time_park = await crud.record.get_avg_time_park(
         db, start_time_in=start_today, end_time_in=end_today
     )
+    if avg_time_park:
+        avg_time_park = convert_time_to_minute(avg_time_park)
+    avg_time_park = 0
+
 
     capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
@@ -122,7 +126,7 @@ async def capacity(db: AsyncSession):
         + total_count_in_parking,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
-        avg_minute_park=convert_time_to_minute(avg_time_park),
+        avg_minute_park=avg_time_park,
         len_zone=count_zone,
     )
 
@@ -156,7 +160,7 @@ async def report_zone(db: AsyncSession):
         if av_time:
             convert_av_time = av_time.total_seconds() / 60
         convert_av_time = 0
-        
+
         zone.avrage_stop_minute_today = round(convert_av_time)
 
         total_price, total_income = await bill_repo.get_price_income(

@@ -14,11 +14,11 @@ async def get_multi_by_filters(
     #                   --> record[3] ==> camera_entrance
     #                   --> record[4] ==> camera_exit
 
-    resualt_record = []
+    resualt_record = set()
     for record in records[0]:
         record[0].zone_name = record[2]
         record[0].time_park = round(record[1].total_seconds() / 60)
         record[0].camera_entrance = record[3]
         record[0].camera_exit = record[4]
-        resualt_record.append(record[0])
+        resualt_record.add(record[0])
     return schemas.GetRecords(items=resualt_record, all_items_count=records[1])

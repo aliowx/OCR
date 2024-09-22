@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud
 from app import models
 from app.core.fake_data import fake_data
-from app.db.session import SessionLocal
 from app.db.session import AsyncSessionLocal
 from app import schemas
 import random
@@ -177,6 +176,11 @@ async def create_records(db: AsyncSession):
             last_record = record  # Store the last added record
 
     await db.commit()
+    await db.execute(
+            text(
+                "SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));"
+            )
+        )
 
     if last_record:  # Refresh only if there's a last record
         await db.refresh(last_record)
@@ -268,7 +272,11 @@ async def create_records_past(db: AsyncSession):
 
         # Use async commit/refresh
         await crud.record._commit_refresh(db=db, db_obj=record, commit=False)
-
+    await db.execute(
+            text(
+                "SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));"
+            )
+        )
     # Commit all changes after the loop
     await db.commit()
 

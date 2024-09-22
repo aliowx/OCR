@@ -162,14 +162,12 @@ status_bills = [
 def create_records_past(db: Session):
     image = create_image(db)
     zone_ids = create_zone(db)
-    for _ in range(1, 1000):
+    latest_id_record = (
+        db.query(models.Record).order_by(models.Record.id.desc()).first()
+    ).id
+    for i in range(1, 1000):
         record = models.Record(
-            id=(
-                db.query(models.Record)
-                .order_by(models.Record.id.desc())
-                .first()
-            ).id
-            + 1,
+            id=latest_id_record + i,
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
             start_time=datetime.now(timezone.utc).replace(tzinfo=None),
             end_time=datetime.now(timezone.utc).replace(tzinfo=None)

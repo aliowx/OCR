@@ -156,9 +156,9 @@ async def report_zone(db: AsyncSession):
             end_time_in=end_today,
         )
 
+        convert_av_time = 0
         if av_time:
             convert_av_time = av_time.total_seconds() / 60
-        convert_av_time = 0
 
         zone.avrage_stop_minute_today = round(convert_av_time)
 

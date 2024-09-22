@@ -162,7 +162,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-
     async def get_multi_by_filters(
         self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
     ) -> list[Record] | Awaitable[list[Record]]:
@@ -192,7 +191,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
 
         if params.input_plate is not None:
-            filters.append(Record.plate.ilike(f"%{params.input_plate}%"))
+            filters.append(Record.plate.ilike(params.input_plate))
 
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
@@ -225,7 +224,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
-
+        
         return [result, all_items_count]
 
     async def get_record(

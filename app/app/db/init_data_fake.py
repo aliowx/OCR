@@ -342,7 +342,7 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_sub_zone(db)
         await create_records(db)
         # await create_records_past(db)
-        await create_events(db)
+        # await create_events(db)
     except Exception as e:
         await logger.error(f"initial data creation error\n{e}")
 

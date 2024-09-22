@@ -83,9 +83,11 @@ async def create_equipment(db: AsyncSession):
 async def create_image(db: AsyncSession):
     image = await db.execute(select(models.Image).limit(1))
     image = image.scalars().first()
+    equipment_ids = await create_equipment(db)
 
     if not image:
         image = fake_data.IMAGE
+        image.camera_id = random.choice(equipment_ids)
         await commit_to_db(db, data=image, name="image")
 
     return image
@@ -98,7 +100,6 @@ async def create_price(db: AsyncSession):
         )
     )
     price = price.scalars().first()
-    print(price)
     if not price:
         await commit_to_db(
             db,

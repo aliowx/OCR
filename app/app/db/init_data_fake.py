@@ -216,22 +216,25 @@ async def create_records_past(db: AsyncSession):
     latest_id = await latest_id_records(db)
 
     for i in range(1, 1000):
-        time = datetime.now(timezone.utc).replace(tzinfo=None)
+        time = datetime(
+            year=random.randint(2023, 2024),
+            month=random.randint(1, 9),
+            day=random.randint(1, 20),
+            hour=random.randint(0, 23),
+            minute=random.randint(0, 59),
+            second=random.randint(0, 59),
+        )
         record = models.Record(
             id=latest_id + i,
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-            start_time=time + timedelta(minutes=random.randint(1, 25)),
+            start_time=time,
             end_time=time + timedelta(hours=random.randint(1, 23)),
             img_entrance_id=None,
             img_exit_id=None,
             score=0.01,
             zone_id=random.choice(zone_ids),
             latest_status=schemas.StatusRecord.finished.value,
-            created=datetime(
-                year=random.randint(2023, 2024),
-                month=random.randint(1, 9),
-                day=random.randint(1, 20),
-            ),
+            created=time,
         )
         record.img_entrance_id = image.id
         record.img_exit_id = image.id
@@ -284,13 +287,10 @@ async def create_events(db: AsyncSession):
     events = []
 
     for _ in range(1, 50):
+        time = datetime.now(timezone.utc).replace(tzinfo=None)
         event = models.Event(
             plate=f"{random.randint(10, 99)}{random.randint(10, 70)}{random.randint(100, 999)}{random.randint(10, 99)}",
-            record_time=datetime(
-                year=random.randint(2023, 2024),
-                month=random.randint(1, 9),
-                day=random.randint(1, 28),
-            ),
+            record_time=time,
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=random.choice(cameras),

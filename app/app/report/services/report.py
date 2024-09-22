@@ -106,7 +106,6 @@ async def capacity(db: AsyncSession):
         avg_time_park = convert_time_to_minute(avg_time_park)
     avg_time_park = 0
 
-
     capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
     total_count_in_parking = await crud.record.get_total_in_parking(db)
@@ -447,18 +446,27 @@ async def report_bill(
             end_time_in=end_time_in,
         )
     )
+    total_amount = 0
+    if total_bills[0] is not None:
+        total_amount = round(total_bills[0])
+    total_amount_paid = 0
+    if bills_paid[0] is not None:
+        total_amount_paid = round(bills_paid[0])
+    total_amount_unpaid = 0
+    if bills_unpaid[0] is not None:
+        total_amount_unpaid = round(bills_unpaid[0])
 
     return {
         "total_bills": {
-            "price": round(total_bills[0]) if total_bills[0] else 0,
+            "price": total_amount,
             "count": total_bills[1],
         },
         "bills_paid": {
-            "price": round(bills_paid[0]) if bills_paid[0] else 0,
+            "price": total_amount_paid,
             "count": bills_paid[1],
         },
         "bills_unpaid": {
-            "price": round(bills_unpaid[0]) if bills_unpaid else 0,
+            "price": total_amount_unpaid,
             "count": bills_unpaid[1],
         },
     }

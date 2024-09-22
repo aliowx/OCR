@@ -180,7 +180,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         query_total_count_price = select(
             func.sum(Bill.price),
-            func.count(Bill.id),
+            func.count(),
         ).filter(*filters)
 
         excute_query_total_count_price = await db.execute(

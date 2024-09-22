@@ -339,6 +339,11 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         await logger.error(f"initial data creation error\n{e}")
 
     finally:
+        await db.execute(
+            text(
+                "SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));"
+            )
+        )
         await db.close()
 
 

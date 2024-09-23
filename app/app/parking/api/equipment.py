@@ -43,9 +43,28 @@ async def read_equipments(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Equipment]]]:
     """
-    Read equipments.
-    
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
+    EquipmentType = {
+        CAMERA_ENTRANCE_DOOR = 1
+        CAMERA_EXIT_DOOR = 2
+        SENSOR = 3
+        ROADBLOCK = 4
+        DISPLAY = 5
+        ERS = 6
+        KIOSK = 7
+        PAYMENT_DEVICE = 8
+        REGIONAL_SWITCH = 9
+        REGIONAL_COMPUTER = 10
+        REGIONAL_CONTROLLER = 11
+        POS = 12
+        }
+    EquipmentStatus = {
+        HEALTHY = 1
+        BROKEN = 2
+        DISCONNECTED = 3
+        }
+
     """
 
     equipments = await equipment_services.read_equipments(db, params=params)
@@ -75,7 +94,25 @@ async def create_equipment(
     Create equipment.
 
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
-
+    EquipmentType = {
+        CAMERA_ENTRANCE_DOOR = 1
+        CAMERA_EXIT_DOOR = 2
+        SENSOR = 3
+        ROADBLOCK = 4
+        DISPLAY = 5
+        ERS = 6
+        KIOSK = 7
+        PAYMENT_DEVICE = 8
+        REGIONAL_SWITCH = 9
+        REGIONAL_COMPUTER = 10
+        REGIONAL_CONTROLLER = 11
+        POS = 12
+        }
+    EquipmentStatus = {
+        HEALTHY = 1
+        BROKEN = 2
+        DISCONNECTED = 3
+        }
     """
     equipment = await equipment_services.create_equipment(
         db, equipment_data=equipment_in
@@ -106,6 +143,27 @@ async def create_equipment_bulk(
     Bulk create equipments.
 
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
+    EquipmentType = {
+        CAMERA_ENTRANCE_DOOR = 1
+        CAMERA_EXIT_DOOR = 2
+        SENSOR = 3
+        ROADBLOCK = 4
+        DISPLAY = 5
+        ERS = 6
+        KIOSK = 7
+        PAYMENT_DEVICE = 8
+        REGIONAL_SWITCH = 9
+        REGIONAL_COMPUTER = 10
+        REGIONAL_CONTROLLER = 11
+        POS = 12
+        }
+
+    EquipmentStatus = {
+        HEALTHY = 1
+        BROKEN = 2
+        DISCONNECTED = 3
+        }
 
     """
     equipments = await equipment_services.create_equipment_bulk(
@@ -138,6 +196,27 @@ async def update_equipment(
     Update equipment.
 
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+
+    EquipmentType = {
+        CAMERA_ENTRANCE_DOOR = 1
+        CAMERA_EXIT_DOOR = 2
+        SENSOR = 3
+        ROADBLOCK = 4
+        DISPLAY = 5
+        ERS = 6
+        KIOSK = 7
+        PAYMENT_DEVICE = 8
+        REGIONAL_SWITCH = 9
+        REGIONAL_COMPUTER = 10
+        REGIONAL_CONTROLLER = 11
+        POS = 12
+        }
+
+    EquipmentStatus = {
+        HEALTHY = 1
+        BROKEN = 2
+        DISCONNECTED = 3
+        }
 
     """
     equipment = await equipment_services.update_equipment(

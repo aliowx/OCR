@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
 from app.parking.repo import equipment_repo, zone_repo
 from app.parking.services import zone as zone_services
+from typing import Any
 
 
 # calculate  first date month
@@ -311,7 +312,7 @@ async def get_count_referred(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
 
-    count_record = await crud.record.get_count_referred_by_timing(
+    count_record = await crud.record.get_count_referred_by_timing_status(
         db,
         input_start_create_time=start_time_in,
         input_end_create_time=end_time_in,
@@ -322,37 +323,81 @@ async def get_count_referred(
         ),
         zone_id=zone_id,
     )
-    convert_to_dict_record = {
-        time.date(): count for time, count in count_record
-    }
+    convert_to_dict_record = {}
+    for time, count, status in count_record:
+        record_date = time.date()
+        if record_date not in convert_to_dict_record:
+            convert_to_dict_record[record_date] = {}
+        convert_to_dict_record[record_date][status] = count
     for item in range_date:
         if timing == report_schemas.Timing.day:
             if item["time"] in convert_to_dict_record:
-                item["count"] = convert_to_dict_record[item["time"]]
+                item["count"] = {
+                    "unfinished": convert_to_dict_record[item["time"]].get(
+                        "unfinished", 0
+                    ),
+                    "finished": convert_to_dict_record[item["time"]].get(
+                        "finished", 0
+                    ),
+                    "unknown": convert_to_dict_record[item["time"]].get(
+                        "unknown", 0
+                    ),
+                }
+            else:
+                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
         if timing == report_schemas.Timing.week:
-            # For weekly grouping, sum over a 7-day period
-            start_date = item[
-                "time"
-            ]  # Assuming `item["time"]` is the start of the week
+            start_date = item["time"]
             end_date = start_date + timedelta(days=7)
-            week_count = 0
+            weekly_data = {"unfinished": 0, "finished": 0, "unknown": 0}
 
             # Iterate through each day in the 7-day period and sum up the count
             current_date = start_date
             while current_date < end_date:
                 if current_date in convert_to_dict_record:
-                    week_count += convert_to_dict_record[current_date]
+                    for status, count in convert_to_dict_record[
+                        current_date
+                    ].items():
+                        if status in weekly_data:
+                            weekly_data[status] += count
+                        else:
+                            weekly_data[status] = count
                 current_date += timedelta(days=1)
             item.update({"end_date": end_date})
-            item["count"] = week_count
+            item["count"] = weekly_data
         if timing == report_schemas.Timing.month:
             if item["time"] in convert_to_dict_record:
-                item["count"] = convert_to_dict_record[item["time"]]
-                item.update({"end_time": last_day_of_month(item["time"])})
+
+                item["count"] = {
+                    "unfinished": convert_to_dict_record[item["time"]].get(
+                        "unfinished", 0
+                    ),
+                    "finished": convert_to_dict_record[item["time"]].get(
+                        "finished", 0
+                    ),
+                    "unknown": convert_to_dict_record[item["time"]].get(
+                        "unknown", 0
+                    ),
+                }
+            else:
+                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
+            item.update({"end_time": last_day_of_month(item["time"])})
         if timing == report_schemas.Timing.year:
             if item["time"] in convert_to_dict_record:
-                item["count"] = convert_to_dict_record[item["time"]]
+                item["count"] = {
+                    "unfinished": convert_to_dict_record[item["time"]].get(
+                        "unfinished", 0
+                    ),
+                    "finished": convert_to_dict_record[item["time"]].get(
+                        "finished", 0
+                    ),
+                    "unknown": convert_to_dict_record[item["time"]].get(
+                        "unknown", 0
+                    ),
+                }
+            else:
+                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
         item["start_time"] = item.pop("time")
+        item["data"] = item.pop("count")
 
     return range_date
 
@@ -365,14 +410,44 @@ async def get_count_referred_by_zone(
     zone_id: int | None = None,
 ) -> list:
 
-    if zone_id:
-        return await get_count_referred(
-            db,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            timing=timing,
-            zone_id=zone_id,
+    async def _cal_count_referred_with_out_status(data: Any):
+        range_date = create_ranges_date(
+            start_date=start_time_in, end_date=end_time_in, timing=timing
         )
+        print(data)
+        convert_to_dict_record = {time.date(): count for time, count in data}
+
+        for item in range_date:
+            if timing == report_schemas.Timing.day:
+                if item["time"] in convert_to_dict_record:
+                    item["count"] = convert_to_dict_record[item["time"]]
+            if timing == report_schemas.Timing.week:
+                # For weekly grouping, sum over a 7-day period
+                start_date = item[
+                    "time"
+                ]  # Assuming `item["time"]` is the start of the week
+                end_date = start_date + timedelta(days=7)
+                week_count = 0
+
+                # Iterate through each day in the 7-day period and sum up the count
+                current_date = start_date
+                while current_date < end_date:
+                    if current_date in convert_to_dict_record:
+                        week_count += convert_to_dict_record[current_date]
+                    current_date += timedelta(days=1)
+                item.update({"end_date": end_date})
+                item["count"] = week_count
+            if timing == report_schemas.Timing.month:
+                if item["time"] in convert_to_dict_record:
+                    item["count"] = convert_to_dict_record[item["time"]]
+                    item.update({"end_time": last_day_of_month(item["time"])})
+            if timing == report_schemas.Timing.year:
+                if item["time"] in convert_to_dict_record:
+                    item["count"] = convert_to_dict_record[item["time"]]
+            item["start_time"] = item.pop("time")
+
+        return range_date
+
     list_zone = []
     all_count_referred = 0
     if zone_id is None:
@@ -380,21 +455,23 @@ async def get_count_referred_by_zone(
         for zone in zones_ids:
 
             total_count_referred = 0
-            zone_data = await get_count_referred(
+            zone_data = await crud.record.get_count_referred_with_out_status(
                 db,
-                start_time_in=start_time_in,
-                end_time_in=end_time_in,
+                input_start_create_time=start_time_in,
+                input_end_create_time=end_time_in,
                 timing=timing,
                 zone_id=zone.id,
             )
-            for count in zone_data:
+            record_detail = await _cal_count_referred_with_out_status(zone_data)
+            for count in record_detail:
+                # print(count["count"])
                 total_count_referred += count["count"]
-            zone_data.append({"total_referred": total_count_referred})
+            record_detail.append({"total_referred": total_count_referred})
             all_count_referred += total_count_referred
             list_zone.append(
                 {
                     "zone_name": zone.name,
-                    "data": zone_data,
+                    "data": record_detail,
                 }
             )
         list_zone.append({"all_count_referred": all_count_referred})

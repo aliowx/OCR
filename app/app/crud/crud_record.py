@@ -93,7 +93,41 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             query.with_only_columns(func.count()).filter(*filters)
         )
 
-    async def get_count_referred_by_timing(
+    async def get_count_referred_by_timing_status(
+        self,
+        db: AsyncSession,
+        *,
+        input_start_create_time: datetime = None,
+        input_end_create_time: datetime = None,
+        timing: Timing,
+        zone_id: int | None = None,
+    ):
+        filters = [
+            Record.is_deleted == False,
+            Record.created.between(
+                input_start_create_time, input_end_create_time
+            ),
+        ]
+
+        if zone_id is not None:
+            filters.append(Record.zone_id == zone_id)
+
+        query = (
+            select(
+                func.date_trunc(timing, Record.created).label(timing),
+                func.count(Record.id).label("count"),
+                Record.latest_status,
+            )
+            .where(and_(*filters))
+            .group_by(timing)
+            .group_by(Record.latest_status)
+        )
+        exec = await db.execute(query)
+        fetch = exec.fetchall()
+
+        return fetch
+
+    async def get_count_referred_with_out_status(
         self,
         db: AsyncSession,
         *,
@@ -234,12 +268,14 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self,
         db: AsyncSession,
     ):
-        return await db.scalar(select(func.count(Record.id)).filter(
-            *[
-                Record.is_deleted == False,
-                Record.latest_status == StatusRecord.unknown.value,
-            ]
-        ))
+        return await db.scalar(
+            select(func.count(Record.id)).filter(
+                *[
+                    Record.is_deleted == False,
+                    Record.latest_status == StatusRecord.unknown.value,
+                ]
+            )
+        )
 
     async def get_count_capacity(
         self,

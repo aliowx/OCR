@@ -114,14 +114,14 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         query = (
             select(
-                func.date_trunc(timing, Record.created).label(timing),
+                (func.date_trunc(timing, Record.created)).label(timing),
                 func.count(Record.id).label("count"),
                 Record.latest_status,
             )
             .where(and_(*filters))
             .group_by(timing)
             .group_by(Record.latest_status)
-            .order_by(Record.id.asc())
+            .order_by(timing)
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()
@@ -146,7 +146,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if zone_id is not None:
             filters.append(Record.zone_id == zone_id)
-
+        
         query = (
             select(
                 func.date_trunc(timing, Record.created).label(timing),
@@ -154,7 +154,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             )
             .where(and_(*filters))
             .group_by(timing)
-            .order_by(Record.id.asc())
+            .order_by(timing)
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()

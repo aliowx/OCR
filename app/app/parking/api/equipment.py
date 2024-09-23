@@ -39,7 +39,7 @@ async def read_equipments(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    params: schemas.ReadEquipmentsParams = Depends(),
+    params: schemas.FilterEquipmentsParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Equipment]]]:
     """

@@ -7,6 +7,7 @@ from app.models.base import EquipmentStatus, EquipmentType
 
 class Equipment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    
     equipment_type: Mapped[EquipmentType] = mapped_column(
         Integer, nullable=True
     )
@@ -14,6 +15,8 @@ class Equipment(Base):
         Integer, nullable=True
     )
     serial_number: Mapped[str] = mapped_column(String(50), nullable=True)
+
+    tag: Mapped[str] = mapped_column(String, nullable=True)
 
     ip_address: Mapped[str] = mapped_column(String(15), nullable=True)
 
@@ -37,4 +40,3 @@ class Equipment(Base):
         nullable=True,
     )
     zone = relationship("Zone", foreign_keys=zone_id)
-

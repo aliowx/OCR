@@ -8,27 +8,27 @@ from app.parking.schemas import Zone as schemasZone
 from app.utils import MessageCodes, PaginatedContent
 from pydantic import TypeAdapter
 
+
 async def get_multi_quipments(
-    db: AsyncSession,
-    params: schemas.ReadEquipmentsParams | schemas.ReadEquipmentsFilter,
+    db: AsyncSession, params: schemas.FilterEquipmentsParams
 ):
-    if isinstance(params, schemas.ReadEquipmentsParams):
-        params = params.db_filters
     equipments, total_count = await equipment_repo.get_multi_with_filters(
-        db, filters=params
+        db, params=params
     )
     return [equipments, total_count]
 
 
 async def read_equipments(
-    db: AsyncSession, params: schemas.ReadEquipmentsParams
+    db: AsyncSession, params: schemas.FilterEquipmentsParams
 ) -> PaginatedContent[list[schemas.Equipment]]:
     equipments, total_count = await get_multi_quipments(db, params)
     adapter = TypeAdapter(schemasZone)
     for zone in equipments:
         zone_detail = await zone_repo.get(db, id=zone.zone_id)
         if zone_detail:
-            zone.zone_detail = jsonable_encoder(adapter.validate_python(zone_detail, from_attributes=True))
+            zone.zone_detail = jsonable_encoder(
+                adapter.validate_python(zone_detail, from_attributes=True)
+            )
     return PaginatedContent(
         data=equipments,
         total_count=total_count,
@@ -48,8 +48,26 @@ async def create_equipment(
             detail="Zone  Not Found",
             msg_code=MessageCodes.not_found,
         )
-    params = schemas.ReadEquipmentsFilter(
-        ip_address__eq=equipment_data.ip_address,
+    params = schemas.FilterEquipmentsParams(
+        ip_address=equipment_data.ip_address,
+    )
+    ip_address_check, total_count_ip = await get_multi_quipments(db, params)
+    if total_count_ip:
+        raise ServiceFailure(
+            detail="Duplicate ip address",
+            msg_code=MessageCodes.duplicate_ip_address,
+        )
+    params = schemas.FilterEquipmentsParams(
+        tag=equipment_data.tag,
+    )
+    tag_check, total_count_tag = await get_multi_quipments(db, params)
+    if total_count_tag:
+        raise ServiceFailure(
+            detail="Duplicate tag",
+            msg_code=MessageCodes.duplicate_name,
+        )
+    params = schemas.FilterEquipmentsParams(
+        ip_address=equipment_data.ip_address,
     )
     ip_address_check, total_count_ip = await get_multi_quipments(db, params)
     if total_count_ip:
@@ -110,9 +128,9 @@ async def update_equipment(
                 msg_code=MessageCodes.not_found,
             )
 
-    if equipment_data.ip_address:
-        params = schemas.ReadEquipmentsFilter(
-            ip_address__eq=equipment_data.ip_address,
+    if equipment_data.ip_address is not None:
+        params = schemas.FilterEquipmentsParams(
+            ip_address=equipment_data.ip_address,
             size=1,
         )
         ip_address_check, total_count = await get_multi_quipments(
@@ -128,9 +146,9 @@ async def update_equipment(
                     msg_code=MessageCodes.duplicate_ip_address,
                 )
 
-    if equipment_data.serial_number:
-        params = schemas.ReadEquipmentsFilter(
-            serial_number__eq=equipment_data.serial_number,
+    if equipment_data.serial_number is not None:
+        params = schemas.FilterEquipmentsParams(
+            serial_number=equipment_data.serial_number,
             size=1,
         )
         serial_number_check, total_count = await get_multi_quipments(
@@ -145,6 +163,24 @@ async def update_equipment(
                 raise ServiceFailure(
                     detail="Duplicate equipment serial number",
                     msg_code=MessageCodes.duplicate_serial_number,
+                )
+    if equipment_data.tag is not None:
+        params = schemas.FilterEquipmentsParams(
+            tag=equipment_data.tag,
+            size=1,
+        )
+        tag_check, total_count = await get_multi_quipments(
+            db, params=params
+        )
+        if total_count:
+            if (
+                tag_check[0].tag
+                and equipment.tag
+                != tag_check[0].tag
+            ):
+                raise ServiceFailure(
+                    detail="Duplicate equipment tag",
+                    msg_code=MessageCodes.duplicate_name,
                 )
     if equipment_data.additional_data:
         current_additional_data = equipment.additional_data.copy()

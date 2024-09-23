@@ -15,7 +15,7 @@ from app.utils import APIResponse, APIResponseType
 from app.parking.repo import equipment_repo
 from app.utils import PaginatedContent
 from app.parking.schemas.equipment import (
-    ReadEquipmentsFilter,
+    FilterEquipmentsParams,
 )
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
@@ -51,8 +51,8 @@ async def read_events(
     if params.input_camera_serial is not None:
         camera_id, total_count = await equipment_repo.get_multi_with_filters(
             db,
-            filters=ReadEquipmentsFilter(
-                serial_number__eq=params.input_camera_serial
+            filters=FilterEquipmentsParams(
+                serial_number=params.input_camera_serial
             ),
         )
         params.input_camera_id = camera_id.id

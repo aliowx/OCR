@@ -19,7 +19,7 @@ from app.pricing.models import Price
 from .schemas.equipment import (
     EquipmentCreate,
     EquipmentUpdate,
-    ReadEquipmentsFilter,
+    FilterEquipmentsParams,
 )
 from .schemas.parking import ParkingCreate, ParkingUpdate
 from .schemas.spot import SpotCreate, SpotUpdate
@@ -246,53 +246,52 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]
 ):
-    def _build_filters(self, filters: ReadEquipmentsFilter) -> list:
-        orm_filters = []
-        if filters.zone_id__eq:
-            orm_filters.append(self.model.zone_id == filters.zone_id__eq)
-        if filters.equipment_type__eq:
-            orm_filters.append(
-                self.model.equipment_type == filters.equipment_type__eq
-            )
-        if filters.equipment_status__eq:
-            orm_filters.append(
-                self.model.equipment_status == filters.equipment_status__eq
-            )
-        if filters.ip_address__eq:
-            orm_filters.append(self.model.ip_address == filters.ip_address__eq)
-        if filters.serial_number__eq:
-            orm_filters.append(
-                self.model.serial_number == filters.serial_number__eq
-            )
-        return orm_filters
 
     async def get_multi_with_filters(
         self,
         db: AsyncSession,
         *,
-        filters: ReadEquipmentsFilter,
-        asc: bool = False,
+        params: FilterEquipmentsParams,
     ) -> tuple[list[Equipment], int]:
-        orm_filters = self._build_filters(filters)
-        query = select(Equipment).filter(
-            self.model.is_deleted == false(),
-            *orm_filters,
-        )
 
-        q = query.with_only_columns(func.count())
+        filters = [Equipment.is_deleted == false()]
+
+        query = select(Equipment)
+
+        if params.zone_id:
+            filters.append(self.model.zone_id == params.zone_id)
+
+        if params.equipment_type:
+            filters.append(self.model.equipment_type == params.equipment_type)
+
+        if params.equipment_status:
+            filters.append(
+                self.model.equipment_status == params.equipment_status
+            )
+
+        if params.ip_address:
+            filters.append(self.model.ip_address == params.ip_address)
+
+        if params.serial_number:
+            filters.append(self.model.serial_number == params.serial_number)
+
+        if params.tag:
+            filters.append(self.model.tag == params.tag)
+
+        q = query.with_only_columns(func.count()).filter(*filters)
         total_count = db.scalar(q)
 
-        order_by = self.model.id.asc() if asc else self.model.id.desc()
+        order_by = self.model.id.asc() if params.asc else self.model.id.desc()
         query = query.order_by(order_by)
 
-        if filters.limit is None:
+        if params.size is None:
             return (
-                await self._all(db.scalars(query.offset(filters.skip))),
+                await self._all(db.scalars(query.filter(*filters).offset(params.skip))),
                 await total_count,
             )
         return (
             await self._all(
-                db.scalars(query.offset(filters.skip).limit(filters.limit))
+                db.scalars(query.filter(*filters).offset(params.skip).limit(params.size))
             ),
             await total_count,
         )

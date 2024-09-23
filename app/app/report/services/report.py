@@ -93,11 +93,10 @@ async def capacity(db: AsyncSession):
         input_start_create_time=start_today,
         input_end_create_time=end_today,
     )
-    count_today_except_status_unfinished = (
-        await crud.record.get_total_park_today_except_unfinished(db)
-    )
 
     total_amount_bill = await bill_repo.get_total_amount_bill(db)
+    if total_amount_bill is None:
+        total_amount_bill = 0
 
     avg_time_park = await crud.record.get_avg_time_park(
         db, start_time_in=start_today, end_time_in=end_today
@@ -108,21 +107,23 @@ async def capacity(db: AsyncSession):
 
     capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
+    unknown_referred = await crud.record.get_count_unknown_referred(db)
+    if unknown_referred is None:
+        unknown_referred = 0
+
     total_count_in_parking = await crud.record.get_total_in_parking(db)
-    empty = 0
+    empty = capacity_zones
 
     if total_count_in_parking:
         empty = capacity_zones - total_count_in_parking
         if empty < 0:
             empty = 0
-    else:
-        empty = capacity_zones
+
     return report_schemas.Capacity(
         total=capacity_zones,
         empty=empty,
         full=total_count_in_parking,
-        total_today_park=count_today_except_status_unfinished
-        + total_count_in_parking,
+        unknown=unknown_referred,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
         avg_minute_park=avg_time_park,

@@ -15,7 +15,7 @@ class Capacity(BaseModel):
     total: int | None = None
     empty: int | None = None
     full: int | None = None
-    total_today_park: int | None = None
+    unknown: int | None = None
     count_referred: int | None = None
     total_amount_bill: float | None = None
     avg_minute_park: int | None = None

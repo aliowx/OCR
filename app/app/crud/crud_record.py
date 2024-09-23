@@ -63,22 +63,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         else:
             return q.first()
 
-    async def get_total_park_today_except_unfinished(
-        self, db: Session | AsyncSession
-    ):
-
-        return await db.scalar(
-            select(Record)
-            .with_only_columns(func.count())
-            .filter(
-                (Record.latest_status != StatusRecord.unfinished.value)
-                & (
-                    Record.created
-                    >= datetime.now(UTC).replace(tzinfo=None).date()
-                ),
-            )
-        )
-
     async def get_total_in_parking(self, db: Session | AsyncSession):
 
         return await db.scalar(
@@ -224,7 +208,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
-        
+
         return [result, all_items_count]
 
     async def get_record(
@@ -245,6 +229,17 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.latest_status == input_status)
 
         return await self._first(db.scalars(query.filter(*filters)))
+
+    async def get_count_unknown_referred(
+        self,
+        db: AsyncSession,
+    ):
+        return await db.scalar(select(func.count(Record.id)).filter(
+            *[
+                Record.is_deleted == False,
+                Record.latest_status == StatusRecord.unknown.value,
+            ]
+        ))
 
     async def get_count_capacity(
         self,

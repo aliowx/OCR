@@ -23,11 +23,10 @@ class EquipmentCreate(BaseModel):
     serial_number: str = Field(None, max_length=50)
     ip_address: str
     zone_id: int
-    tag:str
-    
+    tag: str
 
 
-class EquipmentUpdate(EquipmentBase):...
+class EquipmentUpdate(EquipmentBase): ...
 
 
 class EquipmentInDBBase(EquipmentBase):
@@ -48,8 +47,12 @@ class FilterEquipmentsParams(BaseModel):
     ip_address: str | None = None
     serial_number: str | None = None
     zone_id: int | None = None
-    equipment_type: EquipmentType  = None
-    equipment_status: EquipmentStatus = None 
+    equipment_type: EquipmentType | None = Field(
+        QueryParam(None, description=str(list(EquipmentType)))
+    )
+    equipment_status: EquipmentStatus | None = Field(
+        QueryParam(None, description=str(list(EquipmentStatus)))
+    )
     tag: str | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None

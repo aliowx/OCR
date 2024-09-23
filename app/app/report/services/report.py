@@ -414,7 +414,6 @@ async def get_count_referred_by_zone(
         range_date = create_ranges_date(
             start_date=start_time_in, end_date=end_time_in, timing=timing
         )
-        print(data)
         convert_to_dict_record = {time.date(): count for time, count in data}
 
         for item in range_date:
@@ -464,7 +463,6 @@ async def get_count_referred_by_zone(
             )
             record_detail = await _cal_count_referred_with_out_status(zone_data)
             for count in record_detail:
-                # print(count["count"])
                 total_count_referred += count["count"]
             record_detail.append({"total_referred": total_count_referred})
             all_count_referred += total_count_referred

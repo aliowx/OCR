@@ -374,9 +374,11 @@ async def get_count_referred_by_zone(
             zone_id=zone_id,
         )
     list_zone = []
+    all_count_referred = 0
     if zone_id is None:
         zones_ids = await zone_repo.get_multi(db, limit=None)
         for zone in zones_ids:
+
             total_count_referred = 0
             zone_data = await get_count_referred(
                 db,
@@ -388,12 +390,14 @@ async def get_count_referred_by_zone(
             for count in zone_data:
                 total_count_referred += count["count"]
             zone_data.append({"total_referred": total_count_referred})
+            all_count_referred += total_count_referred
             list_zone.append(
                 {
                     "zone_name": zone.name,
                     "data": zone_data,
                 }
             )
+        list_zone.append({"all_count_referred": all_count_referred})
     return list_zone
 
 

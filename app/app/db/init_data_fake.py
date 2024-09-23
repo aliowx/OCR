@@ -177,10 +177,8 @@ async def create_records(db: AsyncSession):
 
     await db.commit()
     await db.execute(
-            text(
-                "SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));"
-            )
-        )
+        text("SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));")
+    )
 
     if last_record:  # Refresh only if there's a last record
         await db.refresh(last_record)
@@ -273,10 +271,8 @@ async def create_records_past(db: AsyncSession):
         # Use async commit/refresh
         await crud.record._commit_refresh(db=db, db_obj=record, commit=False)
     await db.execute(
-            text(
-                "SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));"
-            )
-        )
+        text("SELECT setval('record_id_seq', (SELECT MAX(id) FROM record));")
+    )
     # Commit all changes after the loop
     await db.commit()
 
@@ -294,43 +290,60 @@ async def create_events(db: AsyncSession):
     zone_ids = await create_zone(db)
     events = []
 
-    for _ in range(1, 50):
-        time = datetime.now(timezone.utc).replace(tzinfo=None)
+    for _ in range(1, 250):
+        time = datetime(
+            year=random.randint(2023, 2024),
+            month=random.randint(1, 9),
+            day=random.randint(1, 22),
+            hour=random.randint(0, 23),
+            minute=random.randint(0, 59),
+            second=random.randint(0, 59),
+        )
+        time_now = datetime.now(timezone.utc).replace(tzinfo=None)
         event = models.Event(
             plate=f"{random.randint(10, 99)}{random.randint(10, 70)}{random.randint(100, 999)}{random.randint(10, 99)}",
-            record_time=time,
+            record_time=time_now,
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=random.choice(cameras),
             zone_id=random.choice(zone_ids),
-            type_camera=schemas.event.TypeCamera.entranceDoor.value,
+            type_camera=random.choice(type_camera_event),
+            created=time
         )
-        events.append(event)
+        db.add(event)
+    await crud.record._commit_refresh(db=db, db_obj=event, commit=True)
+        # events.append(event)
+        # await crud.record._commit_refresh(db=db, db_obj=event, commit=False)
+    # await db.commit()
         # Sending tasks to Celery asynchronously
-        celery_app.send_task(
-            "add_events",
-            args=[jsonable_encoder(event)],
-        )
+        # celery_app.send_task(
+        #     "add_events",
+        #     args=[jsonable_encoder(event)],
+        # )
 
     # Use asyncio.sleep instead of time.sleep to avoid blocking
-    await asyncio.sleep(3)
+    # await asyncio.sleep(3)
 
-    for one_event in events:
-        event = models.Event(
-            plate=one_event.plate,
-            record_time=one_event.record_time
-            + timedelta(hours=random.randint(1, 16)),
-            type_camera=random.choice(type_camera_event),
-            plate_image_id=image.id,
-            lpr_image_id=image.id,
-            camera_id=one_event.camera_id,
-            zone_id=one_event.zone_id,
-        )
-        # Sending tasks to Celery asynchronously
-        celery_app.send_task(
-            "add_events",
-            args=[jsonable_encoder(event)],
-        )
+    # for one_event in events:
+    #     event = models.Event(
+    #         plate=one_event.plate,
+    #         record_time=one_event.record_time
+    #         + timedelta(hours=random.randint(1, 16)),
+    #         type_camera=random.choice(type_camera_event),
+    #         plate_image_id=image.id,
+    #         lpr_image_id=image.id,
+    #         camera_id=one_event.camera_id,
+    #         zone_id=one_event.zone_id,
+    #         created=time+timedelta(hours=1)
+    #     )
+    #     db.add(events)
+    #     # Sending tasks to Celery asynchronously
+    #     # celery_app.send_task(
+    #     #     "add_events",
+    #     #     args=[jsonable_encoder(event)],
+    #     # )
+    #     await crud.record._commit_refresh(db=db, db_obj=event, commit=False)
+    # await db.commit()
 
 
 async def init_db_fake_data(db: AsyncSession) -> None:
@@ -340,11 +353,11 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_image(db)
         # await create_zone(db)
         # await create_sub_zone(db)
-        await create_records(db)
+        # await create_records(db)
         # await create_records_past(db)
-        # await create_events(db)
+        await create_events(db)
     except Exception as e:
-        await logger.error(f"initial data creation error\n{e}")
+        logger.error(f"initial data creation error\n{e}")
 
     finally:
         await db.execute(

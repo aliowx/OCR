@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, WebSocket, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas, utils
@@ -11,7 +11,7 @@ from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated
+from typing import Annotated, Optional, List
 from cache.redis import redis_connect_async
 
 
@@ -34,14 +34,18 @@ async def read_records(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
     record_in: schemas.ParamsRecord = Depends(),
+    input_status_record: Optional[List[schemas.record.StatusRecord]] = Query(
+        None
+    ),  # List of StatusRecord as query parameter
 ) -> APIResponseType[schemas.GetRecords]:
     """
     All record
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-
-    records = await records_services.get_multi_by_filters(db, params=record_in)
+    
+    records = await records_services.get_multi_by_filters(db, params=record_in,input_status_record=input_status_record)
 
     return APIResponse(records)
 

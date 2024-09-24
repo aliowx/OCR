@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, UTC
-from typing import Awaitable, Optional
+from typing import Awaitable, Optional, List
 
 import rapidjson
 from fastapi.encoders import jsonable_encoder
@@ -17,6 +17,7 @@ from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
 from app.models.image import Image
+from fastapi import Query
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -146,7 +147,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if zone_id is not None:
             filters.append(Record.zone_id == zone_id)
-        
+
         query = (
             select(
                 func.date_trunc(timing, Record.created).label(timing),
@@ -183,7 +184,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
     async def get_multi_by_filters(
-        self, db: Session | AsyncSession, *, params: schemas.ParamsRecord
+        self,
+        db: Session | AsyncSession,
+        *,
+        params: schemas.ParamsRecord,
+        input_status_record: Optional[
+            List[schemas.record.StatusRecord]
+        ] = Query(
+            None
+        ),  # List of StatusRecord as query parameter
     ) -> list[Record] | Awaitable[list[Record]]:
 
         img_entrance = aliased(Image)
@@ -222,8 +231,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_end_time is not None:
             filters.append(Record.created <= params.input_end_time)
 
-        if params.input_status_record is not None:
-            filters.append(Record.latest_status == params.input_status_record)
+        if input_status_record is not None:
+            filters.append(Record.latest_status.in_(input_status_record))
 
         if params.input_score is not None:
             filters.append(Record.score >= params.input_score)

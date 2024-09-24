@@ -3,7 +3,6 @@ from typing import List
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
-
 class StatusRecord(str, Enum):
     finished = "finished"
     unfinished = "unfinished"
@@ -67,7 +66,6 @@ class ParamsRecord(BaseModel):
     input_end_time: datetime | None = None
     input_zone_id: int | None = None
     input_score: float | None = None
-    input_status_record: StatusRecord | None = None
     skip: int | None = 0
     limit: int | None = 100
     asc: bool | None = False

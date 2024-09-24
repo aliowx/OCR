@@ -189,11 +189,18 @@ async def park_time(
 ):
     list_avg_zone_time_park = []
     convert_to_minute_time_park = 0
+
     total_avrage_park_time = await crud.record.get_avg_time_park(
         db,
         start_time_in=start_time_in,
         end_time_in=end_time_in,
     )
+    if total_avrage_park_time is not None:
+        total_avrage_park_time = round(
+            total_avrage_park_time.total_seconds() / 60
+        )
+    else:
+        total_avrage_park_time = 0
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
         avrage_park_time = await crud.record.get_avg_time_park(
@@ -213,11 +220,7 @@ async def park_time(
             }
         )
     list_avg_zone_time_park.append(
-        {
-            "avg_total_time_park": round(
-                total_avrage_park_time.total_seconds() / 60
-            )
-        }
+        {"avg_total_time_park": total_avrage_park_time}
     )
 
     return list_avg_zone_time_park
@@ -452,7 +455,7 @@ async def get_count_referred_by_zone(
     zones_ids = await zone_repo.get_multi(db, limit=None)
     if zone_id:
         zone = await zone_repo.get(db, id=zone_id)
-        zones_ids = [zone] 
+        zones_ids = [zone]
     for zone in zones_ids:
         total_count_referred = 0
         zone_data = await crud.record.get_count_referred_with_out_status(

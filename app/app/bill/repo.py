@@ -39,7 +39,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         self, db: AsyncSession, *, params: ParamsBill
     ) -> tuple[list[billschemas], int]:
 
-        query = select(Bill)
+        query = select(Bill).join(Record, Bill.record_id == Record.id)
 
         filters = [Bill.is_deleted == false()]
 
@@ -62,7 +62,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             filters.append(Bill.status == params.input_status)
 
         count = await db.scalar(
-            query.with_only_columns(func.count()).filter(*filters)
+            query.filter(*filters).with_only_columns(func.count())
         )
 
         order_by = Bill.id.asc() if params.asc else Bill.id.desc()
@@ -70,9 +70,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.size is None:
             items = await self._all(
                 db.scalars(
-                    query.order_by(order_by)
+                    query.filter(*filters)
+                    .order_by(order_by)
                     .offset(params.skip)
-                    .filter(*filters)
                 )
             )
 
@@ -80,10 +80,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         items = await self._all(
             db.scalars(
-                query.order_by(order_by)
+                query.filter(*filters)
+                .order_by(order_by)
                 .limit(params.size)
                 .offset(params.skip)
-                .filter(*filters)
             )
         )
         return (items, count)

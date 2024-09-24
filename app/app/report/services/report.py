@@ -447,33 +447,36 @@ async def get_count_referred_by_zone(
 
         return range_date
 
-    list_zone = []
     all_count_referred = 0
-    if zone_id is None:
-        zones_ids = await zone_repo.get_multi(db, limit=None)
-        for zone in zones_ids:
+    result = {}
+    zones_ids = await zone_repo.get_multi(db, limit=None)
+    if zone_id:
+        zone = await zone_repo.get(db, id=zone_id)
+        zones_ids = [zone] 
+    for zone in zones_ids:
+        total_count_referred = 0
+        zone_data = await crud.record.get_count_referred_with_out_status(
+            db,
+            input_start_create_time=start_time_in,
+            input_end_create_time=end_time_in,
+            timing=timing,
+            zone_id=zone.id,
+        )
+        record_detail = await _cal_count_referred_with_out_status(zone_data)
+        for record in record_detail:
+            start_time = record["start_time"]
+            count = record["count"]
 
-            total_count_referred = 0
-            zone_data = await crud.record.get_count_referred_with_out_status(
-                db,
-                input_start_create_time=start_time_in,
-                input_end_create_time=end_time_in,
-                timing=timing,
-                zone_id=zone.id,
-            )
-            record_detail = await _cal_count_referred_with_out_status(zone_data)
-            for count in record_detail:
-                total_count_referred += count["count"]
-            record_detail.append({"total_referred": total_count_referred})
-            all_count_referred += total_count_referred
-            list_zone.append(
-                {
-                    "zone_name": zone.name,
-                    "data": record_detail,
-                }
-            )
-        list_zone.append({"all_count_referred": all_count_referred})
-    return list_zone
+            if start_time not in result:
+                result[start_time] = {"total": 0}
+
+            result[start_time][zone.name] = count
+            result[start_time]["total"] += count
+
+            total_count_referred += count
+        all_count_referred += total_count_referred
+    result["all_count_referred"] = all_count_referred
+    return result
 
 
 async def count_entrance_exit_zone(

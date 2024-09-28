@@ -225,11 +225,25 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
 
-        if params.input_start_time is not None:
-            filters.append(Record.created >= params.input_start_time)
+        if params.input_created_start_time is not None:
+            filters.append(Record.created >= params.input_created_start_time)
 
-        if params.input_end_time is not None:
-            filters.append(Record.created <= params.input_end_time)
+        if params.input_created_end_time is not None:
+            filters.append(Record.created <= params.input_created_end_time)
+
+        if params.input_entrance_start_time is not None:
+            filters.append(
+                Record.start_time >= params.input_entrance_start_time
+            )
+
+        if params.input_entrance_end_time is not None:
+            filters.append(Record.start_time <= params.input_entrance_end_time)
+
+        if params.input_exit_start_time is not None:
+            filters.append(Record.end_time >= params.input_exit_start_time)
+
+        if params.input_exit_end_time is not None:
+            filters.append(Record.end_time <= params.input_exit_end_time)
 
         if input_status_record is not None:
             filters.append(Record.latest_status.in_(input_status_record))

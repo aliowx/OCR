@@ -85,7 +85,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
 
         filters.append(
-            Record.created.between(
+            Record.start_time.between(
                 input_start_create_time, input_end_create_time
             )
         )
@@ -105,7 +105,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
     ):
         filters = [
             Record.is_deleted == False,
-            Record.created.between(
+            Record.start_time.between(
                 input_start_create_time, input_end_create_time
             ),
         ]
@@ -115,7 +115,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         query = (
             select(
-                (func.date_trunc(timing, Record.created)).label(timing),
+                (func.date_trunc(timing, Record.start_time)).label(timing),
                 func.count(Record.id).label("count"),
                 Record.latest_status,
             )
@@ -140,7 +140,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
     ):
         filters = [
             Record.is_deleted == False,
-            Record.created.between(
+            Record.start_time.between(
                 input_start_create_time, input_end_create_time
             ),
         ]
@@ -150,7 +150,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         query = (
             select(
-                func.date_trunc(timing, Record.created).label(timing),
+                func.date_trunc(timing, Record.start_time).label(timing),
                 func.count(Record.id).label("count"),
             )
             .where(and_(*filters))
@@ -175,7 +175,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [
             Record.is_deleted == False,
-            Record.created.between(start_time_in, end_time_in),
+            Record.start_time.between(start_time_in, end_time_in),
             Record.zone_id == zone_id,
         ]
 
@@ -225,11 +225,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
 
-        if params.input_created_start_time is not None:
-            filters.append(Record.created >= params.input_created_start_time)
+        # if params.input_created_start_time is not None:
+        #     filters.append(Record.created >= params.input_created_start_time)
 
-        if params.input_created_end_time is not None:
-            filters.append(Record.created <= params.input_created_end_time)
+        # if params.input_created_end_time is not None:
+        #     filters.append(Record.created <= params.input_created_end_time)
 
         if params.input_entrance_start_time is not None:
             filters.append(
@@ -343,10 +343,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.zone_id == zone_id_in)
 
         if start_time_in is not None:
-            filters.append(Record.created >= start_time_in)
+            filters.append(Record.start_time >= start_time_in)
 
         if end_time_in is not None:
-            filters.append(Record.created <= end_time_in)
+            filters.append(Record.start_time <= end_time_in)
 
         avg_time_park = await db.scalar(query.filter(*filters))
 
@@ -366,7 +366,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [Record.is_deleted == False]
 
         if input_create_time is not None:
-            filters.append(Record.created <= input_create_time.isoformat())
+            filters.append(Record.start_time >= input_create_time)
 
         if input_status_record is not None:
             filters.append(Record.latest_status == input_status_record)

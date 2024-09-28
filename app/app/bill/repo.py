@@ -275,8 +275,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if start_time_in is not None and end_time_in is not None:
             filters.append(
-                Bill.created.between(start_time_in, end_time_in),
-                Record.created.between(start_time_in, end_time_in),
+                and_(
+                    Bill.created.between(start_time_in, end_time_in),
+                    Record.start_time.between(start_time_in, end_time_in),
+                )
             )
         if zone_id is not None:
             filters.append(Bill.zone_id == zone_id)

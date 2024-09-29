@@ -327,7 +327,9 @@ async def get_count_referred(
         zone_id=zone_id,
     )
     convert_to_dict_record = {}
+    total_count_record = 0
     for time, count, status in count_record:
+        total_count_record += count
         record_date = time.date()
         if record_date not in convert_to_dict_record:
             convert_to_dict_record[record_date] = {}
@@ -401,6 +403,7 @@ async def get_count_referred(
                 item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
         item["start_time"] = item.pop("time")
         item["data"] = item.pop("count")
+    range_date.append({"total_refferd": total_count_record})
 
     return range_date
 

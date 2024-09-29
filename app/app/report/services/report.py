@@ -494,12 +494,14 @@ async def count_entrance_exit_zone(
     )
     data = []
     for camera_zone, zone in cameras_zones:
+        print(camera_zone, zone,camera_zone.id)
         count = await crud.event.count_entrance_exit_door(
             db,
             camera_id=camera_zone.id,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
         )
+        print(count)
         if count:
             data.append(
                 {
@@ -507,7 +509,7 @@ async def count_entrance_exit_zone(
                     "type_camera": models.base.EquipmentType(
                         camera_zone.equipment_type
                     ).name,
-                    "camera_name": camera_zone.serial_number,
+                    "camera_name": camera_zone.tag,
                     "zone_name": zone.name,
                 }
             )
@@ -518,7 +520,7 @@ async def count_entrance_exit_zone(
                     "type_camera": models.base.EquipmentType(
                         camera_zone.equipment_type
                     ).name,
-                    "camera_name": camera_zone.serial_number,
+                    "camera_name": camera_zone.tag,
                     "zone_name": zone.name,
                 }
             )

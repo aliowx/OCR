@@ -91,16 +91,12 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
         query = (
             select(
                 # func.distinact return unique value
-                func.count(Event.camera_id).label("count")
+                func.count(Event.id).label("count")
             )
             .where(Event.camera_id.in_(camera_id_obj))
-            .group_by(Event.camera_id)
         )
 
-        filters = [
-            Event.is_deleted == False,
-            Event.created >= datetime.now(UTC).replace(tzinfo=None).date(),
-        ]
+        filters = [Event.is_deleted == False]
 
         if start_time_in is not None:
             filters.append(Event.created >= start_time_in)

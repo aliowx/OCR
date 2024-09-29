@@ -116,14 +116,14 @@ async def capacity(db: AsyncSession):
     empty = capacity_zones
 
     if total_count_in_parking:
-        empty = capacity_zones - total_count_in_parking
+        empty = capacity_zones - (total_count_in_parking + unknown_referred )
         if empty < 0:
             empty = 0
 
     return report_schemas.Capacity(
         total=capacity_zones,
         empty=empty,
-        full=total_count_in_parking,
+        full=total_count_in_parking + unknown_referred,
         unknown=unknown_referred,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,

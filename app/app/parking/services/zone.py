@@ -37,7 +37,12 @@ async def set_children_ancestors_capacity(
     zone.ancestors = await get_ancestors(db, zone)
 
     total_count_full = await curdRecord.get_count_capacity(
-        db, zone=zone, status_in=StatusRecord.unfinished.value
+        db,
+        zone=zone,
+        status_in=[
+            StatusRecord.unfinished.value,
+            StatusRecord.unfinished.value,
+        ],
     )
     zone.full = total_count_full
     zone.empty = (

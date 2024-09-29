@@ -306,7 +306,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self,
         db: Session | AsyncSession,
         zone: schemas.Zone,
-        status_in: StatusRecord,
+        status_in: list[StatusRecord],
     ):
         # add id zone and id subzone
         # when have list to add set use update
@@ -317,7 +317,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         query = (
             select(func.count(Record.id))
             .where(Record.zone_id.in_(zone_ids))
-            .filter(*[Record.latest_status == status_in])
+            .filter(*[Record.latest_status.in_(status_in)])
         )
 
         return await db.scalar(query)

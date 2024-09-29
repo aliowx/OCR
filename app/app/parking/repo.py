@@ -128,6 +128,15 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                 )
             )
 
+    async def get_zones_price(self, db: Session | AsyncSession):
+        query = select(Zone.name, Price.name).join(
+            Price, Zone.price_id == Price.id
+        )
+
+        zones_price = (await db.execute(query)).fetchall()
+
+        return zones_price
+
     async def get_multi_ancestor(self, db: Session | AsyncSession, ids: int):
         if ids is not None:
             return await self._all(
@@ -286,12 +295,18 @@ class EquipmentRepository(
 
         if params.size is None:
             return (
-                await self._all(db.scalars(query.filter(*filters).offset(params.skip))),
+                await self._all(
+                    db.scalars(query.filter(*filters).offset(params.skip))
+                ),
                 await total_count,
             )
         return (
             await self._all(
-                db.scalars(query.filter(*filters).offset(params.skip).limit(params.size))
+                db.scalars(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .limit(params.size)
+                )
             ),
             await total_count,
         )

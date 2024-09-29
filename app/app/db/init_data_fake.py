@@ -308,18 +308,18 @@ async def create_events(db: AsyncSession):
             camera_id=random.choice(cameras),
             zone_id=random.choice(zone_ids),
             type_camera=random.choice(type_camera_event),
-            created=time
+            created=time_now,
         )
         db.add(event)
     await crud.record._commit_refresh(db=db, db_obj=event, commit=True)
-        # events.append(event)
-        # await crud.record._commit_refresh(db=db, db_obj=event, commit=False)
+    # events.append(event)
+    # await crud.record._commit_refresh(db=db, db_obj=event, commit=False)
     # await db.commit()
-        # Sending tasks to Celery asynchronously
-        # celery_app.send_task(
-        #     "add_events",
-        #     args=[jsonable_encoder(event)],
-        # )
+    # Sending tasks to Celery asynchronously
+    # celery_app.send_task(
+    #     "add_events",
+    #     args=[jsonable_encoder(event)],
+    # )
 
     # Use asyncio.sleep instead of time.sleep to avoid blocking
     # await asyncio.sleep(3)

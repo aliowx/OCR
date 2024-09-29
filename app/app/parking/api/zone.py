@@ -201,10 +201,10 @@ async def create_zone(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , OPERATIONAL_STAFF ]
 
     """
-    
+
     zones_price = await zone_repo.get_zones_price(db)
+    result = []
     if zones_price:
-        result = {zone: price for zone, price in zones_price}
-    else:
-        result = {}
+        for zone, price in zones_price:
+            result.append({"zone_name": zone, "price_list_name": price})
     return APIResponse(result)

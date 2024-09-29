@@ -308,12 +308,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         zone: schemas.Zone,
         status_in: list[StatusRecord],
     ):
-        # add id zone and id subzone
-        # when have list to add set use update
-        # when have int to add set use add
+    
         zone_ids = {zone.id}
         zone_ids.update(zone.children)
-
         query = (
             select(func.count(Record.id))
             .where(Record.zone_id.in_(zone_ids))

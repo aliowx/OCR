@@ -52,7 +52,7 @@ class FilterEquipmentsParams(BaseModel):
     tag: str | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None
-    size: int | None = 100
+    size: int | None = None
     page: int = 1
     asc: bool = True
 

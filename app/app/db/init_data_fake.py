@@ -217,11 +217,14 @@ async def create_records_past(db: AsyncSession):
     zone_ids = await create_zone(db)
     latest_id = await latest_id_records(db)
 
-    for i in range(1, 1000):
+    for i in range(1, 200):
         time = datetime(
-            year=random.randint(2023, 2024),
-            month=random.randint(1, 9),
-            day=random.randint(1, 20),
+            # year=random.randint(2023, 2024),
+            year=2024,
+            # month=random.randint(1, 9),
+            month=9,
+            # day=random.randint(1, 20),
+            day=random.randint(1, 30),
             hour=random.randint(0, 23),
             minute=random.randint(0, 59),
             second=random.randint(0, 59),
@@ -292,9 +295,11 @@ async def create_events(db: AsyncSession):
 
     for _ in range(1, 250):
         time = datetime(
-            year=random.randint(2023, 2024),
-            month=random.randint(1, 9),
-            day=random.randint(1, 22),
+            # year=random.randint(2023, 2024),
+            year=2024,
+            # month=random.randint(1, 9),
+            month=9,
+            day=random.randint(1, 30),
             hour=random.randint(0, 23),
             minute=random.randint(0, 59),
             second=random.randint(0, 59),
@@ -302,7 +307,7 @@ async def create_events(db: AsyncSession):
         time_now = datetime.now(timezone.utc).replace(tzinfo=None)
         event = models.Event(
             plate=f"{random.randint(10, 99)}{random.randint(10, 70)}{random.randint(100, 999)}{random.randint(10, 99)}",
-            record_time=time_now,
+            record_time=time,
             plate_image_id=image.id,
             lpr_image_id=image.id,
             camera_id=random.choice(cameras),
@@ -354,7 +359,7 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_zone(db)
         # await create_sub_zone(db)
         # await create_records(db)
-        # await create_records_past(db)
+        await create_records_past(db)
         await create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

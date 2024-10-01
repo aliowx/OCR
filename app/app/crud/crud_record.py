@@ -258,7 +258,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 await db.execute(query.filter(*filters).offset(params.skip))
             ).fetchall()
 
-            print(result)
             return [result, all_items_count]
         result = (
             await db.execute(
@@ -268,7 +267,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
-        print(result)
 
         return [result, all_items_count]
 

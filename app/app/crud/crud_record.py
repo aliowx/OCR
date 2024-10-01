@@ -225,11 +225,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
 
-        # if params.input_created_start_time is not None:
-        #     filters.append(Record.created >= params.input_created_start_time)
+        if params.input_created_start_time is not None:
+            filters.append(Record.created >= params.input_created_start_time)
 
-        # if params.input_created_end_time is not None:
-        #     filters.append(Record.created <= params.input_created_end_time)
+        if params.input_created_end_time is not None:
+            filters.append(Record.created <= params.input_created_end_time)
 
         if params.input_entrance_start_time is not None:
             filters.append(
@@ -258,6 +258,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 await db.execute(query.filter(*filters).offset(params.skip))
             ).fetchall()
 
+            print(result)
             return [result, all_items_count]
         result = (
             await db.execute(
@@ -267,6 +268,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .order_by(Record.id.asc() if params.asc else Record.id.desc())
             )
         ).fetchall()
+        print(result)
 
         return [result, all_items_count]
 
@@ -308,7 +310,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         zone: schemas.Zone,
         status_in: list[StatusRecord],
     ):
-    
+
         zone_ids = {zone.id}
         zone_ids.update(zone.children)
         query = (

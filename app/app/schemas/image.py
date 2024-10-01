@@ -14,10 +14,12 @@ class ImageBinaryBase(ImageBase):
 
 class ImageBase64Base(ImageBase):
     image: Optional[str] = None
+    camera_id: Optional[int] = None
 
 
 class ImageCreateBase64(ImageBase64Base):
     image: str
+    camera_id: int
 
 
 class ImageCreateBinary(ImageBinaryBase):

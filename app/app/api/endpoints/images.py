@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 @router.post("/")
 async def create_image(
-    *,
     _: Annotated[
         bool,
         Depends(
@@ -34,6 +33,7 @@ async def create_image(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
     image_in: schemas.ImageCreateBase64,
 ) -> APIResponseType[schemas.ImageBase64InDB]:
     """

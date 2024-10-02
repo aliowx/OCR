@@ -157,7 +157,7 @@ async def create_records(db: AsyncSession):
     zone_ids = await create_zone(db)
     image = await create_image(db)
     latest_id = await latest_id_records(db)
-    if latest_id is None:
+    if latest_id is not None:
         last_record = None
         for record in records_data:
             record.id = latest_id + 1

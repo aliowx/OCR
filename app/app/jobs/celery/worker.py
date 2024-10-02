@@ -81,7 +81,13 @@ def update_record(self, event_id) -> str:
             status=StatusRecord.unfinished.value,
             for_update=True,
         )
-        if record is None and event.type_event != TypeEvent.exitDoor.value:
+        if (
+            record is None
+            and event.type_event != TypeEvent.exitDoor.value
+            and event.type_event != TypeEvent.admin_exitRegistration.value
+            and event.type_event
+            != TypeEvent.admin_exitRegistration_and_billIssuance.value
+        ):
             record = schemas.RecordCreate(
                 plate=event.plate,
                 start_time=event.record_time,
@@ -95,15 +101,20 @@ def update_record(self, event_id) -> str:
             )
             record = crud.record.create(db=self.session, obj_in=record)
         elif record:
+            record_update = None
+            latest_status = StatusRecord.unfinished.value
+            if (
+                event.type_event == TypeEvent.exitDoor.value
+                or event.type_event
+                == TypeEvent.admin_exitRegistration_and_billIssuance.value
+                or event.type_event == TypeEvent.admin_exitRegistration.value
+            ):
+                latest_status = StatusRecord.finished.value
             if record.start_time > event.record_time:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     start_time=event.record_time,
-                    latest_status=(
-                        StatusRecord.finished.value
-                        if event.type_event == TypeEvent.exitDoor.value
-                        else StatusRecord.unfinished.value
-                    ),
+                    latest_status=latest_status,
                 )
             if record.end_time < event.record_time:
                 record_update = RecordUpdate(
@@ -111,34 +122,35 @@ def update_record(self, event_id) -> str:
                     end_time=event.record_time,
                     img_entrance_id=event.lpr_image_id,
                     img_plate_exit_id=event.plate_image_id,
-                    latest_status=(
-                        StatusRecord.finished.value
-                        if event.type_event == TypeEvent.exitDoor.value
-                        else StatusRecord.unfinished.value
-                    ),
+                    latest_status=latest_status,
                 )
-            if not record_update:
+            if record_update is None:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
-                    latest_status=(
-                        StatusRecord.finished
-                        if event.type_event == TypeEvent.exitDoor.value
-                        else StatusRecord.unfinished.value
-                    ),
+                    latest_status=latest_status,
                 )
 
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
             )
 
-            if record.latest_status == StatusRecord.finished:
+            if (
+                record.latest_status == StatusRecord.finished
+                and event.type_event != TypeEvent.admin_exitRegistration.value
+            ):
+                issued_by = billSchemas.Issued.exit_camera.value
+                if (
+                    event.type_event
+                    == TypeEvent.admin_exitRegistration_and_billIssuance.value
+                ):
+                    issued_by = billSchemas.Issued.admin.value
                 bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
                         plate=record.plate,
                         start_time=record.start_time,
                         end_time=record.end_time,
-                        issued_by=billSchemas.Issued.exit_camera.value,
+                        issued_by=issued_by,
                         price=calculate_price(
                             self.session,
                             zone_id=record.zone_id,

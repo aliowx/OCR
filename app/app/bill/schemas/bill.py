@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class Issued(str, Enum):
     kiosk = "kiosk"
     exit_camera = "exit_camera"
+    admin = "admin"
 
 
 class StatusBill(str, Enum):

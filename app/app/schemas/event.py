@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from enum import Enum
@@ -9,6 +9,8 @@ class TypeEvent(str, Enum):
     sensor = "sensor"
     entranceDoor = "entranceDoor"
     exitDoor = "exitDoor"
+    admin_exitRegistration_and_billIssuance = "exitReg_billIssue"
+    admin_exitRegistration = "exitReg"
 
 
 # Shared properties
@@ -21,24 +23,18 @@ class EventBase(BaseModel):
     lpr_image_id: Optional[int] = None
     record_id: Optional[int] = None
 
-    camera_id: Optional[int] = Field(None, ge=1)
+    camera_id: Optional[int] = None
 
     spot_id: Optional[int] = None
     zone_id: Optional[int] = None
 
-    price_model_id: Optional[int] = Field(None)
     type_event: TypeEvent | None = None
 
 
 class EventCreate(EventBase):
     plate: str
-    record_time: datetime
-    spot_id: int | None = None
+    record_time: datetime = datetime.now(timezone.utc).replace(tzinfo=None)
     zone_id: int
-    camera_id: int
-    lpr_image_id: int
-    plate_image_id: int
-    price_model_id: int | None = None
     type_event: TypeEvent
 
 

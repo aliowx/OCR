@@ -39,6 +39,7 @@ class Event(Base):
         Integer,
         ForeignKey("equipment.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
+        nullable=True
     )
     camera = relationship("Equipment", foreign_keys=camera_id)
 

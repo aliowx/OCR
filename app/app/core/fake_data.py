@@ -104,7 +104,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.event.TypeCamera.entranceDoor,
+        type_event=MainSchema.event.TypeEvent.entranceDoor,
         created=random.choice(
             [
                 datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
@@ -140,7 +140,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.event.TypeCamera.entranceDoor,
+        type_event=MainSchema.event.TypeEvent.entranceDoor,
         created=random.choice(
             [
                 datetime.now(UTC).replace(tzinfo=None) - timedelta(days=i)
@@ -158,7 +158,7 @@ class FakeData(BaseSettings):
         lpr_image_id=None,
         camera_id=None,
         zone_id=None,
-        type_camera=MainSchema.event.TypeCamera.entranceDoor,
+        type_event=MainSchema.event.TypeEvent.entranceDoor,
         created=datetime(
             year=random.randint(2022, 2024),
             month=random.randint(1, 12),

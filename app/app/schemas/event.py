@@ -5,7 +5,7 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class TypeCamera(str, Enum):
+class TypeEvent(str, Enum):
     sensor = "sensor"
     entranceDoor = "entranceDoor"
     exitDoor = "exitDoor"
@@ -27,7 +27,7 @@ class EventBase(BaseModel):
     zone_id: Optional[int] = None
 
     price_model_id: Optional[int] = Field(None)
-    type_camera: TypeCamera | None = None
+    type_event: TypeEvent | None = None
 
 
 class EventCreate(EventBase):
@@ -39,7 +39,7 @@ class EventCreate(EventBase):
     lpr_image_id: int
     plate_image_id: int
     price_model_id: int | None = None
-    type_camera: TypeCamera
+    type_event: TypeEvent
 
 
 # Properties to receive on item update
@@ -91,5 +91,5 @@ class ParamsEvents(BaseModel):
 
 class ReportDoor(BaseModel):
     count: int | None = None
-    type_camera: TypeCamera | None = None
+    type_event: TypeEvent | None = None
     camera_name: str | None = None

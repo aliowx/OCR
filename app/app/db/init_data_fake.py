@@ -280,9 +280,9 @@ async def create_records_past(db: AsyncSession):
     await db.commit()
 
 
-type_camera_event = [
-    schemas.event.TypeCamera.entranceDoor.value,
-    schemas.event.TypeCamera.exitDoor.value,
+type_event = [
+    schemas.event.TypeEvent.entranceDoor.value,
+    schemas.event.TypeEvent.exitDoor.value,
 ]
 
 
@@ -312,7 +312,7 @@ async def create_events(db: AsyncSession):
             lpr_image_id=image.id,
             camera_id=random.choice(cameras),
             zone_id=random.choice(zone_ids),
-            type_camera=random.choice(type_camera_event),
+            type_event=random.choice(type_event),
             created=time_now,
         )
         db.add(event)
@@ -334,7 +334,7 @@ async def create_events(db: AsyncSession):
     #         plate=one_event.plate,
     #         record_time=one_event.record_time
     #         + timedelta(hours=random.randint(1, 16)),
-    #         type_camera=random.choice(type_camera_event),
+    #         type_event=random.choice(type_event),
     #         plate_image_id=image.id,
     #         lpr_image_id=image.id,
     #         camera_id=one_event.camera_id,
@@ -358,8 +358,8 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_image(db)
         # await create_zone(db)
         # await create_sub_zone(db)
-        # await create_records(db)
-        await create_records_past(db)
+        await create_records(db)
+        # await create_records_past(db)
         await create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

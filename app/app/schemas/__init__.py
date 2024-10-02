@@ -41,7 +41,7 @@ from .event import (
     EventCreate,
     EventUpdate,
     ParamsEvents,
-    TypeCamera,
+    TypeEvent,
 )
 from .record import (
     GetRecords,

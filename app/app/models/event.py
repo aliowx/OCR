@@ -17,7 +17,7 @@ class Event(Base):
         index=True,
     )
 
-    type_camera: Mapped[str] = mapped_column(String, nullable=True)
+    type_event: Mapped[str] = mapped_column(String, nullable=True)
 
     zone_id: Mapped[int] = mapped_column(
         Integer,
@@ -65,4 +65,3 @@ class Event(Base):
         nullable=True,
     )
     lpr_image = relationship("Image", foreign_keys=lpr_image_id)
-

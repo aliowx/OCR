@@ -8,7 +8,7 @@ from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.schemas import EventUpdate, RecordUpdate, TypeCamera, StatusRecord
+from app.schemas import EventUpdate, RecordUpdate, TypeEvent, StatusRecord
 
 from app.bill.services.bill import calculate_price
 from app.bill.repo import bill_repo
@@ -81,7 +81,7 @@ def update_record(self, event_id) -> str:
             status=StatusRecord.unfinished.value,
             for_update=True,
         )
-        if record is None and event.type_camera != TypeCamera.exitDoor.value:
+        if record is None and event.type_event != TypeEvent.exitDoor.value:
             record = schemas.RecordCreate(
                 plate=event.plate,
                 start_time=event.record_time,
@@ -101,7 +101,7 @@ def update_record(self, event_id) -> str:
                     start_time=event.record_time,
                     latest_status=(
                         StatusRecord.finished.value
-                        if event.type_camera == TypeCamera.exitDoor.value
+                        if event.type_event == TypeEvent.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )
@@ -113,7 +113,7 @@ def update_record(self, event_id) -> str:
                     img_plate_exit_id=event.plate_image_id,
                     latest_status=(
                         StatusRecord.finished.value
-                        if event.type_camera == TypeCamera.exitDoor.value
+                        if event.type_event == TypeEvent.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )
@@ -122,7 +122,7 @@ def update_record(self, event_id) -> str:
                     score=math.sqrt(record.score),
                     latest_status=(
                         StatusRecord.finished
-                        if event.type_camera == TypeCamera.exitDoor.value
+                        if event.type_event == TypeEvent.exitDoor.value
                         else StatusRecord.unfinished.value
                     ),
                 )

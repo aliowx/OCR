@@ -16,7 +16,7 @@ async def get_multi_by_filters(
     records = await crud.record.get_multi_by_filters(
         db=db, params=params, input_status_record=input_status_record
     )
-    ## ---> records[0]
+    ## ---> records
     #                   --> record[0] ==> records
     #                   --> record[1] ==> time_park
     #                   --> record[2] ==> zone_name

@@ -116,7 +116,7 @@ async def capacity(db: AsyncSession):
     empty = capacity_zones
 
     if total_count_in_parking:
-        empty = capacity_zones - (total_count_in_parking + unknown_referred )
+        empty = capacity_zones - (total_count_in_parking + unknown_referred)
         if empty < 0:
             empty = 0
 
@@ -408,6 +408,46 @@ async def get_count_referred(
     return range_date
 
 
+async def cal_count_with_out_status(
+    data: Any, start_time_in, end_time_in, timing
+):
+    range_date = create_ranges_date(
+        start_date=start_time_in, end_date=end_time_in, timing=timing
+    )
+    convert_to_dict_record = {time.date(): count for time, count in data}
+
+    for item in range_date:
+        if timing == report_schemas.Timing.day:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+        if timing == report_schemas.Timing.week:
+            # For weekly grouping, sum over a 7-day period
+            start_date = item[
+                "time"
+            ]  # Assuming `item["time"]` is the start of the week
+            end_date = start_date + timedelta(days=7)
+            week_count = 0
+
+            # Iterate through each day in the 7-day period and sum up the count
+            current_date = start_date
+            while current_date < end_date:
+                if current_date in convert_to_dict_record:
+                    week_count += convert_to_dict_record[current_date]
+                current_date += timedelta(days=1)
+            item.update({"end_date": end_date})
+            item["count"] = week_count
+        if timing == report_schemas.Timing.month:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+                item.update({"end_time": last_day_of_month(item["time"])})
+        if timing == report_schemas.Timing.year:
+            if item["time"] in convert_to_dict_record:
+                item["count"] = convert_to_dict_record[item["time"]]
+        item["start_time"] = item.pop("time")
+
+    return range_date
+
+
 async def get_count_referred_by_zone(
     db: AsyncSession,
     start_time_in: datetime,
@@ -415,43 +455,6 @@ async def get_count_referred_by_zone(
     timing: report_schemas.Timing,
     zone_id: int | None = None,
 ) -> list:
-
-    async def _cal_count_referred_with_out_status(data: Any):
-        range_date = create_ranges_date(
-            start_date=start_time_in, end_date=end_time_in, timing=timing
-        )
-        convert_to_dict_record = {time.date(): count for time, count in data}
-
-        for item in range_date:
-            if timing == report_schemas.Timing.day:
-                if item["time"] in convert_to_dict_record:
-                    item["count"] = convert_to_dict_record[item["time"]]
-            if timing == report_schemas.Timing.week:
-                # For weekly grouping, sum over a 7-day period
-                start_date = item[
-                    "time"
-                ]  # Assuming `item["time"]` is the start of the week
-                end_date = start_date + timedelta(days=7)
-                week_count = 0
-
-                # Iterate through each day in the 7-day period and sum up the count
-                current_date = start_date
-                while current_date < end_date:
-                    if current_date in convert_to_dict_record:
-                        week_count += convert_to_dict_record[current_date]
-                    current_date += timedelta(days=1)
-                item.update({"end_date": end_date})
-                item["count"] = week_count
-            if timing == report_schemas.Timing.month:
-                if item["time"] in convert_to_dict_record:
-                    item["count"] = convert_to_dict_record[item["time"]]
-                    item.update({"end_time": last_day_of_month(item["time"])})
-            if timing == report_schemas.Timing.year:
-                if item["time"] in convert_to_dict_record:
-                    item["count"] = convert_to_dict_record[item["time"]]
-            item["start_time"] = item.pop("time")
-
-        return range_date
 
     all_count_referred = 0
     result = {}
@@ -468,7 +471,12 @@ async def get_count_referred_by_zone(
             timing=timing,
             zone_id=zone.id,
         )
-        record_detail = await _cal_count_referred_with_out_status(zone_data)
+        record_detail = await cal_count_with_out_status(
+            data=zone_data,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+        )
         for record in record_detail:
             start_time = record["start_time"]
             count = record["count"]
@@ -482,6 +490,53 @@ async def get_count_referred_by_zone(
             total_count_referred += count
         all_count_referred += total_count_referred
     result["all_count_referred"] = all_count_referred
+    return result
+
+
+async def count_parked_vehicles(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+    zone_id: int | None = None,
+) -> list:
+
+    all_count_parked_vehicles = 0
+    result = {}
+    zones_ids = await zone_repo.get_multi(db, limit=None)
+    if zone_id:
+        zone = await zone_repo.get(db, id=zone_id)
+        zones_ids = [zone]
+    for zone in zones_ids:
+        total_count_parked_vehicles = 0
+        zone_data = (
+            await crud.record.get_count_parked_vehicles_with_out_status(
+                db,
+                input_start_create_time=start_time_in,
+                input_end_create_time=end_time_in,
+                timing=timing,
+                zone_id=zone.id,
+            )
+        )
+        record_detail = await cal_count_with_out_status(
+            data=zone_data,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+        )
+        for record in record_detail:
+            start_time = record["start_time"]
+            count = record["count"]
+
+            if start_time not in result:
+                result[start_time] = {"total": 0}
+
+            result[start_time][zone.name] = count
+            result[start_time]["total"] += count
+
+            total_count_parked_vehicles += count
+        all_count_parked_vehicles += total_count_parked_vehicles
+    result["all_count_parked_vehicles"] = all_count_parked_vehicles
     return result
 
 

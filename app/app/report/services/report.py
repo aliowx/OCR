@@ -507,7 +507,7 @@ async def count_entrance_exit_zone(
     )
     data = []
     for camera_zone, zone in cameras_zones:
-        count = await crud.event.count_entrance_exit_door(
+        count = await crud.record.count_entrance_exit_door(
             db,
             camera_id=camera_zone.id,
             start_time_in=start_time_in,

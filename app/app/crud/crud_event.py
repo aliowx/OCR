@@ -80,34 +80,7 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
 
         return [items, all_items_count]
 
-    async def count_entrance_exit_door(
-        self,
-        db: AsyncSession,
-        camera_id: int,
-        start_time_in: datetime | None = None,
-        end_time_in: datetime | None = None,
-    ) -> ReportDoor:
-        camera_id_obj = {camera_id}
-        query = (
-            select(
-                # func.distinact return unique value
-                func.count(Event.id).label("count")
-            )
-            .where(Event.camera_id.in_(camera_id_obj))
-        )
 
-        filters = [Event.is_deleted == False]
-
-        if start_time_in is not None:
-            filters.append(Event.created >= start_time_in)
-        if end_time_in is not None:
-            filters.append(Event.created <= end_time_in)
-
-        execute_query = await db.execute(query.filter(*filters))
-
-        count = execute_query.scalar()
-
-        return count
 
 
 event = CRUDEvent(Event)

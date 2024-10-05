@@ -373,6 +373,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.latest_status == input_status_record)
 
         return self._all(db.scalars(query.filter(*filters)))
+    
+    async def count_entrance_exit_door(
+        self,
+        db: AsyncSession,
+        camera_id: int,
+        start_time_in: datetime | None = None,
+        end_time_in: datetime | None = None,
+    ):
+        camera_id_obj = {camera_id}
+        query = (
+            select(
+                # func.distinact return unique value
+                func.count(Record.id).label("count")
+            )
+            .where(Record.camera_id.in_(camera_id_obj))
+        )
+
+        filters = [Record.is_deleted == False]
+
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(Record.start_time.between >= start_time_in)
+
+        execute_query = await db.execute(query.filter(*filters))
+
+        count = execute_query.scalar()
+
+        return count
 
 
 record = CRUDRecord(Record)

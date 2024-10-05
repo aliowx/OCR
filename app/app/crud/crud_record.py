@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, or_
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -339,11 +339,13 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if zone_id_in is not None:
             filters.append(Record.zone_id == zone_id_in)
 
-        if start_time_in is not None:
-            filters.append(Record.start_time >= start_time_in)
-
-        if end_time_in is not None:
-            filters.append(Record.start_time <= end_time_in)
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(
+                or_(
+                    Record.start_time.between(start_time_in, end_time_in),
+                    Record.end_time.between(start_time_in, end_time_in),
+                )
+            )
 
         avg_time_park = await db.scalar(query.filter(*filters))
 

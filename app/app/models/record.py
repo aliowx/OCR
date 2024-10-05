@@ -48,7 +48,9 @@ class Record(Base):
         index=True,
         nullable=True,
     )
-    img_plate_entrance = relationship("Image", foreign_keys=img_plate_entrance_id)
+    img_plate_entrance = relationship(
+        "Image", foreign_keys=img_plate_entrance_id
+    )
 
     img_plate_exit_id: Mapped[int] = mapped_column(
         Integer,
@@ -77,3 +79,21 @@ class Record(Base):
     events = relationship("Event", back_populates="record")
 
     latest_status: Mapped[str] = mapped_column(String, nullable=True)
+
+    camera_entrance_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("equipment.id"),
+        index=True,
+        nullable=True,
+    )
+    camera_entrance_rel = relationship(
+        "Equipment", foreign_keys=camera_entrance_id
+    )
+
+    camera_exit_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("equipment.id"),
+        index=True,
+        nullable=True,
+    )
+    camera_exit_rel = relationship("Equipment", foreign_keys=camera_exit_id)

@@ -195,9 +195,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         ),  # List of StatusRecord as query parameter
     ) -> list[Record] | Awaitable[list[Record]]:
 
-        img_entrance = aliased(Image)
         equipment_entance = aliased(Equipment)
-        img_exit = aliased(Image)
         equipment_exit = aliased(Equipment)
         query = (
             select(
@@ -207,14 +205,14 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 equipment_entance.tag.label("camera_entrance"),
                 equipment_exit.tag.label("camera_exit"),
             )
-            .join(Zone, Record.zone_id == Zone.id)
-            .join(img_entrance, Record.img_entrance_id == img_entrance.id)
-            .join(
+            .outerjoin(Zone, Record.zone_id == Zone.id)
+            .outerjoin(
                 equipment_entance,
-                img_entrance.camera_id == equipment_entance.id,
+                Record.camera_entrance_id == equipment_entance.id,
             )
-            .join(img_exit, Record.img_exit_id == img_exit.id)
-            .join(equipment_exit, img_exit.camera_id == equipment_exit.id)
+            .outerjoin(
+                equipment_exit, Record.camera_exit_id == equipment_exit.id
+            )
         )
 
         filters = [Record.is_deleted == False]
@@ -222,14 +220,18 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_plate is not None:
             filters.append(Record.plate.ilike(params.input_plate))
 
+        if params.input_camera_exit_id is not None:
+            filters.append(
+                Record.camera_exit_id == params.input_camera_exit_id
+            )
+
+        if params.input_camera_entrance_id is not None:
+            filters.append(
+                Record.camera_entrance_id == params.input_camera_entrance_id
+            )
+
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
-
-        if params.input_created_start_time is not None:
-            filters.append(Record.created >= params.input_created_start_time)
-
-        if params.input_created_end_time is not None:
-            filters.append(Record.created <= params.input_created_end_time)
 
         if params.input_entrance_start_time is not None:
             filters.append(

@@ -23,6 +23,8 @@ class RecordBase(BaseModel):
     spot_id: int | None = None
     zone_id: int | None = None
     latest_status: StatusRecord | None = None
+    camera_entrance_id: int | None = None
+    camera_exit_id: int | None = None
 
 
 # Properties to receive on item creation
@@ -63,14 +65,14 @@ class RecordInDB(RecordInDBBase):
 
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
-    input_created_start_time: datetime | None = None
-    input_created_end_time: datetime | None = None
     input_zone_id: int | None = None
     input_entrance_start_time: datetime | None = None
     input_entrance_end_time: datetime | None = None
     input_exit_start_time: datetime | None = None
     input_exit_end_time: datetime | None = None
     input_score: float | None = None
+    input_camera_entrance_id: int | None = None
+    input_camera_exit_id: int | None = None
     skip: int | None = 0
     limit: int | None = 100
     asc: bool | None = False

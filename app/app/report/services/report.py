@@ -493,51 +493,6 @@ async def get_count_referred_by_zone(
     return result
 
 
-async def count_parked_vehicles(
-    db: AsyncSession,
-    start_time_in: datetime,
-    end_time_in: datetime,
-    timing: report_schemas.Timing,
-    zone_id: int | None = None,
-) -> list:
-
-    all_count_parked_vehicles = 0
-    result = {}
-    zones_ids = await zone_repo.get_multi(db, limit=None)
-    if zone_id:
-        zone = await zone_repo.get(db, id=zone_id)
-        zones_ids = [zone]
-    for zone in zones_ids:
-        total_count_parked_vehicles = 0
-        zone_data = (
-            await crud.record.get_count_parked_vehicles_with_out_status(
-                db,
-                input_start_create_time=start_time_in,
-                input_end_create_time=end_time_in,
-                timing=timing,
-                zone_id=zone.id,
-            )
-        )
-        record_detail = await cal_count_with_out_status(
-            data=zone_data,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            timing=timing,
-        )
-        for record in record_detail:
-            start_time = record["start_time"]
-            count = record["count"]
-
-            if start_time not in result:
-                result[start_time] = {"total": 0}
-
-            result[start_time][zone.name] = count
-            result[start_time]["total"] += count
-
-            total_count_parked_vehicles += count
-        all_count_parked_vehicles += total_count_parked_vehicles
-    result["all_count_parked_vehicles"] = all_count_parked_vehicles
-    return result
 
 
 async def count_entrance_exit_zone(

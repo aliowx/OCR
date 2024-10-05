@@ -106,7 +106,12 @@ async def create_event(
 ) -> APIResponseType[Any]:
     """
     Create new item.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ] \n
+    "sensor"  --> camera \n
+    "entranceDoor"  --> camera \n
+    "exitDoor"  --> camera \n
+    "exitReg_billIssue" --> admin \n
+    "exitReg" --> admin
     """
     result = celery_app.send_task(
         "add_events",

@@ -518,7 +518,7 @@ async def count_entrance_exit_zone(
             obj_camera_entrance[item] = count_entrance[item]
     for item in obj_camera_exit:
         if item in count_exit:
-            obj_camera_exit[item] = count_entrance[item]
+            obj_camera_exit[item] = count_exit[item]
 
     return report_schemas.CountEntranceExitDoor(
         count_entrance=obj_camera_entrance, count_exit=obj_camera_exit

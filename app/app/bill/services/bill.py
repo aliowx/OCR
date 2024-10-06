@@ -31,16 +31,17 @@ async def calculate_price_async(
     end_time_in: datetime,
 ) -> float:
 
-    price = await zone_repo.get_price_zone_async(db, zone_id=zone_id)
-    if not price:
+    get_price = await zone_repo.get_price_zone_async(db, zone_id=zone_id)
+    if not get_price:
         raise ServiceFailure(
             detail="not set model price for this zone",
             msg_code=MessageCodes.not_found,
         )
 
     duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
-    price = price.entrance_fee + (duration_time * price.hourly_fee)
-    return price
+    price = get_price.entrance_fee + (duration_time * get_price.hourly_fee)
+
+    return price, get_price
 
 
 def calculate_price(
@@ -51,9 +52,9 @@ def calculate_price(
     end_time_in: datetime,
 ) -> float:
 
-    price = zone_repo.get_price_zone(db, zone_id=zone_id)
+    get_price = zone_repo.get_price_zone(db, zone_id=zone_id)
 
-    if not price:
+    if not get_price:
         raise ServiceFailure(
             detail="not set model price for this zone",
             msg_code=MessageCodes.not_found,
@@ -61,9 +62,9 @@ def calculate_price(
 
     duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
 
-    price = price.entrance_fee + (duration_time * price.hourly_fee)
+    price = get_price.entrance_fee + (duration_time * get_price.hourly_fee)
 
-    return price
+    return price, get_price
 
 
 async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
@@ -90,17 +91,20 @@ async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
 
 async def kiosk(db: AsyncSession, *, record, issue: bool = False):
     end_time = get_now_datetime_utc()
+    price, get_price = await calculate_price_async(
+        db,
+        start_time_in=record.start_time,
+        end_time_in=end_time,
+        zone_id=record.zone_id,
+    )
     bill = billSchemas.BillShowBykiosk(
         plate=record.plate,
         start_time=record.start_time,
         end_time=end_time,
         issued_by=billSchemas.Issued.kiosk.value,
-        price=await calculate_price_async(
-            db,
-            start_time_in=record.start_time,
-            end_time_in=end_time,
-            zone_id=record.zone_id,
-        ),
+        price=price,
+        entrance_fee=get_price.entrance_fee,
+        hourly_fee=get_price.hourly_fee,
         time_park_so_far=convert_time_to_hour_and_ceil(
             record.start_time, end_time
         ),

@@ -144,6 +144,12 @@ def update_record(self, event_id) -> str:
                     == TypeEvent.admin_exitRegistration_and_billIssuance.value
                 ):
                     issued_by = billSchemas.Issued.admin.value
+                price, get_price = calculate_price(
+                    self.session,
+                    zone_id=record.zone_id,
+                    start_time_in=record.start_time,
+                    end_time_in=record.end_time,
+                )
                 bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
@@ -151,15 +157,12 @@ def update_record(self, event_id) -> str:
                         start_time=record.start_time,
                         end_time=record.end_time,
                         issued_by=issued_by,
-                        price=calculate_price(
-                            self.session,
-                            zone_id=record.zone_id,
-                            start_time_in=record.start_time,
-                            end_time_in=record.end_time,
-                        ),
+                        price=price,
                         record_id=record.id,
                         zone_id=record.zone_id,
                         status=billSchemas.StatusBill.unpaid.value,
+                        entrance_fee=get_price.entrance_fee,
+                        hourly_fee=get_price.hourly_fee,
                     ),
                 )
                 logger.info(f"issue bill {record} by number {bill}")

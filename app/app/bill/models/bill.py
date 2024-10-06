@@ -58,6 +58,14 @@ class Bill(Base):
         DateTime(timezone=False), nullable=True, index=True
     )
 
+    entrance_fee: Mapped[float] = mapped_column(
+        Float, nullable=True, index=True
+    )
+
+    hourly_fee: Mapped[float] = mapped_column(
+        Float, nullable=True, index=True
+    )
+
     price: Mapped[float] = mapped_column(Float, nullable=True, index=True)
 
     issued_by: Mapped[str] = mapped_column(String, nullable=True, index=True)

@@ -249,17 +249,22 @@ async def create_records_past(db: AsyncSession):
 
         # If the record is finished, create a bill
         if record.latest_status == schemas.StatusRecord.finished:
+            price, get_price = await calculate_price_async(
+                db,
+                zone_id=record.zone_id,
+                start_time_in=record.start_time,
+                end_time_in=record.end_time,
+            )
+            entrance_fee = get_price.entrance_fee
+            hourly_fee = get_price.hourly_fee
             bill = models.Bill(
                 plate=record.plate,
                 start_time=record.start_time,
                 end_time=record.end_time,
                 issued_by=billSchemas.Issued.exit_camera.value,
-                price=await calculate_price_async(
-                    db,
-                    zone_id=record.zone_id,
-                    start_time_in=record.start_time,
-                    end_time_in=record.end_time,
-                ),
+                price=price,
+                entrance_fee=entrance_fee,
+                hourly_fee=hourly_fee,
                 record_id=record.id,
                 zone_id=record.zone_id,
                 status=random.choice(status_bills),
@@ -358,8 +363,8 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_image(db)
         # await create_zone(db)
         # await create_sub_zone(db)
-        await create_records(db)
-        # await create_records_past(db)
+        # await create_records(db)
+        await create_records_past(db)
         await create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")

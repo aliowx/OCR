@@ -499,15 +499,29 @@ async def count_entrance_exit_zone(
     end_time_in: datetime | None = None,
 ):
 
+    camera_entrance, camera_exit = (
+        await crud.equipment_repo.get_entrance_exit_camera(
+            db, zone_id=zone_id_in
+        )
+    )
+    obj_camera_entrance = {name_camera: 0 for name_camera in camera_entrance}
+    obj_camera_exit = {name_camera: 0 for name_camera in camera_exit}
+
     count_entrance, count_exit = await crud.record.count_entrance_exit_door(
         db,
         zone_id_in=zone_id_in,
         start_time_in=start_time_in,
         end_time_in=end_time_in,
     )
+    for item in obj_camera_entrance:
+        if item in count_entrance:
+            obj_camera_entrance[item] = count_entrance[item]
+    for item in obj_camera_exit:
+        if item in count_exit:
+            obj_camera_exit[item] = count_entrance[item]
 
     return report_schemas.CountEntranceExitDoor(
-        count_entrance=count_entrance, count_exit=count_exit
+        count_entrance=obj_camera_entrance, count_exit=obj_camera_exit
     )
 
 

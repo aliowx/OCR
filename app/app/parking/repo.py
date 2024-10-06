@@ -315,25 +315,26 @@ class EquipmentRepository(
         self, db: AsyncSession, zone_id: int = None
     ) -> list[Equipment]:
 
-        query = (
-            select(Equipment, Zone)
-            .join(Zone)
-            .where(
-                (Equipment.is_deleted == false())
-                & or_(
-                    Equipment.equipment_type
-                    == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
-                    Equipment.equipment_type
-                    == EquipmentType.CAMERA_EXIT_DOOR.value,
-                )
-            )
+        filters = [Equipment.is_deleted == false()]
+        camera_entrance = select(Equipment.tag).filter(
+            *filters,
+            Equipment.equipment_type
+            == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
         )
-        if zone_id is not None:
-            query = query.where((Equipment.zone_id == zone_id))
+        camera_exit = select(Equipment.tag).filter(
+            *filters,
+            Equipment.equipment_type == EquipmentType.CAMERA_EXIT_DOOR.value,
+        )
 
-        execute_query = await db.execute(query)
-        query_fetch = execute_query.fetchall()
-        return query_fetch
+        if zone_id is not None:
+            camera_entrance = camera_entrance.filter(
+                (Equipment.zone_id == zone_id)
+            )
+            camera_exit = camera_exit.filter((Equipment.zone_id == zone_id))
+
+        list_camera_entrance = await self._all(db.scalars(camera_entrance))
+        list_camera_exit = await self._all(db.scalars(camera_exit))
+        return list_camera_entrance, list_camera_exit
 
     async def one_equipment(
         self, db: AsyncSession, *, serial_number: str

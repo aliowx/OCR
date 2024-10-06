@@ -29,8 +29,8 @@ class BillBase(BaseModel):
     img_exit_id: int | None = None
     rrn_number: str | None = None
     time_paid: datetime | None = None
-    entrance_fee: str | None = None
-    hourly_fee: str | None = None
+    entrance_fee: float | None = None
+    hourly_fee: float | None = None
 
 
 # Properties to receive on item creation

@@ -39,7 +39,7 @@ class Event(Base):
         Integer,
         ForeignKey("equipment.id", onupdate="CASCADE", ondelete="SET NULL"),
         index=True,
-        nullable=True
+        nullable=True,
     )
     camera = relationship("Equipment", foreign_keys=camera_id)
 
@@ -66,3 +66,11 @@ class Event(Base):
         nullable=True,
     )
     lpr_image = relationship("Image", foreign_keys=lpr_image_id)
+
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    user_rel = relationship("User", foreign_keys=user_id)

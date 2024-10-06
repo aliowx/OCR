@@ -29,6 +29,7 @@ class EventBase(BaseModel):
     zone_id: Optional[int] = None
 
     type_event: TypeEvent | None = None
+    user_id: int | None = None
 
 
 class EventCreate(EventBase):

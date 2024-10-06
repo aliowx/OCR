@@ -58,7 +58,8 @@ class ListMaxTimePark(BaseModel):
 
 
 class CountEntranceExitDoor(BaseModel):
-    count_entrance_exit_door: list | None = []
+    count_entrance: dict | None = {}
+    count_exit: dict | None = {}
 
 
 class ZoneReport(Zone):

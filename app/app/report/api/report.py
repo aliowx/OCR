@@ -149,7 +149,6 @@ async def avrage_referred(
     )
 
 
-
 @router.get("/avg-price-per-referred")
 async def avg_price_per_referred(
     _: Annotated[
@@ -204,7 +203,7 @@ async def count_entrance_exit_zone(
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
     *,
-    zone_id: int = None,
+    zone_id_in: int | None = None,
     start_time_in: datetime | None = None,
     end_time_in: datetime | None = None,
 ) -> APIResponseType[Any]:
@@ -215,7 +214,7 @@ async def count_entrance_exit_zone(
     return APIResponse(
         await report_services.count_entrance_exit_zone(
             db,
-            zone_id=zone_id,
+            zone_id_in=zone_id_in,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
         )

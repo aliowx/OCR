@@ -377,28 +377,60 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
     async def count_entrance_exit_door(
         self,
         db: AsyncSession,
-        camera_id: int,
+        zone_id_in: int,
         start_time_in: datetime | None = None,
         end_time_in: datetime | None = None,
     ):
-        camera_id_obj = {camera_id}
-        query = select(
-            # func.distinact return unique value
-            func.count(Record.id).label("count")
-        ).where(Record.camera_id.in_(camera_id_obj))
-
         filters = [Record.is_deleted == False]
 
         if start_time_in is not None and end_time_in is not None:
             filters.append(
                 Record.start_time.between(start_time_in, end_time_in)
             )
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
 
-        execute_query = await db.execute(query.filter(*filters))
+        camera_entrance = aliased(Equipment)
+        query_entrance = (
+            select(
+                camera_entrance.tag,
+                func.count(Record.camera_entrance_id).label("count_entrance"),
+            )
+            .outerjoin(
+                camera_entrance,
+                Record.camera_entrance_id == camera_entrance.id,
+            )
+            .group_by(camera_entrance.tag)
+        )
+        execute_query_entrance = await db.execute(
+            query_entrance.filter(*filters)
+        )
+        fetch_query_entrance = execute_query_entrance.fetchall()
 
-        count = execute_query.scalar()
+        camera_exit = aliased(Equipment)
+        query_exit = (
+            select(
+                camera_exit.tag,
+                func.count(Record.camera_exit_id).label("count_exit"),
+            )
+            .outerjoin(
+                camera_exit,
+                Record.camera_exit_id == camera_exit.id,
+            )
+            .group_by(camera_exit.tag)
+        )
 
-        return count
+        execute_query_exit = await db.execute(query_exit.filter(*filters))
+        fetch_query_exit = execute_query_exit.fetchall()
+
+        count_entrance = {
+            camera_name: count for camera_name, count in fetch_query_entrance
+        }
+        count_exit = {
+            camera_name: count for camera_name, count in fetch_query_exit
+        }
+
+        return count_entrance, count_exit
 
 
 record = CRUDRecord(Record)

@@ -1,12 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bill.repo import bill_repo
-from app.bill.schemas import bill as billSchemas
-from app import schemas, crud, models
+from app import crud
 from app.parking.repo import zone_repo
 from datetime import datetime, timedelta, UTC
 from dateutil.relativedelta import relativedelta
 from app.report import schemas as report_schemas
-from app.parking.repo import equipment_repo, zone_repo
+from app.parking.repo import zone_repo
 from app.parking.services import zone as zone_services
 from typing import Any
 
@@ -493,49 +492,23 @@ async def get_count_referred_by_zone(
     return result
 
 
-
-
 async def count_entrance_exit_zone(
     db: AsyncSession,
-    zone_id: int = None,
+    zone_id_in: int | None = None,
     start_time_in: datetime | None = None,
     end_time_in: datetime | None = None,
 ):
 
-    cameras_zones = await equipment_repo.get_entrance_exit_camera(
-        db, zone_id=zone_id
+    count_entrance, count_exit = await crud.record.count_entrance_exit_door(
+        db,
+        zone_id_in=zone_id_in,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
     )
-    data = []
-    for camera_zone, zone in cameras_zones:
-        count = await crud.record.count_entrance_exit_door(
-            db,
-            camera_id=camera_zone.id,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-        )
-        if count:
-            data.append(
-                {
-                    "count": count,
-                    "type_camera": models.base.EquipmentType(
-                        camera_zone.equipment_type
-                    ).name,
-                    "camera_name": camera_zone.tag,
-                    "zone_name": zone.name,
-                }
-            )
-        else:
-            data.append(
-                {
-                    "count": 0,
-                    "type_camera": models.base.EquipmentType(
-                        camera_zone.equipment_type
-                    ).name,
-                    "camera_name": camera_zone.tag,
-                    "zone_name": zone.name,
-                }
-            )
-    return report_schemas.CountEntranceExitDoor(count_entrance_exit_door=data)
+
+    return report_schemas.CountEntranceExitDoor(
+        count_entrance=count_entrance, count_exit=count_exit
+    )
 
 
 async def report_bill(

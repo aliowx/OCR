@@ -112,12 +112,13 @@ async def capacity(db: AsyncSession):
         unknown_referred = 0
 
     total_count_in_parking = await crud.record.get_total_in_parking(db)
-    empty = capacity_zones
 
-    if total_count_in_parking:
-        empty = capacity_zones - (total_count_in_parking + unknown_referred)
-        if empty < 0:
-            empty = 0
+    if not total_count_in_parking:
+        total_count_in_parking = 0
+
+    empty = capacity_zones - (total_count_in_parking + unknown_referred)
+    if empty < 0:
+        empty = 0
 
     return report_schemas.Capacity(
         total=capacity_zones,

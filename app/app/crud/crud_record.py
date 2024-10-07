@@ -257,7 +257,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if params.limit is None:
             result = (
-                await db.execute(query.filter(*filters).offset(params.skip))
+                await db.execute(
+                    query.filter(*filters)
+                    .offset(params.skip)
+                    .order_by(
+                        Record.start_time.asc()
+                        if params.asc
+                        else Record.start_time.desc()
+                    )
+                )
             ).fetchall()
 
             return [result, all_items_count]
@@ -266,7 +274,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 query.filter(*filters)
                 .offset(params.skip)
                 .limit(params.limit)
-                .order_by(Record.id.asc() if params.asc else Record.id.desc())
+                .order_by(
+                    Record.start_time.asc()
+                    if params.asc
+                    else Record.start_time.desc()
+                )
             )
         ).fetchall()
 

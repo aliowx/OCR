@@ -62,6 +62,7 @@ async def park_time(
     *,
     start_time_in: datetime | None = None,
     end_time_in: datetime | None = None,
+    jalali_date: report_schemas.JalaliDate = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
@@ -70,7 +71,10 @@ async def park_time(
 
     return APIResponse(
         await report_services.park_time(
-            db, start_time_in=start_time_in, end_time_in=end_time_in
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            jalali_date=jalali_date,
         )
     )
 
@@ -95,6 +99,7 @@ async def avrage_referred(
     end_time_in: datetime,
     timing: report_schemas.Timing = report_schemas.Timing.day,
     zone_id: int | None = None,
+    jalali_date: report_schemas.JalaliDate = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
@@ -108,6 +113,7 @@ async def avrage_referred(
             end_time_in=end_time_in,
             timing=timing,
             zone_id=zone_id,
+            jalali_date=jalali_date,
         )
     )
 

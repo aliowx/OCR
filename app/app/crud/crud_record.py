@@ -16,7 +16,7 @@ from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
-from app.models.image import Image
+from app.report.schemas import JalaliDate as JalaliDateReport
 from fastapi import Query
 
 
@@ -380,6 +380,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         start_time_in: datetime = None,
         end_time_in: datetime = None,
         zone_id_in: int | None = None,
+        jalali_date: JalaliDateReport,
     ):
 
         query = select(
@@ -390,15 +391,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [Record.is_deleted == False]
 
+        if jalali_date is not None:
+            column_date_jalali = select(
+                Record.id,
+                func.format_jalali(Record.start_time, False).label(
+                    "date_jalali"
+                ),
+            ).subquery()
+            dj = aliased(column_date_jalali)
+            if (
+                jalali_date.in_start_jalali_date is not None
+                and jalali_date.in_end_jalali_date is not None
+            ):
+                query = query.join(dj, Record.id == dj.c.id).filter(
+                    *[
+                        dj.c.date_jalali.between(
+                            jalali_date.in_start_jalali_date,
+                            jalali_date.in_end_jalali_date,
+                        )
+                    ]
+                )
+
         if zone_id_in is not None:
             filters.append(Record.zone_id == zone_id_in)
 
         if start_time_in is not None and end_time_in is not None:
             filters.append(
-                or_(
-                    Record.start_time.between(start_time_in, end_time_in),
-                    Record.end_time.between(start_time_in, end_time_in),
-                )
+                Record.start_time.between(start_time_in, end_time_in)
             )
 
         avg_time_park = await db.scalar(query.filter(*filters))

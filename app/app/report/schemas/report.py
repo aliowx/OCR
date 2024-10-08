@@ -62,6 +62,11 @@ class CountEntranceExitDoor(BaseModel):
     count_exit: dict | None = {}
 
 
+class JalaliDate(BaseModel):
+    in_start_jalali_date: str | None = None
+    in_end_jalali_date: str | None = None
+
+
 class ZoneReport(Zone):
     total_referred: int | None = 0
     avrage_stop_minute_today: int | None = 0

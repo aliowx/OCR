@@ -186,6 +186,7 @@ async def park_time(
     *,
     start_time_in: datetime,
     end_time_in: datetime,
+    jalali_date: report_schemas.JalaliDate,
 ):
     list_avg_zone_time_park = []
     convert_to_minute_time_park = 0
@@ -194,6 +195,7 @@ async def park_time(
         db,
         start_time_in=start_time_in,
         end_time_in=end_time_in,
+        jalali_date=jalali_date,
     )
     if total_avrage_park_time is not None:
         total_avrage_park_time = round(
@@ -208,6 +210,7 @@ async def park_time(
             zone_id_in=zone.id,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
+            jalali_date=jalali_date,
         )
         if avrage_park_time:
             convert_to_minute_time_park = round(
@@ -308,6 +311,7 @@ async def get_count_referred(
     start_time_in: datetime,
     end_time_in: datetime,
     timing: report_schemas.Timing,
+    jalali_date: report_schemas.JalaliDate,
     zone_id: int | None = None,
 ) -> list:
 
@@ -505,8 +509,17 @@ async def count_entrance_exit_zone(
             db, zone_id=zone_id_in
         )
     )
-    obj_camera_entrance = {name_camera: 0 for name_camera in camera_entrance}
-    obj_camera_exit = {name_camera: 0 for name_camera in camera_exit}
+
+    def _initialize_cameras(cameras):
+        camera_dict = {}
+        for name_camera, zone_name in cameras:
+            if zone_name not in camera_dict:
+                camera_dict[zone_name] = {}
+            camera_dict[zone_name][name_camera] = 0
+        return camera_dict
+
+    obj_camera_entrance = _initialize_cameras(camera_entrance)
+    obj_camera_exit = _initialize_cameras(camera_exit)
 
     count_entrance, count_exit = await crud.record.count_entrance_exit_door(
         db,
@@ -514,12 +527,16 @@ async def count_entrance_exit_zone(
         start_time_in=start_time_in,
         end_time_in=end_time_in,
     )
-    for item in obj_camera_entrance:
-        if item in count_entrance:
-            obj_camera_entrance[item] = count_entrance[item]
-    for item in obj_camera_exit:
-        if item in count_exit:
-            obj_camera_exit[item] = count_exit[item]
+    for zone_name, cameras in obj_camera_entrance.items():
+        for camera_name in cameras:
+            obj_camera_entrance[zone_name][camera_name] = count_entrance.get(
+                camera_name, 0
+            )
+    for zone_name, cameras in obj_camera_exit.items():
+        for camera_name in cameras:
+            obj_camera_exit[zone_name][camera_name] = count_exit.get(
+                camera_name, 0
+            )
 
     return report_schemas.CountEntranceExitDoor(
         count_entrance=obj_camera_entrance, count_exit=obj_camera_exit

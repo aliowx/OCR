@@ -316,14 +316,23 @@ class EquipmentRepository(
     ) -> list[Equipment]:
 
         filters = [Equipment.is_deleted == false()]
-        camera_entrance = select(Equipment.tag).filter(
-            *filters,
-            Equipment.equipment_type
-            == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+        camera_entrance = (
+            select(Equipment.tag, Zone.name)
+            .filter(
+                *filters,
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+            )
+            .join(Zone, Equipment.zone_id == Zone.id)
         )
-        camera_exit = select(Equipment.tag).filter(
-            *filters,
-            Equipment.equipment_type == EquipmentType.CAMERA_EXIT_DOOR.value,
+        camera_exit = (
+            select(Equipment.tag, Zone.name)
+            .filter(
+                *filters,
+                Equipment.equipment_type
+                == EquipmentType.CAMERA_EXIT_DOOR.value,
+            )
+            .join(Zone, Equipment.zone_id == Zone.id)
         )
 
         if zone_id is not None:
@@ -332,8 +341,8 @@ class EquipmentRepository(
             )
             camera_exit = camera_exit.filter((Equipment.zone_id == zone_id))
 
-        list_camera_entrance = await self._all(db.scalars(camera_entrance))
-        list_camera_exit = await self._all(db.scalars(camera_exit))
+        list_camera_entrance = (await db.execute(camera_entrance)).fetchall()
+        list_camera_exit = (await db.execute(camera_exit)).fetchall()
         return list_camera_entrance, list_camera_exit
 
     async def one_equipment(

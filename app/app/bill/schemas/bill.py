@@ -75,6 +75,11 @@ class BillNotAdditionalDetail(BillInDBBase): ...
 class BillInDB(BillInDBBase): ...
 
 
+class JalaliDate(BaseModel):
+    start_jalali_date: str | None = None
+    end_jalali_date: str | None = None
+
+
 class ParamsBill(BaseModel):
     input_plate: str | None = None
     input_start_time: datetime | None = None

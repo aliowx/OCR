@@ -36,13 +36,16 @@ async def read_bill(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
     params: billSchemas.ParamsBill = Depends(),
+    jalali_date: billSchemas.JalaliDate = Depends(),
 ) -> APIResponseType[PaginatedContent[list[billSchemas.Bill]]]:
     """
     All bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    bills = await bill_repo.get_multi_by_filters(db, params=params)
+    
+    bills = await bill_repo.get_multi_by_filters(db, params=params,jalali_date=jalali_date)
     for bill in bills[0]:
         await servicesBill.set_detail(db, bill=bill)
     return APIResponse(

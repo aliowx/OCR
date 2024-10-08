@@ -64,6 +64,29 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         else:
             return q.first()
 
+    def get_by_event_by_admin(
+        self,
+        db: Session,
+        *,
+        plate: schemas.Event,
+        status: list[StatusRecord],
+        for_update: bool = False,
+    ) -> Optional[Record]:
+
+        q = (
+            db.query(Record)
+            .filter(
+                (Record.plate == plate.plate)
+                & (Record.latest_status.in_(status))
+            )
+            .order_by(Record.end_time.desc())
+        )
+
+        if for_update:
+            return q.with_for_update().first()
+        else:
+            return q.first()
+
     async def get_total_in_parking(self, db: Session | AsyncSession):
 
         return await db.scalar(

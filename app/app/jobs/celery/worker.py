@@ -75,12 +75,27 @@ def update_record(self, event_id) -> str:
         # lock events table to prevent multiple record insertion
         self.session.execute(text("LOCK TABLE event IN EXCLUSIVE MODE"))
         event = crud.event.get(self.session, event_id)
+
         record = crud.record.get_by_event(
             db=self.session,
             plate=event,
             status=StatusRecord.unfinished.value,
             for_update=True,
         )
+        if (
+            event.type_event
+            == TypeEvent.admin_exitRegistration_and_billIssuance.value
+            or event.type_event == TypeEvent.admin_exitRegistration.value
+        ):
+            record = crud.record.get_by_event_by_admin(
+                db=self.session,
+                plate=event,
+                status=[
+                    StatusRecord.unfinished.value,
+                    StatusRecord.unknown.value,
+                ],
+                for_update=True,
+            )
         if (
             record is None
             and event.type_event != TypeEvent.exitDoor.value

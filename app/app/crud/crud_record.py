@@ -190,9 +190,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         params: schemas.ParamsRecord,
         input_status_record: Optional[
             List[schemas.record.StatusRecord]
-        ] = Query(
-            None
-        ),  # List of StatusRecord as query parameter
+        ] = Query(None),
+        jalali_date: schemas.record.JalaliDate,
     ) -> list[Record] | Awaitable[list[Record]]:
 
         equipment_entance = aliased(Equipment)
@@ -216,6 +215,45 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
         filters = [Record.is_deleted == False]
+
+        if jalali_date is not None:
+            column_date_jalali_for_entrance = select(
+                Record.id,
+                func.format_jalali(Record.start_time, False).label(
+                    "date_jalali_entrance"
+                ),
+            ).subquery()
+            column_date_jalali_for_exit = select(
+                Record.id,
+                func.format_jalali(Record.end_time, False).label(
+                    "date_jalali_exit"
+                ),
+            ).subquery()
+            dj_entrance = aliased(column_date_jalali_for_entrance)
+            dj_exit = aliased(column_date_jalali_for_exit)
+            query = query.join(dj_entrance, Record.id == dj_entrance.c.id)
+            query = query.join(dj_exit, Record.id == dj_exit.c.id)
+            if jalali_date.in_start_entrance_jalali_date is not None:
+                filters.append(
+                    dj_entrance.c.date_jalali_entrance
+                    >= jalali_date.in_start_entrance_jalali_date,
+                )
+            if jalali_date.in_end_entrance_jalali_date is not None:
+                filters.append(
+                    dj_entrance.c.date_jalali_entrance
+                    <= jalali_date.in_end_entrance_jalali_date,
+                )
+
+            if jalali_date.in_start_exit_jalali_date is not None:
+                filters.append(
+                    dj_exit.c.date_jalali_exit
+                    >= jalali_date.in_start_exit_jalali_date,
+                )
+            if jalali_date.in_end_exit_jalali_date is not None:
+                filters.append(
+                    dj_exit.c.date_jalali_exit
+                    <= jalali_date.in_end_exit_jalali_date,
+                )
 
         if params.input_plate is not None:
             filters.append(Record.plate.ilike(params.input_plate))
@@ -253,7 +291,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_score is not None:
             filters.append(Record.score >= params.input_score)
 
-        all_items_count = await self.count_by_filter(db, filters=filters)
+        all_items_count = await db.scalar(
+            query.filter(*filters).with_only_columns(func.count())
+        )
 
         if params.limit is None:
             result = (

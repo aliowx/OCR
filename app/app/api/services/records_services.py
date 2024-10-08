@@ -12,9 +12,13 @@ async def get_multi_by_filters(
     input_status_record: Optional[List[schemas.record.StatusRecord]] = Query(
         None
     ),
+    jalali_date: schemas.record.JalaliDate,
 ):
     records = await crud.record.get_multi_by_filters(
-        db=db, params=params, input_status_record=input_status_record
+        db=db,
+        params=params,
+        input_status_record=input_status_record,
+        jalali_date=jalali_date,
     )
     ## ---> records
     #                   --> record[0] ==> records

@@ -81,3 +81,10 @@ class ParamsRecord(BaseModel):
 class GetRecords(BaseModel):
     items: List[Record]
     all_items_count: int
+
+
+class JalaliDate(BaseModel):
+    in_start_entrance_jalali_date: str | None = None
+    in_end_entrance_jalali_date: str | None = None
+    in_start_exit_jalali_date: str | None = None
+    in_end_exit_jalali_date: str | None = None

@@ -380,7 +380,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         start_time_in: datetime = None,
         end_time_in: datetime = None,
         zone_id_in: int | None = None,
-        jalali_date: JalaliDateReport,
+        jalali_date: JalaliDateReport = None,
     ):
 
         query = select(

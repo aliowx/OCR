@@ -99,7 +99,9 @@ async def capacity(db: AsyncSession):
         total_amount_bill = 0
 
     avg_time_park = await crud.record.get_avg_time_park(
-        db, start_time_in=start_today, end_time_in=end_today
+        db,
+        start_time_in=start_today,
+        end_time_in=end_today,
     )
     if avg_time_park:
         avg_time_park = convert_time_to_minute(avg_time_park)

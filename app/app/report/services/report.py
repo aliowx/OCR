@@ -392,7 +392,6 @@ async def get_count_referred(
     )
 
     capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
-    print(capacity_zone)
     count_record = await crud.record.get_count_referred_by_timing_status(
         db,
         input_start_create_time=start_time_in,
@@ -418,6 +417,7 @@ async def get_count_referred(
                 * 100
             )
         )
+    print(convert_to_dict_record)
 
     for item in range_date:
         if timing == report_schemas.Timing.day:

@@ -170,9 +170,12 @@ async def report_zone(db: AsyncSession):
         if avg_time:
             convert_avg_time = avg_time.total_seconds() / 60
 
-            zone.effective_utilization_rate = round(
+        effective_utilization_rate = 0
+        if convert_avg_time > 0:
+            effective_utilization_rate = round(
                 ((((convert_avg_time / 60) / (zone.capacity * 24)) * 100)), 2
             )
+        zone.effective_utilization_rate = effective_utilization_rate
 
         zone.avrage_stop_minute_today = round(convert_avg_time)
 

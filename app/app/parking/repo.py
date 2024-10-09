@@ -251,6 +251,20 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
 
         return exe_fetch_query
 
+    async def get_capacity(
+        self,
+        db: AsyncSession,
+        *,
+        zone_id: int,
+    ):
+
+        query = select(func.sum(Zone.capacity))
+        filters = [Zone.is_deleted == False]
+        if zone_id is not None:
+            filters.append(Zone.id == zone_id)
+
+        return await self._first(db.scalars(query.filter(*filters)))
+
 
 class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]

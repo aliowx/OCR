@@ -104,8 +104,9 @@ async def capacity(db: AsyncSession):
         end_time_in=end_today,
     )
     if avg_time_park:
-        avg_time_park = convert_time_to_minute(avg_time_park)
-    avg_time_park = 0
+        avg_time_park = avg_time_park.total_seconds() / 60
+    else:
+        avg_time_park = 0
 
     capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
@@ -122,6 +123,10 @@ async def capacity(db: AsyncSession):
     if empty < 0:
         empty = 0
 
+    effective_utilization_rate = round(
+        ((avg_time_park / 60) / (capacity_zones * 24)) * 100
+    )
+
     return report_schemas.Capacity(
         total=capacity_zones,
         empty=empty,
@@ -131,6 +136,7 @@ async def capacity(db: AsyncSession):
         total_amount_bill=total_amount_bill,
         avg_minute_park=avg_time_park,
         len_zone=count_zone,
+        effective_utilization_rate=effective_utilization_rate,
     )
 
 
@@ -153,18 +159,24 @@ async def report_zone(db: AsyncSession):
                 end_time_in=end_today,
             )
         )
-        av_time = await crud.record.get_avg_time_park(
+        avg_time = await crud.record.get_avg_time_park(
             db,
             zone_id_in=zone.id,
             start_time_in=start_today,
             end_time_in=end_today,
         )
 
-        convert_av_time = 0
-        if av_time:
-            convert_av_time = av_time.total_seconds() / 60
+        convert_avg_time = 0
+        if avg_time:
+            convert_avg_time = avg_time.total_seconds() / 60
+            print(convert_avg_time)
 
-        zone.avrage_stop_minute_today = round(convert_av_time)
+            zone.effective_utilization_rate = round(
+                (((convert_avg_time / 60) / (zone.capacity * 24)) * 100)
+            )
+            print(zone.effective_utilization_rate)
+
+        zone.avrage_stop_minute_today = round(convert_avg_time)
 
         total_price, total_income = await bill_repo.get_price_income(
             db,
@@ -229,6 +241,64 @@ async def park_time(
     )
 
     return list_avg_zone_time_park
+
+
+async def effective_utilization_rate(
+    db: AsyncSession,
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    jalali_date: report_schemas.JalaliDate,
+):
+    list_effective_utilization_rate = []
+    convert_to_minute_time_park = 0
+    total_capacity = 0
+
+    zones = await zone_repo.get_multi(db, limit=None)
+    for zone in zones:
+        avrage_park_time = await crud.record.get_avg_time_park(
+            db,
+            zone_id_in=zone.id,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            jalali_date=jalali_date,
+        )
+        if avrage_park_time:
+            convert_to_minute_time_park = round(
+                (
+                    (avrage_park_time.total_seconds() / 3600)
+                    / (zone.capacity * 24)
+                )
+                * 100
+            )
+        list_effective_utilization_rate.append(
+            {
+                zone.name: convert_to_minute_time_park,
+            }
+        )
+        total_capacity += zone.capacity
+
+    total_avrage_park_time = await crud.record.get_avg_time_park(
+        db,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+        jalali_date=jalali_date,
+    )
+    if total_avrage_park_time is not None and total_capacity != 0:
+        total_effective_utilization_rate = round(
+            (
+                (total_avrage_park_time.total_seconds() / 3600)
+                / (total_capacity * 24)
+            )
+            * 100
+        )
+    else:
+        total_effective_utilization_rate = 0
+    list_effective_utilization_rate.append(
+        {"total_effective_utilization_rate": total_effective_utilization_rate}
+    )
+
+    return list_effective_utilization_rate
 
 
 # Helper function to get the last day of a given month
@@ -321,6 +391,8 @@ async def get_count_referred(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
 
+    capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
+    print(capacity_zone)
     count_record = await crud.record.get_count_referred_by_timing_status(
         db,
         input_start_create_time=start_time_in,
@@ -334,28 +406,27 @@ async def get_count_referred(
     )
     convert_to_dict_record = {}
     total_count_record = 0
-    for time, count, status in count_record:
+    for time, count, avg_time_park in count_record:
         total_count_record += count
         record_date = time.date()
         if record_date not in convert_to_dict_record:
             convert_to_dict_record[record_date] = {}
-        convert_to_dict_record[record_date][status] = count
+        convert_to_dict_record[record_date]["count"] = count
+        convert_to_dict_record[record_date]["effective_utilization_rate"] = (
+            round(
+                ((avg_time_park.total_seconds() / 3600) / (capacity_zone * 24))
+                * 100
+            )
+        )
+
     for item in range_date:
         if timing == report_schemas.Timing.day:
             if item["time"] in convert_to_dict_record:
-                item["count"] = {
-                    "unfinished": convert_to_dict_record[item["time"]].get(
-                        "unfinished", 0
-                    ),
-                    "finished": convert_to_dict_record[item["time"]].get(
-                        "finished", 0
-                    ),
-                    "unknown": convert_to_dict_record[item["time"]].get(
-                        "unknown", 0
-                    ),
-                }
+                # print(convert_to_dict_record[item["time"]])
+                item["count"] = convert_to_dict_record[item["time"]]
+
             else:
-                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
+                item["count"] = {"count": 0, "effective_utilization_rate": 0}
         if timing == report_schemas.Timing.week:
             start_date = item["time"]
             end_date = start_date + timedelta(days=7)
@@ -378,35 +449,15 @@ async def get_count_referred(
         if timing == report_schemas.Timing.month:
             if item["time"] in convert_to_dict_record:
 
-                item["count"] = {
-                    "unfinished": convert_to_dict_record[item["time"]].get(
-                        "unfinished", 0
-                    ),
-                    "finished": convert_to_dict_record[item["time"]].get(
-                        "finished", 0
-                    ),
-                    "unknown": convert_to_dict_record[item["time"]].get(
-                        "unknown", 0
-                    ),
-                }
+                item["count"] = convert_to_dict_record[item["time"]]
             else:
-                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
+                item["count"] = {"count": 0, "effective_utilization_rate": 0}
             item.update({"end_time": last_day_of_month(item["time"])})
         if timing == report_schemas.Timing.year:
             if item["time"] in convert_to_dict_record:
-                item["count"] = {
-                    "unfinished": convert_to_dict_record[item["time"]].get(
-                        "unfinished", 0
-                    ),
-                    "finished": convert_to_dict_record[item["time"]].get(
-                        "finished", 0
-                    ),
-                    "unknown": convert_to_dict_record[item["time"]].get(
-                        "unknown", 0
-                    ),
-                }
+                item["count"] = convert_to_dict_record[item["time"]]
             else:
-                item["count"] = {"unfinished": 0, "finished": 0, "unknown": 0}
+                item["count"] = {"count": 0, "effective_utilization_rate": 0}
         item["start_time"] = item.pop("time")
         item["data"] = item.pop("count")
     range_date.append({"total_refferd": total_count_record})

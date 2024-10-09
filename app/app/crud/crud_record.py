@@ -131,6 +131,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             Record.start_time.between(
                 input_start_create_time, input_end_create_time
             ),
+            Record.latest_status == schemas.record.StatusRecord.finished.value,
         ]
 
         if zone_id is not None:
@@ -140,12 +141,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             select(
                 (func.date_trunc(timing, Record.start_time)).label(timing),
                 func.count(Record.id).label("count"),
-                Record.latest_status,
+                func.avg(Record.end_time - Record.start_time),
             )
             .where(and_(*filters))
             .group_by(timing)
-            .group_by(Record.latest_status)
-            .order_by(timing)
         )
         exec = await db.execute(query)
         fetch = exec.fetchall()
@@ -525,6 +524,34 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         }
 
         return count_entrance, count_exit
+
+    async def get_effective_utilization_rate(
+        self,
+        db: AsyncSession,
+        *,
+        start_time_in: datetime = None,
+        end_time_in: datetime = None,
+        zone_id_in: int = None,
+    ):
+        query = select(
+            func.avg(
+                ((Record.end_time) - (Record.start_time)).label("time_park")
+            ),
+        )
+
+        filters = [Record.is_deleted == False, Zone.is_deleted == False]
+
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
+
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(
+                Record.start_time.between(start_time_in, end_time_in)
+            )
+
+        result = (await db.execute(query.filter(*filters))).fetchall()
+
+        return result
 
 
 record = CRUDRecord(Record)

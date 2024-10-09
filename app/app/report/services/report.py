@@ -417,7 +417,10 @@ async def get_count_referred(
                 * 100
             )
         )
-    print(convert_to_dict_record)
+    print(
+        convert_to_dict_record,
+        ((avg_time_park.total_seconds() / 3600) / (capacity_zone * 24)) * 100,
+    )
 
     for item in range_date:
         if timing == report_schemas.Timing.day:

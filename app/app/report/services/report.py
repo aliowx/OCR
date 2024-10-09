@@ -124,7 +124,7 @@ async def capacity(db: AsyncSession):
         empty = 0
 
     effective_utilization_rate = round(
-        ((avg_time_park / 60) / (capacity_zones * 24)) * 100
+        (((avg_time_park / 60) / (capacity_zones * 24)) * 100), 2
     )
 
     return report_schemas.Capacity(
@@ -169,12 +169,10 @@ async def report_zone(db: AsyncSession):
         convert_avg_time = 0
         if avg_time:
             convert_avg_time = avg_time.total_seconds() / 60
-            print(convert_avg_time)
 
             zone.effective_utilization_rate = round(
-                (((convert_avg_time / 60) / (zone.capacity * 24)) * 100)
+                ((((convert_avg_time / 60) / (zone.capacity * 24)) * 100)), 2
             )
-            print(zone.effective_utilization_rate)
 
         zone.avrage_stop_minute_today = round(convert_avg_time)
 
@@ -413,14 +411,16 @@ async def get_count_referred(
         convert_to_dict_record[record_date]["count"] = count
         convert_to_dict_record[record_date]["effective_utilization_rate"] = (
             round(
-                ((avg_time_park.total_seconds() / 3600) / (capacity_zone * 24))
-                * 100
+                (
+                    (
+                        (avg_time_park.total_seconds() / 3600)
+                        / (capacity_zone * 24)
+                    )
+                    * 100,
+                    2,
+                )
             )
         )
-    print(
-        convert_to_dict_record,
-        ((avg_time_park.total_seconds() / 3600) / (capacity_zone * 24)) * 100,
-    )
 
     for item in range_date:
         if timing == report_schemas.Timing.day:

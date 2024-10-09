@@ -285,10 +285,13 @@ async def effective_utilization_rate(
     if total_avrage_park_time is not None and total_capacity != 0:
         total_effective_utilization_rate = round(
             (
-                (total_avrage_park_time.total_seconds() / 3600)
-                / (total_capacity * 24)
-            )
-            * 100
+                (
+                    (total_avrage_park_time.total_seconds() / 3600)
+                    / (total_capacity * 24)
+                )
+                * 100
+            ),
+            2,
         )
     else:
         total_effective_utilization_rate = 0
@@ -416,9 +419,9 @@ async def get_count_referred(
                         (avg_time_park.total_seconds() / 3600)
                         / (capacity_zone * 24)
                     )
-                    * 100,
-                    2,
-                )
+                    * 100
+                ),
+                2,
             )
         )
 

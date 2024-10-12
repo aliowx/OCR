@@ -44,41 +44,6 @@ async def capacity(
     return APIResponse(await report_services.capacity(db))
 
 
-@router.get("/park-time")
-async def park_time(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.REPORTING_ANALYSIS,
-                ]
-            )
-        ),
-    ],
-    db: AsyncSession = Depends(deps.get_db_async),
-    *,
-    start_time_in: datetime | None = None,
-    end_time_in: datetime | None = None,
-    jalali_date: report_schemas.JalaliDate = Depends(),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> APIResponseType[Any]:
-    """
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
-    """
-
-    return APIResponse(
-        await report_services.park_time(
-            db,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            jalali_date=jalali_date,
-        )
-    )
-
-
 @router.get("/effective-utilization-rate")
 async def get_effective_utilization_rate(
     _: Annotated[

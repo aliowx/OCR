@@ -98,15 +98,15 @@ async def capacity(db: AsyncSession):
     if total_amount_bill is None:
         total_amount_bill = 0
 
-    avg_time_park = await crud.record.get_avg_time_park(
+    time_park = await crud.record.get_time_park(
         db,
         start_time_in=start_today,
         end_time_in=end_today,
     )
-    if avg_time_park:
-        avg_time_park = round(avg_time_park.total_seconds() / 60)
+    if time_park:
+        time_park = round(time_park.total_seconds() / 60)
     else:
-        avg_time_park = 0
+        time_park = 0
 
     capacity_zones, count_zone = await zone_repo.get_capacity_count_zone(db)
 
@@ -123,9 +123,12 @@ async def capacity(db: AsyncSession):
     if empty < 0:
         empty = 0
 
-    effective_utilization_rate = round(
-        (((avg_time_park / 60) / (capacity_zones * 24)) * 100), 2
-    )
+    if time_park > 0:
+        effective_utilization_rate = round(
+            (((time_park / 60) / (capacity_zones * 24)) * 100), 2
+        )
+    else:
+        effective_utilization_rate = 0
 
     return report_schemas.Capacity(
         total=capacity_zones,
@@ -134,7 +137,7 @@ async def capacity(db: AsyncSession):
         unknown=unknown_referred,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,
-        avg_minute_park=avg_time_park,
+        time_minute_park=time_park,
         len_zone=count_zone,
         effective_utilization_rate=effective_utilization_rate,
     )
@@ -159,25 +162,25 @@ async def report_zone(db: AsyncSession):
                 end_time_in=end_today,
             )
         )
-        avg_time = await crud.record.get_avg_time_park(
+        time_park = await crud.record.get_time_park(
             db,
             zone_id_in=zone.id,
             start_time_in=start_today,
             end_time_in=end_today,
         )
 
-        convert_avg_time = 0
-        if avg_time:
-            convert_avg_time = avg_time.total_seconds() / 60
+        convert_time = 0
+        if time_park:
+            convert_time = time_park.total_seconds() / 60
 
         effective_utilization_rate = 0
-        if convert_avg_time > 0:
+        if convert_time > 0:
             effective_utilization_rate = round(
-                ((((convert_avg_time / 60) / (zone.capacity * 24)) * 100)), 2
+                ((((convert_time / 60) / (zone.capacity * 24)) * 100)), 2
             )
         zone.effective_utilization_rate = effective_utilization_rate
 
-        zone.avrage_stop_minute_today = round(convert_avg_time)
+        zone.time_park_minute_today = round(convert_time)
 
         total_price, total_income = await bill_repo.get_price_income(
             db,
@@ -196,54 +199,6 @@ async def report_zone(db: AsyncSession):
     return zones
 
 
-async def park_time(
-    db: AsyncSession,
-    *,
-    start_time_in: datetime,
-    end_time_in: datetime,
-    jalali_date: report_schemas.JalaliDate,
-):
-    list_avg_zone_time_park = []
-    convert_to_minute_time_park = 0
-
-    total_avrage_park_time = await crud.record.get_avg_time_park(
-        db,
-        start_time_in=start_time_in,
-        end_time_in=end_time_in,
-        jalali_date=jalali_date,
-    )
-    if total_avrage_park_time is not None:
-        total_avrage_park_time = round(
-            total_avrage_park_time.total_seconds() / 60
-        )
-    else:
-        total_avrage_park_time = 0
-    zones = await zone_repo.get_multi(db, limit=None)
-    for zone in zones:
-        avrage_park_time = await crud.record.get_avg_time_park(
-            db,
-            zone_id_in=zone.id,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            jalali_date=jalali_date,
-        )
-        if avrage_park_time:
-            convert_to_minute_time_park = round(
-                avrage_park_time.total_seconds() / 60
-            )
-        list_avg_zone_time_park.append(
-            {
-                "zone_name": zone.name,
-                "avg_time_park": convert_to_minute_time_park,
-            }
-        )
-    list_avg_zone_time_park.append(
-        {"avg_total_time_park": total_avrage_park_time}
-    )
-
-    return list_avg_zone_time_park
-
-
 async def effective_utilization_rate(
     db: AsyncSession,
     *,
@@ -257,20 +212,17 @@ async def effective_utilization_rate(
 
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
-        avrage_park_time = await crud.record.get_avg_time_park(
+        park_time = await crud.record.get_time_park(
             db,
             zone_id_in=zone.id,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
             jalali_date=jalali_date,
         )
-        if avrage_park_time:
+        if park_time:
             effective_utilization_rate = round(
                 (
-                    (
-                        (avrage_park_time.total_seconds() / 3600)
-                        / (zone.capacity * 24)
-                    )
+                    ((park_time.total_seconds() / 3600) / (zone.capacity * 24))
                     * 100
                 ),
                 2,
@@ -282,17 +234,17 @@ async def effective_utilization_rate(
         )
         total_capacity += zone.capacity
 
-    total_avrage_park_time = await crud.record.get_avg_time_park(
+    total_park_time = await crud.record.get_time_park(
         db,
         start_time_in=start_time_in,
         end_time_in=end_time_in,
         jalali_date=jalali_date,
     )
-    if total_avrage_park_time is not None and total_capacity != 0:
+    if total_park_time is not None and total_capacity != 0:
         total_effective_utilization_rate = round(
             (
                 (
-                    (total_avrage_park_time.total_seconds() / 3600)
+                    (total_park_time.total_seconds() / 3600)
                     / (total_capacity * 24)
                 )
                 * 100

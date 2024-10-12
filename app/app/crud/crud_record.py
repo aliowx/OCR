@@ -394,7 +394,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return await db.scalar(query)
 
-    async def get_avg_time_park(
+    async def get_time_park(
         self,
         db: AsyncSession,
         *,
@@ -405,12 +405,15 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
     ):
 
         query = select(
-            func.avg(
+            func.sum(
                 ((Record.end_time) - (Record.start_time)).label("time_park")
             ),
         )
 
-        filters = [Record.is_deleted == False]
+        filters = [
+            Record.is_deleted == False,
+            Record.latest_status == schemas.record.StatusRecord.finished,
+        ]
 
         if jalali_date is not None:
             column_date_jalali = select(

@@ -217,7 +217,7 @@ async def create_records_past(db: AsyncSession):
     zone_ids = await create_zone(db)
     latest_id = await latest_id_records(db)
 
-    for i in range(1, 200):
+    for i in range(1, 250):
         time = datetime(
             # year=random.randint(2023, 2024),
             year=2024,
@@ -229,20 +229,50 @@ async def create_records_past(db: AsyncSession):
             minute=random.randint(0, 59),
             second=random.randint(0, 59),
         )
+        time_now = datetime.now(timezone.utc).replace(tzinfo=None)
         record = models.Record(
             id=latest_id + i,
             plate=f"{random.randint(10,99)}{random.randint(10,70)}{random.randint(100,999)}{random.randint(10,99)}",
-            start_time=time,
-            end_time=time + timedelta(hours=random.randint(1, 23)),
+            start_time=time_now,
+            end_time=time_now + timedelta(hours=random.randint(1, 10)),
             img_entrance_id=None,
             img_exit_id=None,
             score=0.01,
             zone_id=random.choice(zone_ids),
-            latest_status=schemas.StatusRecord.finished.value,
-            created=time,
+            latest_status=random.choice(list_status_record),
+            # created=time,
         )
         record.img_entrance_id = image.id
         record.img_exit_id = image.id
+        if record.latest_status == schemas.StatusRecord.unfinished:
+            record.end_time = record.start_time
+        record.camera_entrance_id = (
+            (
+                await db.execute(
+                    select(models.Equipment.id).where(
+                        models.Equipment.equipment_type
+                        == models.base.EquipmentType.CAMERA_ENTRANCE_DOOR.value,
+                        models.Equipment.zone_id == record.zone_id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+        if record.latest_status == schemas.StatusRecord.finished:
+            record.camera_exit_id = (
+                (
+                    await db.execute(
+                        select(models.Equipment.id).where(
+                            models.Equipment.equipment_type
+                            == models.base.EquipmentType.CAMERA_EXIT_DOOR.value,
+                            models.Equipment.zone_id == record.zone_id,
+                        )
+                    )
+                )
+                .scalars()
+                .first()
+            )
 
         # Add record to the session
         db.add(record)
@@ -365,7 +395,7 @@ async def init_db_fake_data(db: AsyncSession) -> None:
         # await create_sub_zone(db)
         # await create_records(db)
         await create_records_past(db)
-        await create_events(db)
+        # await create_events(db)
     except Exception as e:
         logger.error(f"initial data creation error\n{e}")
 

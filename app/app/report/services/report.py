@@ -104,7 +104,7 @@ async def capacity(db: AsyncSession):
         end_time_in=end_today,
     )
     if avg_time_park:
-        avg_time_park = avg_time_park.total_seconds() / 60
+        avg_time_park = round(avg_time_park.total_seconds() / 60)
     else:
         avg_time_park = 0
 

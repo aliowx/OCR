@@ -142,18 +142,11 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         count, total_price = (
             await db.execute(query_sum_price_bill)
         ).fetchone()
-        if total_price and count:
-            avg_price = total_price / count
 
-        if (
-            total_price is None
-            or total_price == 0
-            or count is None
-            or count == 0
-        ):
-            avg_price = 0
+        if total_price is None or total_price == 0:
+            total_price = 0
 
-        return avg_price, total_income
+        return total_price, total_income
 
     async def get_total_amount_bill(self, db: AsyncSession):
 

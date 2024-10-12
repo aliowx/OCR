@@ -131,7 +131,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             Record.start_time.between(
                 input_start_create_time, input_end_create_time
             ),
-            Record.latest_status == schemas.record.StatusRecord.finished.value,
         ]
 
         if zone_id is not None:

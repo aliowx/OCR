@@ -99,6 +99,12 @@ class ParkingRepository(CRUDBase[Parking, ParkingCreate, ParkingUpdate]):
             return None
         return parkings[0]
 
+    def get_main_parking_sync(self, db: Session) -> Parking | None:
+        parkings = self.get_multi(db)
+        if not parkings:
+            return None
+        return parkings[0]
+
 
 class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
     async def get_by_name(

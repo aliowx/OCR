@@ -75,6 +75,7 @@ def update_record(self, event_id) -> str:
         # lock events table to prevent multiple record insertion
         self.session.execute(text("LOCK TABLE event IN EXCLUSIVE MODE"))
         event = crud.event.get(self.session, event_id)
+        payment_type = crud.parking_repo.get_main_parking_sync(db=self.session)
 
         record = crud.record.get_by_event(
             db=self.session,
@@ -115,6 +116,32 @@ def update_record(self, event_id) -> str:
                 latest_status=StatusRecord.unfinished.value,
             )
             record = crud.record.create(db=self.session, obj_in=record)
+            if (
+                payment_type.payment_type
+                == models.base.ParkingPaymentType.BEFORE_ENTER.value
+            ):
+                price, get_price = calculate_price(
+                    self.session,
+                    zone_id=record.zone_id,
+                    start_time_in=record.start_time,
+                    end_time_in=record.end_time,
+                )
+                issued_by = billSchemas.Issued.entrance.value
+                bill_repo.create(
+                    self.session,
+                    obj_in=billSchemas.BillCreate(
+                        plate=record.plate,
+                        start_time=record.start_time,
+                        end_time=record.end_time,
+                        issued_by=issued_by,
+                        price=price,
+                        record_id=record.id,
+                        zone_id=record.zone_id,
+                        status=billSchemas.StatusBill.unpaid.value,
+                        entrance_fee=get_price.entrance_fee,
+                        hourly_fee=get_price.hourly_fee,
+                    ),
+                )
         elif record:
             record_update = None
             latest_status = StatusRecord.unfinished.value
@@ -152,6 +179,8 @@ def update_record(self, event_id) -> str:
             if (
                 record.latest_status == StatusRecord.finished
                 and event.type_event != TypeEvent.admin_exitRegistration.value
+                and payment_type.payment_type
+                != models.base.ParkingPaymentType.BEFORE_ENTER.value
             ):
                 issued_by = billSchemas.Issued.exit_camera.value
                 if (

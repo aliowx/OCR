@@ -7,6 +7,7 @@ class Issued(str, Enum):
     kiosk = "kiosk"
     exit_camera = "exit_camera"
     admin = "admin"
+    entrance = "entrance"
 
 
 class StatusBill(str, Enum):

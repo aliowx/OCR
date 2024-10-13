@@ -140,7 +140,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             select(
                 (func.date_trunc(timing, Record.start_time)).label(timing),
                 func.count(Record.id).label("count"),
-                func.avg(Record.end_time - Record.start_time),
+                func.sum(Record.end_time - Record.start_time),
             )
             .where(and_(*filters))
             .group_by(timing)

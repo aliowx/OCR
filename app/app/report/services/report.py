@@ -364,7 +364,7 @@ async def get_count_referred(
     )
     convert_to_dict_record = {}
     total_count_record = 0
-    for time, count, avg_time_park in count_record:
+    for time, count, time_park in count_record:
         total_count_record += count
         record_date = time.date()
         if record_date not in convert_to_dict_record:
@@ -373,10 +373,7 @@ async def get_count_referred(
         convert_to_dict_record[record_date]["effective_utilization_rate"] = (
             round(
                 (
-                    (
-                        (avg_time_park.total_seconds() / 3600)
-                        / (capacity_zone * 24)
-                    )
+                    ((time_park.total_seconds() / 3600) / (capacity_zone * 24))
                     * 100
                 ),
                 2,
@@ -386,9 +383,7 @@ async def get_count_referred(
     for item in range_date:
         if timing == report_schemas.Timing.day:
             if item["time"] in convert_to_dict_record:
-                # print(convert_to_dict_record[item["time"]])
                 item["count"] = convert_to_dict_record[item["time"]]
-
             else:
                 item["count"] = {"count": 0, "effective_utilization_rate": 0}
         if timing == report_schemas.Timing.week:

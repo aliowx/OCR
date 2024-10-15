@@ -44,8 +44,10 @@ async def read_bill(
     All bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    
-    bills = await bill_repo.get_multi_by_filters(db, params=params,jalali_date=jalali_date)
+
+    bills = await bill_repo.get_multi_by_filters(
+        db, params=params, jalali_date=jalali_date
+    )
     for bill in bills[0]:
         await servicesBill.set_detail(db, bill=bill)
     return APIResponse(
@@ -181,29 +183,9 @@ async def update_bills(
     create bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    resualt = {}
-    list_bills_update = []
-    list_bills_not_update = []
-    msg_code = 0
-    for bill_in in bills_update:
-        bill = await bill_repo.get(db, id=bill_in.id, for_update=True)
-        if bill:
-            if bill.rrn_number is not None:
-                msg_code = 14
-                list_bills_not_update.append(bill)
-            if bill.rrn_number is None:
-                bill_update = await bill_repo.update(
-                    db, db_obj=bill, obj_in=bill_in.model_dump()
-                )
-                await db.commit()
-                list_bills_update.append(bill_update)
 
-        if not bill:
-            list_bills_not_update.append(
-                {"bill by this id not found": bill_in.id}
-            )
-    resualt.update({"list_bills_update": list_bills_update})
-    if list_bills_not_update != []:
-        resualt.update({"list_bills_not_update": list_bills_not_update})
+    result, msg_code = await servicesBill.update_multi_bill(
+        db, bills_update=bills_update
+    )
 
-    return APIResponse(resualt, msg_code=msg_code)
+    return APIResponse(result, msg_code=msg_code)

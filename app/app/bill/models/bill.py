@@ -38,6 +38,22 @@ class Bill(Base):
     )
     record_rel = relationship("Record", foreign_keys=record_id)
 
+    camera_entrance_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("equipment.id", ondelete="SET NULL", onupdate="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    camera_entrance_rel = relationship("Equipment", foreign_keys=camera_entrance_id)
+
+    camera_exit_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("equipment.id", ondelete="SET NULL", onupdate="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    camera_exit_rel = relationship("Equipment", foreign_keys=camera_exit_id)
+
     plate: Mapped[str] = mapped_column(String, nullable=True)
 
     start_time: Mapped[datetime] = mapped_column(

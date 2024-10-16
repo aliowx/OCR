@@ -11,7 +11,7 @@ from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.models.record import Record
-from app.schemas.record import RecordCreate, RecordUpdate
+from app.schemas.record import RecordCreate, RecordUpdate, StatusRecord
 from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
@@ -156,32 +156,21 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
+        input_status: StatusRecord,
         timing: Timing,
         zone_id: int | None = None,
     ):
         filters = [
             Record.is_deleted == False,
-            Record.start_time.between(
-                input_start_create_time, input_end_create_time
-            ),
+            Record.latest_status == input_status,
+            Record.end_time >= input_start_create_time,
+            Record.start_time <= input_end_create_time,
         ]
+        query = select(Record).filter(and_(*filters))
 
-        if zone_id is not None:
-            filters.append(Record.zone_id == zone_id)
+        records = await self._all(db.scalars(query))
 
-        query = (
-            select(
-                func.date_trunc(timing, Record.start_time).label(timing),
-                func.count(Record.id).label("count"),
-            )
-            .where(and_(*filters))
-            .group_by(timing)
-            .order_by(timing)
-        )
-        exec = await db.execute(query)
-        fetch = exec.fetchall()
-
-        return fetch
+        return records
 
     async def get_today_count_referred_by_zone(
         self,
@@ -362,7 +351,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_status is not None:
             filters.append(Record.latest_status == input_status)
 
-        return await self._first(db.scalars(query.filter(*filters)))
+        return await self._first(
+            db.scalars(query.filter(*filters).order_by(Record.id.desc()))
+        )
 
     async def get_count_unknown_referred(
         self,

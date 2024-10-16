@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bill.repo import bill_repo
-from app import crud
+from app import crud, schemas
 from app.parking.repo import zone_repo
 from datetime import datetime, timedelta, UTC
 from dateutil.relativedelta import relativedelta
@@ -8,6 +8,7 @@ from app.report import schemas as report_schemas
 from app.parking.repo import zone_repo
 from app.parking.services import zone as zone_services
 from typing import Any
+from fastapi.encoders import jsonable_encoder
 
 
 # calculate  first date month
@@ -287,7 +288,6 @@ def get_month_range(start_date: datetime, end_date: datetime):
         # Move to the next month
         next_month = current_start + timedelta(days=31)
         current_start = next_month.replace(day=1)
-
     return month_ranges
 
 
@@ -297,7 +297,11 @@ def get_year_range(start_date: datetime, end_date: datetime):
     end_year = end_date.year
 
     return [
-        datetime(year, 1, 1).date() for year in range(start_year, end_year + 1)
+        {
+            "start": datetime(year, 1, 1),
+            "end": datetime(year, 12, 31, 23, 59, 59),
+        }
+        for year in range(start_year, end_year + 1)
     ]
 
 
@@ -464,6 +468,37 @@ async def cal_count_with_out_status(
     return range_date
 
 
+def create_ranges_date2(
+    end_date: datetime, start_date: datetime, timing: report_schemas.Timing
+):
+
+    start_time = start_date.replace(hour=0, minute=0, microsecond=0)
+    end_time = end_date.replace(hour=23, minute=59, microsecond=59)
+
+    ranges = []
+    current_date = start_date
+    while current_date <= end_date:
+        # Create a range
+        start_time = current_date
+        if timing == report_schemas.Timing.day:
+            current_date += timedelta(days=1)
+            ranges.append({"start": start_time, "end": end_time, "count": 0})
+
+        if timing == report_schemas.Timing.week:
+            ranges.append({"start": start_time, "end": end_time, "count": 0})
+            start_time = current_date + timedelta(days=7)
+            current_date += timedelta(days=7)
+
+        if timing == report_schemas.Timing.month:
+            range_month = get_month_range(start_date, end_date)
+            for start, end in range_month:
+                ranges.append({"start": start, "end": end, "count": 0})
+            return ranges
+        if timing == report_schemas.Timing.year:
+            return get_year_range(start_date, end_date)
+    return ranges
+
+
 async def get_count_referred_by_zone(
     db: AsyncSession,
     start_time_in: datetime,
@@ -472,6 +507,37 @@ async def get_count_referred_by_zone(
     zone_id: int | None = None,
 ) -> list:
 
+    range_date = create_ranges_date2(
+        start_date=start_time_in, end_date=end_time_in, timing=timing
+    )
+
+    for date_time in range_date:
+        records = await crud.record.get_count_referred_with_out_status(
+            db,
+            input_start_create_time=date_time.get("start"),
+            input_end_create_time=date_time.get("end"),
+            input_status=schemas.record.StatusRecord.finished,
+            timing=timing,
+            zone_id=zone_id,
+        )
+        print(jsonable_encoder(records))
+        # print(date_time.get("start"), date_time.get("end"), records)
+        total_park_time = timedelta(hours=0)
+        for record in records:
+
+            if record.start_time < date_time.get(
+                "start"
+            ) and record.end_time < date_time.get("end"):
+                total_park_time += record.end_time - date_time.get("start")
+            elif record.start_time > date_time.get("start") and record.end_time < date_time.get("end"):
+                total_park_time += record.end_time - record.start_time
+            elif record.start_time < date_time.get("start") and record.end_time > date_time.get("end"):
+                total_park_time += date_time.get("end") - record.start_time
+
+        
+        print(total_park_time.total_seconds() / 3600)
+    
+    return
     all_count_referred = 0
     result = {}
     zones_ids = await zone_repo.get_multi(db, limit=None)

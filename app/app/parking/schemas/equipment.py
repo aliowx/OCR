@@ -22,8 +22,9 @@ class EquipmentCreate(BaseModel):
     equipment_status: Optional[EquipmentStatus]
     serial_number: str = Field(None, max_length=50)
     ip_address: str
-    zone_id: int
     tag: str
+    zone_id: int | None = None
+    additional_data: dict | None = None
 
 
 class EquipmentUpdate(EquipmentBase): ...

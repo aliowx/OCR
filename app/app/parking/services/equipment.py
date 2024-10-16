@@ -42,12 +42,13 @@ async def create_equipment(
     equipment_data: schemas.EquipmentCreate,
     commit: bool = True,
 ) -> Equipment:
-    zone = await zone_repo.get(db, id=equipment_data.zone_id)
-    if not zone:
-        raise ServiceFailure(
-            detail="Zone  Not Found",
-            msg_code=MessageCodes.not_found,
-        )
+    if equipment_data.zone_id is not None:
+        zone = await zone_repo.get(db, id=equipment_data.zone_id)
+        if not zone:
+            raise ServiceFailure(
+                detail="Zone  Not Found",
+                msg_code=MessageCodes.not_found,
+            )
     params = schemas.FilterEquipmentsParams(
         ip_address=equipment_data.ip_address,
     )
@@ -169,15 +170,9 @@ async def update_equipment(
             tag=equipment_data.tag,
             size=1,
         )
-        tag_check, total_count = await get_multi_quipments(
-            db, params=params
-        )
+        tag_check, total_count = await get_multi_quipments(db, params=params)
         if total_count:
-            if (
-                tag_check[0].tag
-                and equipment.tag
-                != tag_check[0].tag
-            ):
+            if tag_check[0].tag and equipment.tag != tag_check[0].tag:
                 raise ServiceFailure(
                     detail="Duplicate equipment tag",
                     msg_code=MessageCodes.duplicate_name,

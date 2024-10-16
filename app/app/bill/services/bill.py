@@ -126,7 +126,9 @@ async def kiosk(db: AsyncSession, *, record, issue: bool = False):
     return bill
 
 
-async def update_multi_bill(db, bills_update: list[billSchemas.BillUpdate]):
+async def update_multi_bill(
+    db: AsyncSession, bills_update: list[billSchemas.BillUpdate]
+):
     resualt = {}
 
     list_bills_update = []

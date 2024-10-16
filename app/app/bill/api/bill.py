@@ -111,18 +111,14 @@ async def create_bill_by_kiosk(
     create bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
+    bill=None
     record = await crud.record.get_record(
         db,
         input_plate=plate_in,
         input_status=schemas.StatusRecord.unfinished.value,
     )
-    if not record:
-        raise exc.ServiceFailure(
-            detail="plate not in parking",
-            msg_code=MessageCodes.not_found,
-        )
-
-    bill = await servicesBill.kiosk(db, record=record, issue=issue)
+    if record:
+        bill = await servicesBill.kiosk(db, record=record, issue=issue)
 
     return APIResponse(bill)
 

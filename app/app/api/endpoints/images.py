@@ -2,7 +2,7 @@ import io
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
@@ -10,7 +10,7 @@ from starlette.responses import StreamingResponse
 from app import crud, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
-from app.utils import APIResponse, APIResponseType
+from app.utils import APIResponse, APIResponseType, storage
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
@@ -34,15 +34,21 @@ async def create_image(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
-    image_in: schemas.ImageCreateBase64,
-) -> APIResponseType[schemas.ImageBase64InDB]:
+    file: UploadFile | None = None,
+    camera_id: int,
+    save_as: schemas.image.ImageSaveAs | None = None,
+) -> APIResponseType[Any]:
     """
     Create new image.
-
     user access to this [ ADMINISTRATOR ]
     """
-    image = await crud.image.create_base64(db=db, obj_in=image_in)
-    return APIResponse(image)
+    if save_as is not None:
+        client = storage.get_client(name=save_as)
+        client.upload_file()
+    else:
+        image = await crud.image.create_base64(db=db, obj_in=image_in)
+    return
+    # return APIResponse(image)
 
 
 # TODO Fix bug

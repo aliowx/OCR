@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-
+from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 
@@ -60,6 +60,11 @@ class ImageBase64InDB(ImageBase64Base):
 
 class ImageBase64(ImageBase64Base):
     pass
+
+
+class ImageSaveAs(StrEnum):
+    minio = "minio"
+    database = "database"
 
 
 class ImageInDB(ImageInDBBase):

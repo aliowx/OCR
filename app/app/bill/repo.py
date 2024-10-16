@@ -37,6 +37,28 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             db.scalars(query.order_by(Bill.created.desc()).filter(*filters))
         )
 
+    async def get_bill_by_record_id(
+        self,
+        db: AsyncSession,
+        *,
+        bill_status: StatusBill,
+        record_id: int = None,
+    ) -> Bill:
+
+        query = select(Bill)
+
+        filters = [
+            Bill.is_deleted == false(),
+            Bill.status == bill_status,
+        ]
+
+        if record_id is not None:
+            filters.append(Bill.record_id == record_id)
+
+        return await self._first(
+            db.scalars(query.order_by(Bill.created.desc()).filter(*filters))
+        )
+
     async def get_multi_by_filters(
         self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate
     ) -> tuple[list[billschemas], int]:
@@ -112,7 +134,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         *,
         start_time_in: datetime = None,
         end_time_in: datetime = None,
-        zone_id: int = None
+        zone_id: int = None,
     ):
         filters = [Bill.is_deleted == false()]
 
@@ -177,7 +199,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         *,
         zone_id: int,
         start_time_in: datetime,
-        end_time_in: datetime
+        end_time_in: datetime,
     ):
 
         filters = [Bill.is_deleted == False]
@@ -236,7 +258,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         timing: Timing,
         zone_id: int,
         start_time_in: datetime,
-        end_time_in: datetime
+        end_time_in: datetime,
     ):
 
         filters = [Bill.is_deleted == False]

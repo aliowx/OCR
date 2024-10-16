@@ -104,23 +104,27 @@ async def create_bill_by_kiosk(
         ),
     ],
     plate_in: str,
-    issue: bool = False,
+    issue: bool = None,
     db: AsyncSession = Depends(deps.get_db_async),
-) -> APIResponseType[billSchemas.Bill | billSchemas.BillShowBykiosk]:
+) -> APIResponseType[Any]:
     """
     create bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    bill=None
     record = await crud.record.get_record(
         db,
         input_plate=plate_in,
         input_status=schemas.StatusRecord.unfinished.value,
     )
     if record:
-        bill = await servicesBill.kiosk(db, record=record, issue=issue)
-
-    return APIResponse(bill)
+        record = await servicesBill.kiosk(db, record=record, issue=issue)
+    else:
+        record = await crud.record.get_record(
+            db,
+            input_plate=plate_in,
+            input_status=schemas.StatusRecord.finished.value,
+        )
+    return APIResponse(record)
 
 
 @router.get("/get_by_ids/")

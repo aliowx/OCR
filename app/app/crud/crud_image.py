@@ -13,6 +13,7 @@ from app.schemas.image import (
     ImageCreateBinary,
     ImageUpdateBase64,
     ImageUpdateBinary,
+    ImageCreate,
 )
 
 
@@ -105,7 +106,7 @@ class CRUDImage(
         return [ImageBase64InDB(**obj) for obj in images]
 
     async def create_base64(
-        self, db: AsyncSession, *, obj_in: ImageCreateBase64
+        self, db: AsyncSession, *, obj_in: ImageCreateBase64 | ImageCreate
     ) -> ImageBase64InDB:
         obj_in = jsonable_encoder(obj_in)
         if "image" in obj_in:
@@ -168,6 +169,13 @@ class CRUDImage(
 
         obj = ImageBase64InDB(**obj)
         return obj
+
+    async def create_path(self, db: AsyncSession, *, obj_in: ImageCreate):
+        print(obj_in)
+        print(jsonable_encoder(Image()))
+        obj_in = Image(**obj_in)
+        db.add(obj_in)
+        return await self._commit_refresh(db=db, db_obj=obj_in)
 
 
 image = CRUDImage(Image)

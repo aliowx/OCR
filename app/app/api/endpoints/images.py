@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
-
+import base64
 from app import crud, schemas, utils
 from app.api import deps
 from app.core import exceptions as exc
@@ -14,6 +14,7 @@ from app.utils import APIResponse, APIResponseType, storage
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
+from app.parking.repo import equipment_repo
 
 router = APIRouter()
 namespace = "images"
@@ -34,21 +35,42 @@ async def create_image(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
-    file: UploadFile | None = None,
-    camera_id: int,
+    file_in: UploadFile,
+    camera_id: int | None = None,
     save_as: schemas.image.ImageSaveAs | None = None,
 ) -> APIResponseType[Any]:
     """
     Create new image.
     user access to this [ ADMINISTRATOR ]
     """
-    if save_as is not None:
+    camera_exist = await equipment_repo.get(db, id=camera_id)
+    if not camera_exist:
+        raise exc.ServiceFailure(
+            detail="Camera Not Found",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    if save_as == schemas.image.ImageSaveAs.minio:
+        file_content = await file_in.read()
+        file_bytes = io.BytesIO(file_content)
         client = storage.get_client(name=save_as)
-        client.upload_file()
-    else:
-        image = await crud.image.create_base64(db=db, obj_in=image_in)
-    return
-    # return APIResponse(image)
+        path_file = client.upload_file(
+            content=file_bytes, name=file_in.filename, size=file_in.size
+        )
+        obj_in = schemas.image.ImageCreate(path_image=path_file)
+        if camera_id is not None:
+            obj_in.camera_id = camera_id
+        image = await crud.image.create_path(db, obj_in=obj_in.model_dump())
+
+    elif save_as == schemas.image.ImageSaveAs.database:
+        file_content = await file_in.read()
+        file_base64 = base64.b64encode(file_content).decode("utf-8")
+        obj_in = schemas.image.ImageCreate(image=file_base64)
+        if camera_id is not None:
+            obj_in.camera_id = camera_id
+        image = await crud.image.create_base64(
+            db=db, obj_in=obj_in.model_dump()
+        )
+    return APIResponse(image)
 
 
 # TODO Fix bug

@@ -5,7 +5,9 @@ from pydantic import BaseModel, ConfigDict
 
 
 class ImageBase(BaseModel):
-    pass
+    path_image: str | None = None
+    image: Optional[str] = None
+    camera_id: Optional[int] = None
 
 
 class ImageBinaryBase(ImageBase):
@@ -15,6 +17,9 @@ class ImageBinaryBase(ImageBase):
 class ImageBase64Base(ImageBase):
     image: Optional[str] = None
     camera_id: Optional[int] = None
+
+
+class ImageCreate(ImageBase): ...
 
 
 class ImageCreateBase64(ImageBase64Base):
@@ -60,6 +65,11 @@ class ImageBase64InDB(ImageBase64Base):
 
 class ImageBase64(ImageBase64Base):
     pass
+
+
+class PathImageCreate(BaseModel):
+    path_image: str | None = None
+    camera_id: int | None = None
 
 
 class ImageSaveAs(StrEnum):

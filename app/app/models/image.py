@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import Integer, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
 
@@ -9,6 +9,8 @@ class Image(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     image: Mapped[str] = mapped_column(LargeBinary, nullable=True)
+
+    path_image: Mapped[str] = mapped_column(String, nullable=True)
 
     camera_id: Mapped[int] = mapped_column(
         Integer,

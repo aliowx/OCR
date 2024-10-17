@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class MinIO:
-    def init(self):
+    def __init__(self):
         # self.client = Minio(
         #     endpoint=settings.MINIO_SERVER_ADDRESS,
         #     access_key=settings.MINIO_ACCESS_KEY,
@@ -27,19 +27,25 @@ class MinIO:
             http_client=urllib3.PoolManager(cert_reqs="CERT_NONE"),
             secure=False,
         )
-        self.folder_path = settings.MINIO_FOLDER_ADDRESS
-        self.bucket_name = settings.MINIO_BUCKET_NAME
+        # self.folder_path = ""
+        self.bucket_name = "tets"
+        self.check_buckt_exist(self.bucket_name)
+
+    def check_buckt_exist(self, bucket_name: str):
+        bucket_exist = self.client.bucket_exists(bucket_name)
+        if not bucket_exist:
+            self.client.make_bucket(bucket_name)
+        return bucket_name
 
     def upload_file(self, content: BytesIO, name: str, size: int) -> str:
         try:
-            path = self.folder_path + name
             self.client.put_object(
                 bucket_name=self.bucket_name,
                 data=content,
-                object_name=path,
+                object_name=name,
                 length=size,
             )
-            return path
+            return f"/{self.bucket_name}/{name}"
 
         except S3Error as e:
             logger.error("MinIO error in upload file:", e)
@@ -47,7 +53,7 @@ class MinIO:
 
     def download_file(self, file_name: str) -> BinaryIO:
         try:
-            file_path = self.folder_path + file_name
+            file_path = file_name
             response = self.client.get_object(self.bucket_name, file_path)
 
             file = BytesIO()
@@ -68,7 +74,6 @@ class MinIO:
 def get_client(name: ImageSaveAs):
     if name.minio:
         return MinIO()
-    
 
 
 # # file: UploadFile = File()  # API input

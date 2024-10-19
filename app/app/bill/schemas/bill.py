@@ -32,11 +32,16 @@ class BillBase(BaseModel):
     time_paid: datetime | None = None
     entrance_fee: float | None = None
     hourly_fee: float | None = None
+    camera_entrance_id: int | None = None
+    camera_exit_id: int | None = None
 
 
 # Properties to receive on item creation
 class BillCreate(BillBase):
-    record_id: int
+    plate: str
+    price: float = 20000
+    issued_by: Issued
+    status: StatusBill
 
 
 class BillShowBykiosk(BillCreate):

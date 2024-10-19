@@ -214,16 +214,17 @@ async def create_bill(
     create bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    time_now = datetime.now(UTC).replace(tzinfo=None)
-    price, get_price = await servicesBill.calculate_price_async(
-        db,
-        start_time_in=time_now,
-        end_time_in=time_now,
-        zone_id=bill_in.zone_id,
-    )
-    bill_in.price = price
-    bill_in.entrance_fee = get_price.entrance_fee
-    bill_in.entrance_fee = get_price.hourly_fee
+    if bill_in.price is None:
+        time_now = datetime.now(UTC).replace(tzinfo=None)
+        price, get_price = await servicesBill.calculate_price_async(
+            db,
+            start_time_in=time_now,
+            end_time_in=time_now,
+            zone_id=bill_in.zone_id,
+        )
+        bill_in.price = price
+        bill_in.entrance_fee = get_price.entrance_fee
+        bill_in.entrance_fee = get_price.hourly_fee
     bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
     redis_client.publish("bills:1", rapidjson.dumps(jsonable_encoder(bill)))
 

@@ -45,6 +45,8 @@ class MessageCodes:
     duplicate_name = 12
     not_permission = 13
     bills_has_rrns = 14
+    unsuccessfully_pay = 15
+    successfully_pay = 16
 
     english_messages_names = {
         0: "Successful Operation",
@@ -61,7 +63,10 @@ class MessageCodes:
         11: "Duplicate zone pricing",
         12: "Duplicate name",
         13: "not access",
-        14: "The bills has RRN number"
+        14: "The bills has RRN number",
+        15: "Unsuccessful pay",
+        16: "Successful pay",
+
     }
 
     persian_message_names = {
@@ -79,5 +84,7 @@ class MessageCodes:
         11: "قیمت‌گذاری وارد شده برای این منطقه تکراری است",
         12: "نام تکرایر است",
         13: "دسترسی ندارید",
-        14: "قبض دارای شماره RRN میباشد"
+        14: "قبض دارای شماره RRN میباشد",
+        15: "پرداخت ناموفق",
+        16: "پرداخت موفق"
     }

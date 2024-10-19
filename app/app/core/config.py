@@ -4,7 +4,7 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator,HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 import app
@@ -119,6 +119,11 @@ class StorageSettings(SettingsBase):
 
     TEST_FIRST_SUPERUSER: str = None
     TEST_FIRST_SUPERUSER_PASSWORD: str = None
+
+    # payment
+    PAYMENT_ADDRESS : HttpUrl
+    PAYMENT_USER_NAME : str
+    PAYMENT_PASSWORD : str
 
     @property
     def async_database_url(self) -> str | None:

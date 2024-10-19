@@ -8,6 +8,7 @@ class Issued(str, Enum):
     exit_camera = "exit_camera"
     admin = "admin"
     entrance = "entrance"
+    pos = "pos"
 
 
 class StatusBill(str, Enum):
@@ -39,9 +40,9 @@ class BillBase(BaseModel):
 # Properties to receive on item creation
 class BillCreate(BillBase):
     plate: str
-    price: float = 20000
-    issued_by: Issued
-    status: StatusBill
+    zone_id: int
+    issued_by: Issued = Issued.pos
+    status: StatusBill = StatusBill.unpaid
 
 
 class BillShowBykiosk(BillCreate):

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, WebSocket
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
-
+from datetime import datetime, UTC
 from app import crud, schemas
 from app.api import deps
 from app.core import exceptions as exc
@@ -214,11 +214,18 @@ async def create_bill(
     create bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-
-    bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
-    redis_client.publish(
-        "bills:1", rapidjson.dumps(jsonable_encoder(bill))
+    time_now = datetime.now(UTC).replace(tzinfo=None)
+    price, get_price = await servicesBill.calculate_price_async(
+        db,
+        start_time_in=time_now,
+        end_time_in=time_now,
+        zone_id=bill_in.zone_id,
     )
+    bill_in.price = price
+    bill_in.entrance_fee = get_price.entrance_fee
+    bill_in.entrance_fee = get_price.hourly_fee
+    bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
+    redis_client.publish("bills:1", rapidjson.dumps(jsonable_encoder(bill)))
 
     return APIResponse(bill)
 

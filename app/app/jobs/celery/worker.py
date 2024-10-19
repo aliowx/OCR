@@ -4,11 +4,14 @@ import random
 from datetime import datetime, timedelta, UTC
 from sqlalchemy import text
 
+from fastapi.encoders import jsonable_encoder
 from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import EventUpdate, RecordUpdate, TypeEvent, StatusRecord
+import rapidjson
+from cache.redis import redis_client as cache_redis_client
 
 from app.bill.services.bill import calculate_price
 from app.bill.repo import bill_repo
@@ -114,6 +117,7 @@ def update_record(self, event_id) -> str:
                 spot_id=event.spot_id,
                 zone_id=event.zone_id,
                 latest_status=StatusRecord.unfinished.value,
+                camera_entrance_id=event.camera_id,
             )
             record = crud.record.create(db=self.session, obj_in=record)
             if (
@@ -140,7 +144,11 @@ def update_record(self, event_id) -> str:
                         status=billSchemas.StatusBill.unpaid.value,
                         entrance_fee=get_price.entrance_fee,
                         hourly_fee=get_price.hourly_fee,
+                        camera_entrance_id=record.camera_entrance_id,
                     ),
+                )
+                cache_redis_client.publish(
+                    "bills:1", rapidjson.dumps(jsonable_encoder(bill))
                 )
         elif record:
             record_update = None
@@ -171,6 +179,9 @@ def update_record(self, event_id) -> str:
                     score=math.sqrt(record.score),
                     latest_status=latest_status,
                 )
+
+            if event.type_event == TypeEvent.exitDoor.value:
+                record.camera_exit_id = event.camera_id
 
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update
@@ -207,7 +218,12 @@ def update_record(self, event_id) -> str:
                         status=billSchemas.StatusBill.unpaid.value,
                         entrance_fee=get_price.entrance_fee,
                         hourly_fee=get_price.hourly_fee,
+                        camera_entrance_id=record.camera_entrance_id,
+                        camera_exit_id=record.camera_exit_id,
                     ),
+                )
+                cache_redis_client.publish(
+                    "bills:1", rapidjson.dumps(jsonable_encoder(bill))
                 )
                 logger.info(f"issue bill {record} by number {bill}")
 

@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, WebSocket
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 
@@ -15,7 +16,8 @@ from app.bill.services import bill as servicesBill
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
-
+import rapidjson
+from cache.redis import redis_client
 
 router = APIRouter()
 namespace = "bill"
@@ -189,3 +191,52 @@ async def update_bills(
     )
 
     return APIResponse(result, msg_code=msg_code)
+
+
+@router.post("/create")
+async def create_bill(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    bill_in: billSchemas.BillCreate,
+) -> APIResponseType[Any]:
+    """
+    create bill.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+
+    bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
+    redis_client.publish(
+        "bills:1", rapidjson.dumps(jsonable_encoder(bill))
+    )
+
+    return APIResponse(bill)
+
+
+@router.websocket("/bills")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connection = await redis_connect_async(240)  # 3 mins
+    async with connection.pubsub() as channel:
+        await channel.subscribe("bills:1")
+        try:
+            while True:
+                data = await channel.get_message(
+                    ignore_subscribe_messages=True, timeout=240
+                )
+                # data = await websocket.receive_text()
+                if data and "data" in data:
+                    print(data["data"])
+                    await websocket.send_text(data["data"])
+        except:
+            channel.unsubscribe("bills:1")

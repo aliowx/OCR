@@ -151,3 +151,35 @@ async def read_payments(
     )
 
     return response.json()
+
+
+@router.get("/report_logs")
+async def read_payments_logs(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    tracker_id: int,
+    skip: int = Query(0),
+    limit: int = Query(100),
+    get_total_count: bool = Query(False),
+):
+    data = {
+        "tracker_id":tracker_id,
+        "skip": skip,
+        "limit": limit,
+        "get_total_count": get_total_count,
+    }
+
+    response = await pay_repo.payment_request_get(
+        params=data, url=PaymentUrlEndpoint.reports_log
+    )
+
+    return response.json()

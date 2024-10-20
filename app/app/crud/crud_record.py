@@ -226,44 +226,44 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         filters = [Record.is_deleted == False]
 
-        if jalali_date is not None:
-            column_date_jalali_for_entrance = select(
-                Record.id,
-                func.format_jalali(Record.start_time, False).label(
-                    "date_jalali_entrance"
-                ),
-            ).subquery()
-            column_date_jalali_for_exit = select(
-                Record.id,
-                func.format_jalali(Record.end_time, False).label(
-                    "date_jalali_exit"
-                ),
-            ).subquery()
-            dj_entrance = aliased(column_date_jalali_for_entrance)
-            dj_exit = aliased(column_date_jalali_for_exit)
-            query = query.join(dj_entrance, Record.id == dj_entrance.c.id)
-            query = query.join(dj_exit, Record.id == dj_exit.c.id)
-            if jalali_date.in_start_entrance_jalali_date is not None:
-                filters.append(
-                    dj_entrance.c.date_jalali_entrance
-                    >= jalali_date.in_start_entrance_jalali_date,
-                )
-            if jalali_date.in_end_entrance_jalali_date is not None:
-                filters.append(
-                    dj_entrance.c.date_jalali_entrance
-                    <= jalali_date.in_end_entrance_jalali_date,
-                )
-
-            if jalali_date.in_start_exit_jalali_date is not None:
-                filters.append(
-                    dj_exit.c.date_jalali_exit
-                    >= jalali_date.in_start_exit_jalali_date,
-                )
-            if jalali_date.in_end_exit_jalali_date is not None:
-                filters.append(
-                    dj_exit.c.date_jalali_exit
-                    <= jalali_date.in_end_exit_jalali_date,
-                )
+        # if jalali_date is not None:
+        #     column_date_jalali_for_entrance = select(
+        #         Record.id,
+        #         func.format_jalali(Record.start_time, False).label(
+        #             "date_jalali_entrance"
+        #         ),
+        #     ).subquery()
+        #     column_date_jalali_for_exit = select(
+        #         Record.id,
+        #         func.format_jalali(Record.end_time, False).label(
+        #             "date_jalali_exit"
+        #         ),
+        #     ).subquery()
+        #     dj_entrance = aliased(column_date_jalali_for_entrance)
+        #     dj_exit = aliased(column_date_jalali_for_exit)
+        #     query = query.join(dj_entrance, Record.id == dj_entrance.c.id)
+        #     query = query.join(dj_exit, Record.id == dj_exit.c.id)
+        #     if jalali_date.in_start_entrance_jalali_date is not None:
+        #         filters.append(
+        #             dj_entrance.c.date_jalali_entrance
+        #             >= jalali_date.in_start_entrance_jalali_date,
+        #         )
+        #     if jalali_date.in_end_entrance_jalali_date is not None:
+        #         filters.append(
+        #             dj_entrance.c.date_jalali_entrance
+        #             <= jalali_date.in_end_entrance_jalali_date,
+        #         )
+        #
+        #     if jalali_date.in_start_exit_jalali_date is not None:
+        #         filters.append(
+        #             dj_exit.c.date_jalali_exit
+        #             >= jalali_date.in_start_exit_jalali_date,
+        #         )
+        #     if jalali_date.in_end_exit_jalali_date is not None:
+        #         filters.append(
+        #             dj_exit.c.date_jalali_exit
+        #             <= jalali_date.in_end_exit_jalali_date,
+        #         )
 
         if params.input_plate is not None:
             filters.append(Record.plate.ilike(params.input_plate))
@@ -406,26 +406,26 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             Record.latest_status == schemas.record.StatusRecord.finished,
         ]
 
-        if jalali_date is not None:
-            column_date_jalali = select(
-                Record.id,
-                func.format_jalali(Record.start_time, False).label(
-                    "date_jalali"
-                ),
-            ).subquery()
-            dj = aliased(column_date_jalali)
-            if (
-                jalali_date.in_start_jalali_date is not None
-                and jalali_date.in_end_jalali_date is not None
-            ):
-                query = query.join(dj, Record.id == dj.c.id).filter(
-                    *[
-                        dj.c.date_jalali.between(
-                            jalali_date.in_start_jalali_date,
-                            jalali_date.in_end_jalali_date,
-                        )
-                    ]
-                )
+        # if jalali_date is not None:
+        #     column_date_jalali = select(
+        #         Record.id,
+        #         func.format_jalali(Record.start_time, False).label(
+        #             "date_jalali"
+        #         ),
+        #     ).subquery()
+        #     dj = aliased(column_date_jalali)
+        #     if (
+        #         jalali_date.in_start_jalali_date is not None
+        #         and jalali_date.in_end_jalali_date is not None
+        #     ):
+        #         query = query.join(dj, Record.id == dj.c.id).filter(
+        #             *[
+        #                 dj.c.date_jalali.between(
+        #                     jalali_date.in_start_jalali_date,
+        #                     jalali_date.in_end_jalali_date,
+        #                 )
+        #             ]
+        #         )
 
         if zone_id_in is not None:
             filters.append(Record.zone_id == zone_id_in)

@@ -1,7 +1,6 @@
 import io
 import logging
 from typing import Any
-
 from fastapi import APIRouter, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
@@ -153,6 +152,43 @@ async def read_image_binary(
             msg_code=utils.MessageCodes.not_found,
         )
     return StreamingResponse(io.BytesIO(image.image), media_type="image/png")
+
+
+@router.get("/get-image-minio/{id}")
+async def read_minio(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    id: int,
+) -> APIResponseType[Any]:
+    """
+    Get binary image by ID.
+
+    user access to this [ ADMINISTRATOR ]
+
+    """
+    image = await crud.image.get(db=db, id=id)
+    if not image:
+        raise exc.ServiceFailure(
+            detail="Not Found",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    bucket_name, path_image = image.path_image.split("/",3)[-2:]
+    client = storage.get_client(name=schemas.image.ImageSaveAs.minio)
+    file = client.download_file(
+        bucket_name=bucket_name, file_name=path_image
+    )
+    read_file =file.read()
+    return StreamingResponse(io.BytesIO(read_file), media_type="image/png")
 
 
 @router.delete("/{id}")

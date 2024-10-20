@@ -45,17 +45,15 @@ class MinIO:
                 object_name=name,
                 length=size,
             )
-            return f"/{self.bucket_name}/{name}"
+            return f"{self.bucket_name}/{name}"
 
         except S3Error as e:
             logger.error("MinIO error in upload file:", e)
             raise e
 
-    def download_file(self, file_name: str) -> BinaryIO:
+    def download_file(self, bucket_name: str, file_name: str) -> BinaryIO:
         try:
-            file_path = file_name
-            response = self.client.get_object(self.bucket_name, file_path)
-
+            response = self.client.get_object(bucket_name, file_name)
             file = BytesIO()
             for data in response.stream(1024):  # Read in 1KB chunks
                 file.write(data)

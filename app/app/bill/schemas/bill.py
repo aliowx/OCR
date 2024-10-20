@@ -94,6 +94,8 @@ class ParamsBill(BaseModel):
     input_issued_by: Issued | None = None
     input_status: StatusBill | None = None
     input_zone_id: int | None = None
+    input_camera_entrance: int | None = None
+    input_camera_exit: int | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = False

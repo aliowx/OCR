@@ -92,6 +92,7 @@ class PaymentUrlEndpoint(StrEnum):
     make = "/payment/make"
     verify = "/payment/verify"
     reports = "/reports/"
+    reports_log = "/reports/logs"
 
 
 class VerifyPaymentResponse(BaseModel):

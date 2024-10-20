@@ -41,12 +41,12 @@ def test_celery(word: str) -> str:
 def add_events(self, event: dict) -> str:
 
     try:
-        event = crud.event.create(db=self.session, obj_in=event)
-
-        celery_app.send_task(
-            "update_record",
-            args=[event.id],
-        )
+        create_event = crud.event.create(db=self.session, obj_in=event)
+        if create_event.invalid == False:
+            celery_app.send_task(
+                "update_record",
+                args=[create_event.id],
+            )
 
     except Exception as exc:
         countdown = int(random.uniform(1, 2) ** self.request.retries)

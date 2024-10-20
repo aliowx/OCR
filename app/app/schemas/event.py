@@ -30,6 +30,7 @@ class EventBase(BaseModel):
 
     type_event: TypeEvent | None = None
     user_id: int | None = None
+    invalid: bool | None = False
 
 
 class EventCreate(EventBase):

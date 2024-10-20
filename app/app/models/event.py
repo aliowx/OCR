@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base, get_now_datetime_utc
@@ -74,3 +74,7 @@ class Event(Base):
         index=True,
     )
     user_rel = relationship("User", foreign_keys=user_id)
+
+    invalid: Mapped[bool] = mapped_column(
+        Boolean, server_default="false", default=False, index=True
+    )

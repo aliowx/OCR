@@ -131,7 +131,7 @@ def update_record(self, event_id) -> str:
                     end_time_in=record.end_time,
                 )
                 issued_by = billSchemas.Issued.entrance.value
-                bill_repo.create(
+                bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
                         plate=record.plate,
@@ -148,7 +148,8 @@ def update_record(self, event_id) -> str:
                     ),
                 )
                 cache_redis_client.publish(
-                    "bills:1", rapidjson.dumps(jsonable_encoder(bill))
+                    f"bills:camera_{bill.camera_entrance_id}",
+                    rapidjson.dumps(jsonable_encoder(bill)),
                 )
         elif record:
             record_update = None
@@ -223,7 +224,8 @@ def update_record(self, event_id) -> str:
                     ),
                 )
                 cache_redis_client.publish(
-                    "bills:1", rapidjson.dumps(jsonable_encoder(bill))
+                    f"bills:camera_{bill.camera_entrance_id}",
+                    rapidjson.dumps(jsonable_encoder(bill)),
                 )
                 logger.info(f"issue bill {record} by number {bill}")
 

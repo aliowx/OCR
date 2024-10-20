@@ -226,17 +226,21 @@ async def create_bill(
         bill_in.entrance_fee = get_price.entrance_fee
         bill_in.entrance_fee = get_price.hourly_fee
     bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
-    redis_client.publish("bills:1", rapidjson.dumps(jsonable_encoder(bill)))
+    redis_client.publish(
+        f"bills:camera_{bill.camera_entrance_id}",
+        rapidjson.dumps(jsonable_encoder(bill)),
+    )
 
     return APIResponse(bill)
 
 
 @router.websocket("/bills")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, camera_id: int):
     await websocket.accept()
     connection = await redis_connect_async(240)  # 3 mins
     async with connection.pubsub() as channel:
-        await channel.subscribe("bills:1")
+        await channel.subscribe(f"bills:camera_{camera_id}")
+
         try:
             while True:
                 data = await channel.get_message(
@@ -247,4 +251,4 @@ async def websocket_endpoint(websocket: WebSocket):
                     print(data["data"])
                     await websocket.send_text(data["data"])
         except:
-            channel.unsubscribe("bills:1")
+            channel.unsubscribe(f"bills:camera_{camera_id}")

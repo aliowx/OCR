@@ -67,21 +67,21 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         filters = [Bill.is_deleted == false()]
 
-        if jalali_date is not None:
-            column_date_jalali = select(
-                Bill.id,
-                func.format_jalali(Bill.created, False).label("date_jalali"),
-            ).subquery()
-            dj = aliased(column_date_jalali)
-            if jalali_date.start_jalali_date is not None:
-                query = query.join(dj, Bill.id == dj.c.id).filter(
-                    *[
-                        dj.c.date_jalali.between(
-                            jalali_date.start_jalali_date,
-                            jalali_date.end_jalali_date,
-                        )
-                    ]
-                )
+        # if jalali_date is not None:
+        #     column_date_jalali = select(
+        #         Bill.id,
+        #         func.format_jalali(Bill.created, False).label("date_jalali"),
+        #     ).subquery()
+        #     dj = aliased(column_date_jalali)
+        #     if jalali_date.start_jalali_date is not None:
+        #         query = query.join(dj, Bill.id == dj.c.id).filter(
+        #             *[
+        #                 dj.c.date_jalali.between(
+        #                     jalali_date.start_jalali_date,
+        #                     jalali_date.end_jalali_date,
+        #                 )
+        #             ]
+        #         )
 
         if params.input_plate is not None:
             filters.append(Bill.plate == params.input_plate)

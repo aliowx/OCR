@@ -71,6 +71,8 @@ class BillInDBBase(BillBase):
     def convert_utc_to_iran_time(cls, value):
 
         if value:
+            if isinstance(value, str):
+                value = datetime.fromisoformat(value)
             # Define Iran Standard Time timezone
             iran_timezone = pytz.timezone("Asia/Tehran")
 

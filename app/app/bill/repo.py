@@ -63,7 +63,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate
     ) -> tuple[list[billschemas], int]:
 
-        query = select(Bill).join(Record, Bill.record_id == Record.id)
+        query = select(Bill).outerjoin(Record, Bill.record_id == Record.id)
 
         filters = [Bill.is_deleted == false()]
 

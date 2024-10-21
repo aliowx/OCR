@@ -182,12 +182,10 @@ async def read_minio(
             detail="Not Found",
             msg_code=utils.MessageCodes.not_found,
         )
-    bucket_name, path_image = image.path_image.split("/",3)[-2:]
+    bucket_name, path_image = image.path_image.split("/", 3)[-2:]
     client = storage.get_client(name=schemas.image.ImageSaveAs.minio)
-    file = client.download_file(
-        bucket_name=bucket_name, file_name=path_image
-    )
-    read_file =file.read()
+    file = client.download_file(bucket_name=bucket_name, file_name=path_image)
+    read_file = file.read()
     return StreamingResponse(io.BytesIO(read_file), media_type="image/png")
 
 

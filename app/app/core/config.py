@@ -4,7 +4,13 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator,HttpUrl
+from pydantic import (
+    AnyHttpUrl,
+    PostgresDsn,
+    RedisDsn,
+    field_validator,
+    HttpUrl,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 import app
@@ -87,7 +93,7 @@ class StorageSettings(SettingsBase):
 
     AUTO_GEN_EVENT_FAKE: int | None = None
     DATA_FAKE_SET: bool | None = False
-    
+
     FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
 
     CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
@@ -121,9 +127,16 @@ class StorageSettings(SettingsBase):
     TEST_FIRST_SUPERUSER_PASSWORD: str = None
 
     # payment
-    PAYMENT_ADDRESS : HttpUrl
-    PAYMENT_USER_NAME : str
-    PAYMENT_PASSWORD : str
+    PAYMENT_ADDRESS: HttpUrl
+    PAYMENT_USER_NAME: str
+    PAYMENT_PASSWORD: str
+
+    # MinIO
+    MINIO_URL: str
+    MINIO_ACCESS_KEY: str
+    MINIO_SECRET_KEY: str
+    MINIO_SECURE: bool
+    MINIO_BUCKET_NAME: str
 
     @property
     def async_database_url(self) -> str | None:

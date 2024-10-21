@@ -3,7 +3,6 @@ from io import BytesIO
 from typing import BinaryIO
 from app.schemas.image import ImageSaveAs
 import urllib3
-from app.crud.crud_image import CRUDImage
 from app.core.config import settings
 from minio import Minio
 from minio.error import S3Error
@@ -13,22 +12,14 @@ logger = logging.getLogger(__name__)
 
 class MinIO:
     def __init__(self):
-        # self.client = Minio(
-        #     endpoint=settings.MINIO_SERVER_ADDRESS,
-        #     access_key=settings.MINIO_ACCESS_KEY,
-        #     secret_key=settings.MINIO_SECRET_KEY,
-        #     http_client=urllib3.PoolManager(cert_reqs="CERT_NONE"),
-        #     secure=True,
-        # )
         self.client = Minio(
-            endpoint="188.121.103.3:9000",
-            access_key="EVpeLRcQYOqxqtQ2qEiX",
-            secret_key="YOeUTTOeQvRu4gJnUlf0artfW6hzVhJlqb8zL1Zf",
+            endpoint=settings.MINIO_URL,
+            access_key=settings.MINIO_ACCESS_KEY,
+            secret_key=settings.MINIO_SECRET_KEY,
             http_client=urllib3.PoolManager(cert_reqs="CERT_NONE"),
-            secure=False,
+            secure=settings.MINIO_SECURE,
         )
-        # self.folder_path = ""
-        self.bucket_name = "tets"
+        self.bucket_name = settings.MINIO_BUCKET_NAME
         self.check_buckt_exist(self.bucket_name)
 
     def check_buckt_exist(self, bucket_name: str):
@@ -72,12 +63,3 @@ class MinIO:
 def get_client(name: ImageSaveAs):
     if name.minio:
         return MinIO()
-
-
-# # file: UploadFile = File()  # API input
-# # file.file.seek(0)
-
-# minio_client = get_client()
-# path = minio_client.upload_file(
-#     content=io.BytesIO(file.file.read()), name=file_name, size=file.size
-# )

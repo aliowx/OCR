@@ -236,3 +236,27 @@ async def update_user(
         )
     user = await crud.user.update(db, db_obj=user, obj_in=user_in)
     return APIResponse(user)
+
+
+@router.post("/introspection")
+async def introspection(
+        _: Annotated[
+            bool,
+            Depends(
+                RoleChecker(
+                    allowed_roles=[
+                        UserRoles.ADMINISTRATOR,
+                        UserRoles.PARKING_MANAGER,
+                    ]
+                )
+            ),
+        ],
+        token: str ,
+        db: AsyncSession = Depends(deps.get_db_async),
+) ->APIResponseType[schemas.User]:
+    """
+    Introspect the given token and return user information
+    """
+    user = await deps.get_current_user(db,token)
+    user = await deps.get_current_active_user(current_user=user)
+    return APIResponse(user)

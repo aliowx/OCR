@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+import pytz
 
 
 class Issued(str, Enum):
@@ -65,6 +66,25 @@ class BillInDBBase(BillBase):
     modified: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("start_time", "end_time", "created", mode="before")
+    def convert_utc_to_iran_time(cls, value):
+
+        if value:
+            # Define Iran Standard Time timezone
+            iran_timezone = pytz.timezone("Asia/Tehran")
+
+            # If value is naive (no timezone), localize it to UTC
+            if value.tzinfo is None:
+                # Localize the naive datetime to UTC
+                utc_time = pytz.utc.localize(value)
+            else:
+                # If it's already timezone aware, convert to UTC
+                utc_time = value.astimezone(pytz.utc)
+
+            # Convert to Iran Standard Time
+            return utc_time.astimezone(iran_timezone)
+        return value
 
 
 # Properties to return to client

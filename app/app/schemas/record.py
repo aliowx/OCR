@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
+import pytz
 
 
 class StatusRecord(str, Enum):
@@ -25,6 +26,25 @@ class RecordBase(BaseModel):
     latest_status: StatusRecord | None = None
     camera_entrance_id: int | None = None
     camera_exit_id: int | None = None
+
+    @field_validator("start_time", "end_time", mode="before")
+    def convert_utc_to_iran_time(cls, value):
+
+        if value:
+            # Define Iran Standard Time timezone
+            iran_timezone = pytz.timezone("Asia/Tehran")
+
+            # If value is naive (no timezone), localize it to UTC
+            if value.tzinfo is None:
+                # Localize the naive datetime to UTC
+                utc_time = pytz.utc.localize(value)
+            else:
+                # If it's already timezone aware, convert to UTC
+                utc_time = value.astimezone(pytz.utc)
+
+            # Convert to Iran Standard Time
+            return utc_time.astimezone(iran_timezone)
+        return value
 
 
 # Properties to receive on item creation

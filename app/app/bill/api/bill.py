@@ -226,10 +226,23 @@ async def create_bill(
         bill_in.entrance_fee = get_price.entrance_fee
         bill_in.entrance_fee = get_price.hourly_fee
     bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
-    redis_client.publish(
-        f"bills:camera_{bill.camera_entrance_id}",
-        rapidjson.dumps(jsonable_encoder(bill)),
+    bill_ws = bill
+
+    bill_ws.start_time = servicesBill.convert_to_timezone_iran(
+        bill_ws.start_time
     )
+    bill_ws.end_time = servicesBill.convert_to_timezone_iran(bill_ws.end_time)
+    bill_ws.created = servicesBill.convert_to_timezone_iran(bill_ws.created)
+    if bill_ws.camera_entrance_id:
+        redis_client.publish(
+            f"bills:camera_{bill_ws.camera_entrance_id}",
+            rapidjson.dumps(jsonable_encoder(bill_ws)),
+        )
+    if bill_ws.camera_exit_id:
+        redis_client.publish(
+            f"bills:camera_{bill_ws.camera_exit_id}",
+            rapidjson.dumps(jsonable_encoder(bill_ws)),
+        )
 
     return APIResponse(bill)
 

@@ -8,7 +8,23 @@ from app.bill.repo import bill_repo
 from app.core.exceptions import ServiceFailure
 from app.utils import MessageCodes
 from app.parking.repo import zone_repo
+import pytz
 import math
+
+def convert_to_timezone_iran(time: datetime):
+    if isinstance(time, str):
+        time = datetime.fromisoformat(time)
+    # Define Iran Standard Time timezone
+    iran_timezone = pytz.timezone("Asia/Tehran")
+    # If value is naive (no timezone), localize it to UTC
+    if time.tzinfo is None:
+        # Localize the naive datetime to UTC
+        utc_time = pytz.utc.localize(time)
+    else:
+        # If it's already timezone aware, convert to UTC
+        utc_time = time.astimezone(pytz.utc)
+    # Convert to Iran Standard Time
+    return utc_time.astimezone(iran_timezone)
 
 
 def convert_time_to_hour_and_ceil(start_time, end_time):

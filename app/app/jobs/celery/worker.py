@@ -11,9 +11,8 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import EventUpdate, RecordUpdate, TypeEvent, StatusRecord
 import rapidjson
-from cache.redis import redis_client as cache_redis_client
 
-from app.bill.services.bill import calculate_price
+from app.bill.services.bill import calculate_price, convert_to_timezone_iran
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
 
@@ -148,10 +147,20 @@ def update_record(self, event_id) -> str:
                         bill_type=billSchemas.BillType.system.value,
                     ),
                 )
-                cache_redis_client.publish(
-                    f"bills:camera_{bill.camera_entrance_id}",
-                    rapidjson.dumps(jsonable_encoder(bill)),
-                )
+                bill_ws = bill
+                if bill_ws is not None:
+                    bill_ws.start_time = convert_to_timezone_iran(
+                        bill_ws.start_time
+                    )
+                    bill_ws.end_time = convert_to_timezone_iran(
+                        bill_ws.end_time
+                    )
+                    bill_ws.created = convert_to_timezone_iran(bill_ws.created)
+                    redis_client.publish(
+                        f"bills:camera_{bill_ws.camera_entrance_id}",
+                        rapidjson.dumps(jsonable_encoder(bill_ws)),
+                    )
+
         elif record:
             record_update = None
             latest_status = StatusRecord.unfinished.value
@@ -225,10 +234,19 @@ def update_record(self, event_id) -> str:
                         bill_type=billSchemas.BillType.system.value,
                     ),
                 )
-                cache_redis_client.publish(
-                    f"bills:camera_{bill.camera_entrance_id}",
-                    rapidjson.dumps(jsonable_encoder(bill)),
-                )
+                bill_ws = bill
+                if bill_ws is not None:
+                    bill_ws.start_time = convert_to_timezone_iran(
+                        bill_ws.start_time
+                    )
+                    bill_ws.end_time = convert_to_timezone_iran(
+                        bill_ws.end_time
+                    )
+                    bill_ws.created = convert_to_timezone_iran(bill_ws.created)
+                    redis_client.publish(
+                        f"bills:camera_{bill_ws.camera_entrance_id}",
+                        rapidjson.dumps(jsonable_encoder(bill_ws)),
+                    )
                 logger.info(f"issue bill {record} by number {bill}")
 
             update_event = EventUpdate(record_id=record.id)

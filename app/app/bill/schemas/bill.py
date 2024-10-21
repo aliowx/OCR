@@ -47,7 +47,6 @@ class BillBase(BaseModel):
 
 # Properties to receive on item creation
 class BillCreate(BillBase):
-    plate: str
     zone_id: int
     issued_by: Issued = Issued.pos
     status: StatusBill = StatusBill.unpaid

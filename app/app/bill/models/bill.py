@@ -44,7 +44,9 @@ class Bill(Base):
         index=True,
         nullable=True,
     )
-    camera_entrance_rel = relationship("Equipment", foreign_keys=camera_entrance_id)
+    camera_entrance_rel = relationship(
+        "Equipment", foreign_keys=camera_entrance_id
+    )
 
     camera_exit_id: Mapped[int] = mapped_column(
         Integer,
@@ -78,12 +80,12 @@ class Bill(Base):
         Float, nullable=True, index=True
     )
 
-    hourly_fee: Mapped[float] = mapped_column(
-        Float, nullable=True, index=True
-    )
+    hourly_fee: Mapped[float] = mapped_column(Float, nullable=True, index=True)
 
     price: Mapped[float] = mapped_column(Float, nullable=True, index=True)
 
     issued_by: Mapped[str] = mapped_column(String, nullable=True, index=True)
 
     status: Mapped[str] = mapped_column(String, nullable=True, index=True)
+
+    bill_type: Mapped[str] = mapped_column(String, index=True, nullable=True)

@@ -17,6 +17,12 @@ class StatusBill(str, Enum):
     unpaid = "unpaid"
 
 
+class BillType(str, Enum):
+    system = "system"
+    free = "free"
+    default = "default"
+
+
 # Shared properties
 class BillBase(BaseModel):
     plate: str | None = None
@@ -36,6 +42,7 @@ class BillBase(BaseModel):
     hourly_fee: float | None = None
     camera_entrance_id: int | None = None
     camera_exit_id: int | None = None
+    bill_type: BillType | None = None
 
 
 # Properties to receive on item creation
@@ -118,6 +125,7 @@ class ParamsBill(BaseModel):
     input_zone_id: int | None = None
     input_camera_entrance: int | None = None
     input_camera_exit: int | None = None
+    input_bill_type: BillType | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = False

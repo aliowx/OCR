@@ -145,6 +145,7 @@ def update_record(self, event_id) -> str:
                         entrance_fee=get_price.entrance_fee,
                         hourly_fee=get_price.hourly_fee,
                         camera_entrance_id=record.camera_entrance_id,
+                        bill_type=billSchemas.BillType.system.value,
                     ),
                 )
                 cache_redis_client.publish(
@@ -221,6 +222,7 @@ def update_record(self, event_id) -> str:
                         hourly_fee=get_price.hourly_fee,
                         camera_entrance_id=record.camera_entrance_id,
                         camera_exit_id=record.camera_exit_id,
+                        bill_type=billSchemas.BillType.system.value,
                     ),
                 )
                 cache_redis_client.publish(

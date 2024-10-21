@@ -87,6 +87,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 Bill.camera_entrance_id == params.input_camera_entrance
             )
 
+        if params.input_bill_type is not None:
+            filters.append(Bill.bill_type == params.input_bill_type)
+
         if params.input_camera_exit is not None:
             filters.append(Bill.camera_exit_id == params.input_camera_exit)
 

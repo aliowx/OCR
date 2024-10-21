@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -110,7 +110,7 @@ async def pay_bills_by_id(
             billSchemas.BillUpdate(
                 id=bill_id,
                 rrn_number=response.reference_number,
-                time_paid=datetime.now(),
+                time_paid=datetime.now(UTC).replace(tzinfo=None),
                 status=billSchemas.StatusBill.paid,
             )
         )

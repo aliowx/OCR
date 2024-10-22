@@ -182,8 +182,6 @@ def update_record(self, event_id) -> str:
                 record_update = RecordUpdate(
                     score=math.sqrt(record.score),
                     end_time=event.record_time,
-                    img_entrance_id=event.lpr_image_id,
-                    img_plate_exit_id=event.plate_image_id,
                     latest_status=latest_status,
                 )
             if record_update is None:

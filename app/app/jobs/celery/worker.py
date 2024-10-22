@@ -112,7 +112,7 @@ def update_record(self, event_id) -> str:
                 end_time=event.record_time,
                 score=0.01,
                 img_entrance_id=event.lpr_image_id,
-                img_exit_id=event.plate_image_id,
+                img_plate_entrance_id=event.plate_image_id,
                 spot_id=event.spot_id,
                 zone_id=event.zone_id,
                 latest_status=StatusRecord.unfinished.value,
@@ -145,6 +145,7 @@ def update_record(self, event_id) -> str:
                         hourly_fee=get_price.hourly_fee,
                         camera_entrance_id=record.camera_entrance_id,
                         bill_type=billSchemas.BillType.system.value,
+                        img_entrance_id=record.img_entrance_id,
                     ),
                 )
                 bill_ws = bill
@@ -193,6 +194,8 @@ def update_record(self, event_id) -> str:
 
             if event.type_event == TypeEvent.exitDoor.value:
                 record.camera_exit_id = event.camera_id
+                record.img_exit_id = event.lpr_image_id
+                record.img_plate_exit_id = event.plate_image_id
 
             record = crud.record.update(
                 self.session, db_obj=record, obj_in=record_update

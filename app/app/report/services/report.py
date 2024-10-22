@@ -346,7 +346,6 @@ async def get_count_referred(
     start_time_in: datetime,
     end_time_in: datetime,
     timing: report_schemas.Timing,
-    jalali_date: report_schemas.JalaliDate,
     zone_id: int | None = None,
 ) -> list:
 
@@ -468,7 +467,7 @@ async def cal_count_with_out_status(
     return range_date
 
 
-def create_ranges_date2(
+def create_ranges_datetime(
     end_date: datetime, start_date: datetime, timing: report_schemas.Timing
 ):
 
@@ -478,28 +477,37 @@ def create_ranges_date2(
     ranges = []
     current_date = start_date
     while current_date <= end_date:
-        # Create a range
         start_time = current_date
         if timing == report_schemas.Timing.day:
             current_date += timedelta(days=1)
-            ranges.append({"start": start_time, "end": end_time, "count": 0})
+            ranges.append(
+                {
+                    "start": start_time,
+                    "end": current_date - timedelta(seconds=1),
+                }
+            )
 
         if timing == report_schemas.Timing.week:
-            ranges.append({"start": start_time, "end": end_time, "count": 0})
-            start_time = current_date + timedelta(days=7)
             current_date += timedelta(days=7)
+            ranges.append(
+                {
+                    "start": start_time,
+                    "end": current_date - timedelta(seconds=1),
+                }
+            )
+            start_time = current_date + timedelta(days=7)
 
         if timing == report_schemas.Timing.month:
             range_month = get_month_range(start_date, end_date)
             for start, end in range_month:
-                ranges.append({"start": start, "end": end, "count": 0})
+                ranges.append({"start": start, "end": end})
             return ranges
         if timing == report_schemas.Timing.year:
             return get_year_range(start_date, end_date)
     return ranges
 
 
-async def get_count_referred_by_zone(
+async def get_effective_utilization_rate(
     db: AsyncSession,
     start_time_in: datetime,
     end_time_in: datetime,
@@ -507,72 +515,56 @@ async def get_count_referred_by_zone(
     zone_id: int | None = None,
 ) -> list:
 
-    range_date = create_ranges_date2(
+    range_date = create_ranges_datetime(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
 
+    capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
+    resualt = []
     for date_time in range_date:
-        records = await crud.record.get_count_referred_with_out_status(
+        records = await crud.record.get_present_in_parking(
             db,
             input_start_create_time=date_time.get("start"),
             input_end_create_time=date_time.get("end"),
             input_status=schemas.record.StatusRecord.finished,
-            timing=timing,
             zone_id=zone_id,
         )
-        print(jsonable_encoder(records))
-        # print(date_time.get("start"), date_time.get("end"), records)
         total_park_time = timedelta(hours=0)
         for record in records:
-
             if record.start_time < date_time.get(
                 "start"
             ) and record.end_time < date_time.get("end"):
                 total_park_time += record.end_time - date_time.get("start")
-            elif record.start_time > date_time.get("start") and record.end_time < date_time.get("end"):
+            elif record.start_time > date_time.get(
+                "start"
+            ) and record.end_time < date_time.get("end"):
                 total_park_time += record.end_time - record.start_time
-            elif record.start_time < date_time.get("start") and record.end_time > date_time.get("end"):
+            elif record.start_time < date_time.get(
+                "start"
+            ) and record.end_time > date_time.get("end"):
                 total_park_time += date_time.get("end") - record.start_time
-
-        
-        print(total_park_time.total_seconds() / 3600)
-    
-    return
-    all_count_referred = 0
-    result = {}
-    zones_ids = await zone_repo.get_multi(db, limit=None)
-    if zone_id:
-        zone = await zone_repo.get(db, id=zone_id)
-        zones_ids = [zone]
-    for zone in zones_ids:
-        total_count_referred = 0
-        zone_data = await crud.record.get_count_referred_with_out_status(
-            db,
-            input_start_create_time=start_time_in,
-            input_end_create_time=end_time_in,
-            timing=timing,
-            zone_id=zone.id,
+            elif record.start_time > date_time.get(
+                "start"
+            ) and record.end_time > date_time.get("end"):
+                total_park_time += date_time.get("end") - record.start_time
+        resualt.append(
+            {
+                "start": date_time.get("start"),
+                "end": date_time.get("end"),
+                "effective_utilization_rate": (
+                    (
+                        (
+                            (total_park_time.total_seconds() / 3600)
+                            / (capacity_zone * 24)
+                        )
+                        * 100
+                    )
+                    if records
+                    else 0
+                ),
+            }
         )
-        record_detail = await cal_count_with_out_status(
-            data=zone_data,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            timing=timing,
-        )
-        for record in record_detail:
-            start_time = record["start_time"]
-            count = record["count"]
-
-            if start_time not in result:
-                result[start_time] = {"total": 0}
-
-            result[start_time][zone.name] = count
-            result[start_time]["total"] += count
-
-            total_count_referred += count
-        all_count_referred += total_count_referred
-    result["all_count_referred"] = all_count_referred
-    return result
+    return resualt
 
 
 async def count_entrance_exit_zone(

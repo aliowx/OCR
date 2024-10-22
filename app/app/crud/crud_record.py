@@ -150,14 +150,13 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return fetch
 
-    async def get_count_referred_with_out_status(
+    async def get_present_in_parking(
         self,
         db: AsyncSession,
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
         input_status: StatusRecord,
-        timing: Timing,
         zone_id: int | None = None,
     ):
         filters = [
@@ -166,7 +165,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             Record.end_time >= input_start_create_time,
             Record.start_time <= input_end_create_time,
         ]
-        query = select(Record).filter(and_(*filters))
+        if zone_id is not None:
+            filters.append(Record.zone_id == zone_id)
+
+        query = select(Record).filter(*filters)
 
         records = await self._all(db.scalars(query))
 

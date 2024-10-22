@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
 
-class Error(Base):
+class Ticket(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     record_id: Mapped[int] = mapped_column(
@@ -25,3 +25,15 @@ class Error(Base):
     correct_plate: Mapped[str] = mapped_column(
         String, nullable=True, index=True
     )
+
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    user_rel = relationship("User", foreign_keys=user_id)
+
+    type: Mapped[str] = mapped_column(String, nullable=True, index=True)
+
+    status: Mapped[str] = mapped_column(String, nullable=True, index=True)

@@ -9,4 +9,4 @@ from .base import UserType
 from .image import Image
 from .event import Event
 from .record import Record
-from app.error_reports.models import Error
+from app.ticket.models.ticket import Ticket

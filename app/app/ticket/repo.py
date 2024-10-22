@@ -3,25 +3,31 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
-from .models import Error
-from .schemas import ErrorCreate, ErrorUpdate, ParamsError
+from .models.ticket import Ticket
+from .schemas import TicketCreate, TicketUpdate, ParamsTicket
 
 
-class CRUDUser(CRUDBase[Error, ErrorCreate, ErrorUpdate]):
+class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
     async def get_multi_by_filter(
-        self, db: Session | AsyncSession, *, params: ParamsError
-    ) -> list[Error] | Awaitable[list[Error]]:
+        self, db: Session | AsyncSession, *, params: ParamsTicket
+    ) -> list[Ticket] | Awaitable[list[Ticket]]:
 
-        query = select(Error)
+        query = select(Ticket)
 
-        filters = [Error.is_deleted == False]
+        filters = [Ticket.is_deleted == False]
 
         if params.input_plate is not None:
-            filters.append(Error.correct_plate == params.input_plate)
+            filters.append(Ticket.correct_plate == params.input_plate)
+
+        if params.ticket_status is not None:
+            filters.append(Ticket.status == params.ticket_status)
+
+        if params.ticket_type is not None:
+            filters.append(Ticket.type == params.ticket_type)
 
         total_count = self.count_by_filter(db, filters=filters)
 
-        order_by = Error.id.asc() if params.asc else Error.id.desc()
+        order_by = Ticket.id.asc() if params.asc else Ticket.id.desc()
 
         if params.size is None:
             return (
@@ -43,4 +49,4 @@ class CRUDUser(CRUDBase[Error, ErrorCreate, ErrorUpdate]):
         )
 
 
-error_repo = CRUDUser(Error)
+ticket_repo = CRUDTicket(Ticket)

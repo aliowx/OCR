@@ -1,9 +1,9 @@
 import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import crud, models, utils
-from app.error_reports import schemas
-from app.error_reports.repo import error_repo
+from app import models, utils
+from app.ticket import schemas
+from app.ticket.repo import ticket_repo
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType, PaginatedContent
@@ -13,12 +13,12 @@ from app.acl.role import UserRoles
 from typing import Annotated
 
 router = APIRouter()
-namespace = "error"
+namespace = "ticket"
 logger = logging.getLogger(__name__)
 
 
 @router.get("/")
-async def read_error(
+async def read_ticket(
     _: Annotated[
         bool,
         Depends(
@@ -31,19 +31,19 @@ async def read_error(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    params: schemas.ParamsError = Depends(),
+    params: schemas.ParamsTicket = Depends(),
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[PaginatedContent[list[schemas.Error]]]:
+) -> APIResponseType[PaginatedContent[list[schemas.Ticket]]]:
     """
-    Retrieve error.
+    Retrieve ticket.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    errors, total_count = await error_repo.get_multi_by_filter(
+    ticket, total_count = await ticket_repo.get_multi_by_filter(
         db, params=params
     )
     return APIResponse(
         PaginatedContent(
-            data=errors,
+            data=ticket,
             total_count=total_count,
             size=params.size,
             page=params.page,
@@ -52,7 +52,7 @@ async def read_error(
 
 
 @router.post("/")
-async def create_error(
+async def create_ticket(
     *,
     _: Annotated[
         bool,
@@ -66,20 +66,20 @@ async def create_error(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    error_in: schemas.ErrorCreate,
+    ticket_in: schemas.TicketCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.Error]:
+) -> APIResponseType[schemas.Ticket]:
     """
-    Create new error.
+    Create new ticket.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    error = await error_repo.create(db, obj_in=error_in)
-    return APIResponse(error)
+    ticket = await ticket_repo.create(db, obj_in=ticket_in)
+    return APIResponse(ticket)
 
 
 @router.get("/{id}")
-async def read_error_by_id(
+async def read_ticket_by_id(
     _: Annotated[
         bool,
         Depends(
@@ -95,22 +95,22 @@ async def read_error_by_id(
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     id: int,
-) -> APIResponseType[schemas.Error]:
+) -> APIResponseType[schemas.Ticket]:
     """
-    Get a specific error by id.
+    Get a specific ticket by id.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    error = await error_repo.get(db, id=id)
-    if not error:
+    ticket = await ticket_repo.get(db, id=id)
+    if not ticket:
         raise exc.ServiceFailure(
-            detail="error not found",
+            detail="ticket not found",
             msg_code=utils.MessageCodes.not_found,
         )
-    return APIResponse(error)
+    return APIResponse(ticket)
 
 
 @router.delete("/{id}")
-async def delete_error(
+async def delete_ticket(
     _: Annotated[
         bool,
         Depends(
@@ -125,23 +125,23 @@ async def delete_error(
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     id: int,
-) -> APIResponseType[schemas.Error]:
+) -> APIResponseType[schemas.Ticket]:
     """
-    delete error.
+    delete ticket.
     user access to this [ ADMINISTRATOR ]
     """
-    user = await error_repo.get(db, id=id)
-    if not user:
+    ticket = await ticket_repo.get(db, id=id)
+    if not ticket:
         raise exc.ServiceFailure(
-            detail="error not found",
+            detail="ticket not found",
             msg_code=utils.MessageCodes.not_found,
         )
-    del_user = await error_repo.remove(db, id=user.id, commit=True)
-    return APIResponse(del_user)
+    del_ticket = await ticket_repo.remove(db, id=ticket.id, commit=True)
+    return APIResponse(del_ticket)
 
 
 @router.put("/{id}")
-async def update_user(
+async def update_ticket(
     *,
     _: Annotated[
         bool,
@@ -156,18 +156,18 @@ async def update_user(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
-    error_in: schemas.ErrorUpdate,
+    ticket_in: schemas.TicketUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.Error]:
+) -> APIResponseType[schemas.Ticket]:
     """
-    Update a error.
+    Update a ticket.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    error = await error_repo.get(db, id=id)
-    if not error:
+    ticket = await ticket_repo.get(db, id=id)
+    if not ticket:
         raise exc.ServiceFailure(
-            detail="The error does't exist in the system",
+            detail="The ticket does't exist in the system",
             msg_code=utils.MessageCodes.not_found,
         )
-    error = await error_repo.update(db, db_obj=error, obj_in=error_in)
-    return APIResponse(error)
+    ticket = await ticket_repo.update(db, db_obj=ticket, obj_in=ticket_in)
+    return APIResponse(ticket)

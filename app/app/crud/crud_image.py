@@ -171,8 +171,6 @@ class CRUDImage(
         return obj
 
     async def create_path(self, db: AsyncSession, *, obj_in: ImageCreate):
-        print(obj_in)
-        print(jsonable_encoder(Image()))
         obj_in = Image(**obj_in)
         db.add(obj_in)
         return await self._commit_refresh(db=db, db_obj=obj_in)

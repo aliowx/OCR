@@ -113,7 +113,6 @@ async def create_event(
     "exitReg_billIssue" --> admin \n
     "exitReg" --> admin
     """
-    print(f"------>{jsonable_encoder(event_in)}")
     result = celery_app.send_task(
         "add_events",
         args=[jsonable_encoder(event_in)],

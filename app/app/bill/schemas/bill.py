@@ -58,7 +58,7 @@ class BillShowBykiosk(BillCreate):
 
 
 # Properties to receive on item update
-class BillUpdate(BaseModel):
+class BillUpdate(BillBase):
     id: int
     rrn_number: str
     time_paid: datetime

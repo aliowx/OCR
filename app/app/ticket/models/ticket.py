@@ -26,15 +26,25 @@ class Ticket(Base):
         String, nullable=True, index=True
     )
 
-    user_id: Mapped[int] = mapped_column(
+    requesting_user_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE"),
         index=True,
         nullable=True,
     )
-    user_rel = relationship("User", foreign_keys=user_id)
+    requesting_user_rel = relationship("User", foreign_keys=requesting_user_id)
 
-    additional_data: Mapped[dict] = mapped_column(JSON, default=dict,nullable=True)
+    verifying_user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    verifying_user_rel = relationship("User", foreign_keys=verifying_user_id)
+
+    additional_data: Mapped[dict] = mapped_column(
+        JSON, default=dict, nullable=True
+    )
 
     type: Mapped[str] = mapped_column(String, nullable=True, index=True)
 

@@ -22,6 +22,7 @@ class TicketBase(BaseModel):
     user_id: int | None = None
     status: TicketStatus | None = None
     type: TicketType | None = None
+    additional_data: dict | None = None
 
 
 class TicketCreate(TicketBase):

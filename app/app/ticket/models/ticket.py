@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
 
@@ -33,6 +33,8 @@ class Ticket(Base):
         nullable=True,
     )
     user_rel = relationship("User", foreign_keys=user_id)
+
+    additional_data: Mapped[dict] = mapped_column(JSON, server_default=dict)
 
     type: Mapped[str] = mapped_column(String, nullable=True, index=True)
 

@@ -21,20 +21,21 @@ class TicketBase(BaseModel):
     record_id: int | None = None
     bill_id: int | None = None
     correct_plate: str | None = None
-    user_id: int | None = None
+    requesting_user_id: int | None = None
+    verifying_user_id: int | None = None
     status: TicketStatus | None = None
     type: TicketType | None = None
     additional_data: dict | None = None
 
 
 class TicketCreate(TicketBase):
-    user_id: int
+    requesting_user_id: int
     status: TicketStatus = TicketStatus.open
     type: TicketType
 
 
 class TicketUpdate(TicketBase):
-    correct_plate: str
+    verifying_user_id: int
 
 
 class TicketInDBBase(TicketBase):

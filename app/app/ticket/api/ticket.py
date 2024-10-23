@@ -7,6 +7,7 @@ from app.ticket.repo import ticket_repo
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType, PaginatedContent
+from app.ticket.services import ticket as ServiceTicket
 
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
@@ -31,14 +32,15 @@ async def read_ticket(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    params: schemas.ParamsTicket = Depends(),
     current_user: models.User = Depends(deps.get_current_active_superuser),
+    *,
+    params: schemas.ParamsTicket = Depends(),
 ) -> APIResponseType[PaginatedContent[list[schemas.Ticket]]]:
     """
     Retrieve ticket.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    ticket, total_count = await ticket_repo.get_multi_by_filter(
+    ticket, total_count = await ServiceTicket.get_record_bill(
         db, params=params
     )
     return APIResponse(

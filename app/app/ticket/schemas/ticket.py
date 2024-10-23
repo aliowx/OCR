@@ -2,6 +2,8 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from enum import Enum
+from app import schemas
+from app.bill.schemas.bill import Bill
 
 
 class TicketStatus(str, Enum):
@@ -42,7 +44,9 @@ class TicketInDBBase(TicketBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Ticket(TicketInDBBase): ...
+class Ticket(TicketInDBBase):
+    record: schemas.Record | None = None
+    bill: Bill | None = None
 
 
 class ParamsTicket(BaseModel):

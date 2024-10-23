@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from .models.ticket import Ticket
 from .schemas import TicketCreate, TicketUpdate, ParamsTicket
+from app.models import Record, Bill
 
 
 class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
@@ -12,7 +13,11 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
         self, db: Session | AsyncSession, *, params: ParamsTicket
     ) -> list[Ticket] | Awaitable[list[Ticket]]:
 
-        query = select(Ticket)
+        query = (
+            select(Ticket, Record, Bill)
+            .outerjoin(Record, Ticket.record_id == Record.id)
+            .outerjoin(Bill, Ticket.bill_id == Bill.id)
+        )
 
         filters = [Ticket.is_deleted == False]
 
@@ -25,28 +30,24 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
         if params.ticket_type is not None:
             filters.append(Ticket.type == params.ticket_type)
 
-        total_count = self.count_by_filter(db, filters=filters)
+        total_count = await self.count_by_filter(db, filters=filters)
 
         order_by = Ticket.id.asc() if params.asc else Ticket.id.desc()
 
         if params.size is None:
-            return (
-                await self._all(
-                    db.scalars(query.filter(*filters).order_by(order_by))
-                ),
-                await total_count,
+            resualt = (
+                await db.execute(query.filter(*filters).order_by(order_by))
+            ).fetchall()
+            return resualt, total_count
+        resualt = (
+            await db.execute(
+                query.filter(*filters)
+                .offset(params.skip)
+                .limit(params.size)
+                .order_by(order_by)
             )
-        return (
-            await self._all(
-                db.scalars(
-                    query.filter(*filters)
-                    .offset(params.skip)
-                    .limit(params.size)
-                    .order_by(order_by)
-                )
-            ),
-            await total_count,
-        )
+        ).fetchall()
+        return resualt, total_count
 
 
 ticket_repo = CRUDTicket(Ticket)

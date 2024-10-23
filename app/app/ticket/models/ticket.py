@@ -34,7 +34,7 @@ class Ticket(Base):
     )
     user_rel = relationship("User", foreign_keys=user_id)
 
-    additional_data: Mapped[dict] = mapped_column(JSON, server_default=dict)
+    additional_data: Mapped[dict] = mapped_column(JSON, default=dict,nullable=True)
 
     type: Mapped[str] = mapped_column(String, nullable=True, index=True)
 

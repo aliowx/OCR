@@ -208,7 +208,6 @@ async def effective_utilization_rate(
     jalali_date: report_schemas.JalaliDate,
 ):
     list_effective_utilization_rate = []
-    effective_utilization_rate = 0
     total_capacity = 0
 
     zones = await zone_repo.get_multi(db, limit=None)
@@ -220,7 +219,9 @@ async def effective_utilization_rate(
             end_time_in=end_time_in,
             jalali_date=jalali_date,
         )
-        if park_time:
+        effective_utilization_rate = 0
+        if park_time and zone.capacity > 0:
+            
             effective_utilization_rate = round(
                 (
                     ((park_time.total_seconds() / 3600) / (zone.capacity * 24))
@@ -241,7 +242,7 @@ async def effective_utilization_rate(
         end_time_in=end_time_in,
         jalali_date=jalali_date,
     )
-    if total_park_time is not None and total_capacity != 0:
+    if total_park_time is not None and total_capacity > 0:
         total_effective_utilization_rate = round(
             (
                 (

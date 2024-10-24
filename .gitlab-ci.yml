@@ -2,10 +2,7 @@ stages:
   - test
   - build
   - deploy
-
-workflow:
-  rules:
-    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
+  - build-production
 
 test-project-test:
   stage: test

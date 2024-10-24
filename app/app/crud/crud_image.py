@@ -75,9 +75,11 @@ class CRUDImage(
             return None
         img = obj.image
         del obj.image
+        return obj
         obj = jsonable_encoder(obj)
         if obj:
-            obj["image"] = base64.b64encode(img).decode()
+            if obj["image"]:
+                obj["image"] = base64.b64encode(img).decode()
 
         obj = ImageBase64InDB(**obj)
         return obj

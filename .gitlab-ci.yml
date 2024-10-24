@@ -13,6 +13,8 @@ test-project-test:
     - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
   script:
     - "echo test"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
 
 build-project-image-test:
   stage: build
@@ -31,6 +33,8 @@ build-project-image-test:
     - shell_executer
   after_script:
     - "echo build is done"
+  rules:
+    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
 
 deploy-iranmall-project-test-server:
   stage: deploy
@@ -55,5 +59,24 @@ deploy-anahid-project-test-server:
   rules:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
       when: manual
+
+
+build-project-image-productioon:
+  stage: build-production
+  before_script:
+    - touch .env
+    - cd ./app
+    - touch .env
+    - cd ..
+    - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
+  script:
+    - "echo deploy to registery"
+    - "sh publishProject.sh"
+  tags:
+    - shell_executer
+  after_script:
+    - "echo build is done"
+  only:
+    - /^v\d+\.\d+\.\d+$/
 
 

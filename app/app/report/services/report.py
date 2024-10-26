@@ -134,7 +134,7 @@ async def capacity(db: AsyncSession):
     return report_schemas.Capacity(
         total=capacity_zones,
         empty=empty,
-        full=total_count_in_parking + unknown_referred,
+        full=total_count_in_parking,
         unknown=unknown_referred,
         count_referred=count_referred,
         total_amount_bill=total_amount_bill,

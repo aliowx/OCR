@@ -10,6 +10,7 @@ from app.report import schemas as report_schemas
 from app.report import services as report_services
 from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.acl.role_checker import RoleChecker
+from app import schemas
 from app.acl.role import UserRoles
 from typing import Annotated
 from datetime import datetime
@@ -169,7 +170,6 @@ async def avrage_referred(
     *,
     start_time_in: datetime,
     end_time_in: datetime,
-    timing: report_schemas.Timing = report_schemas.Timing.day,
     zone_id: int | None = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
@@ -180,9 +180,9 @@ async def avrage_referred(
     return APIResponse(
         await crud.record.get_present_in_parking(
             db,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            timing=timing,
+            input_start_create_time=start_time_in,
+            input_end_create_time=end_time_in,
+            input_status=schemas.record.StatusRecord.finished,
             zone_id=zone_id,
         )
     )

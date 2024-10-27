@@ -41,7 +41,6 @@ async def set_children_ancestors_capacity(
         zone=zone,
         status_in=[
             StatusRecord.unfinished.value,
-            StatusRecord.unknown.value,
         ],
     )
     zone.full = total_count_full

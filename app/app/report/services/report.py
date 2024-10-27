@@ -120,7 +120,7 @@ async def capacity(db: AsyncSession):
     if not total_count_in_parking:
         total_count_in_parking = 0
 
-    empty = capacity_zones - (total_count_in_parking + unknown_referred)
+    empty = capacity_zones - (total_count_in_parking)
     if empty < 0:
         empty = 0
 

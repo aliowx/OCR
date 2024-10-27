@@ -178,6 +178,34 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         records = await self._all(db.scalars(query))
 
         return records
+    
+    async def get_present_in_parking_count(
+        self,
+        db: AsyncSession,
+        *,
+        input_start_create_time: datetime = None,
+        input_end_create_time: datetime = None,
+        input_status: StatusRecord,
+        zone_id: int | None = None,
+    ):
+        filters = [Record.is_deleted == False]
+
+        if zone_id is not None:
+            filters.append(Record.zone_id == zone_id)
+
+        if input_start_create_time is not None:
+            filters.append(Record.end_time >= input_start_create_time)
+
+        if input_end_create_time is not None:
+            filters.append(Record.start_time <= input_end_create_time)
+
+        if input_status is not None:
+            filters.append(Record.latest_status == input_status)
+
+        query = select(func.count(Record.id)).filter(*filters)
+
+        records = await (db.scalar(query))
+        return records
 
     async def get_today_count_referred_by_zone(
         self,

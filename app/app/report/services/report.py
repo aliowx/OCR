@@ -362,81 +362,50 @@ async def get_parking_occupancy_by_zone(
     end_time_in: datetime,
     timing: report_schemas.Timing,
     zone_id: int | None = None,
-) -> list:
-
+) -> dict:
+    
     range_date = create_ranges_datetime(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
-    get_zones = await crud.zone_repo.get_multi(db, limit=None)
-    capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
-    resualt = []
-    if zone_id is not None:
-        get_zones = [await crud.zone_repo.get(db, id=zone_id)]
+    
+    # Retrieve zones and capacities
+    get_zones = await crud.zone_repo.get_multi(db, limit=None) if zone_id is None else [await crud.zone_repo.get(db, id=zone_id)]
+    total_utilization_rate = []
+
+    result = {}
     for zone in get_zones:
         zone_effective_utilization_rate = []
-        zone_data = {}
-
+        
         for date_time in range_date:
-            records = await crud.record.get_present_in_parking(
+            records = await crud.record.get_present_in_parking_count(
                 db,
                 input_start_create_time=date_time.get("start"),
                 input_end_create_time=date_time.get("end"),
                 input_status=schemas.record.StatusRecord.finished,
                 zone_id=zone.id,
             )
-            total_park_time = timedelta(hours=0)
-            for record in records:
-                if record.start_time < date_time.get(
-                    "start"
-                ) and record.end_time < date_time.get("end"):
-                    total_park_time += record.end_time - date_time.get("start")
-                elif record.start_time > date_time.get(
-                    "start"
-                ) and record.end_time < date_time.get("end"):
-                    total_park_time += record.end_time - record.start_time
-                elif record.start_time < date_time.get(
-                    "start"
-                ) and record.end_time > date_time.get("end"):
-                    total_park_time += date_time.get("end") - record.start_time
-                elif record.start_time > date_time.get(
-                    "start"
-                ) and record.end_time > date_time.get("end"):
-                    total_park_time += date_time.get("end") - record.start_time
+
             zone_effective_utilization_rate.append(
                 {
                     "start": date_time.get("start"),
                     "end": date_time.get("end"),
-                    "effective_utilization_rate": (
-                        round(
-                            (
-                                (
-                                    (total_park_time.total_seconds() / 3600)
-                                    / (capacity_zone * 24)
-                                )
-                                * 100
-                            ),
-                            2,
-                        )
-                        if records
-                        else 0
-                    ),
+                    "count": records or 0,
                 }
             )
-        zone_data[zone.name] = zone_effective_utilization_rate
-        resualt.append(zone_data)
+        
+        # Append zone data
+        result[zone.name] = zone_effective_utilization_rate
+        
+        # Aggregate for total
+        for date, entry in zip(range_date, zone_effective_utilization_rate):
+            if len(total_utilization_rate) < len(range_date):
+                total_utilization_rate.append({"start": date["start"], "end": date["end"], "count": entry["count"]})
+            else:
+                total_utilization_rate[range_date.index(date)]["count"] += entry["count"]
 
-    total_effective_utilization_rate = await get_parking_occupancy(
-        db,
-        start_time_in=start_time_in,
-        end_time_in=end_time_in,
-        timing=timing,
-        zone_id=zone_id,
-    )
-    # dict_total_effective_utilization_rate = {item for item in total_effective_utilization_rate}
-    resualt.append(
-        {"total_effective_utilization_rate": total_effective_utilization_rate}
-    )
-    return resualt
+    result["total"] = total_utilization_rate
+    
+    return result
 
 
 async def cal_count_with_out_status(

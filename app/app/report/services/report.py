@@ -205,61 +205,73 @@ async def effective_utilization_rate(
     *,
     start_time_in: datetime,
     end_time_in: datetime,
-    jalali_date: report_schemas.JalaliDate,
 ):
-    list_effective_utilization_rate = []
-    total_capacity = 0
 
-    zones = await zone_repo.get_multi(db, limit=None)
-    for zone in zones:
-        park_time = await crud.record.get_time_park(
+    get_zones = await crud.zone_repo.get_multi(db, limit=None)
+    zone_effective_utilization_rate = []
+    for zone in get_zones:
+        capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone.id)
+
+        records = await crud.record.get_present_in_parking(
             db,
-            zone_id_in=zone.id,
-            start_time_in=start_time_in,
-            end_time_in=end_time_in,
-            jalali_date=jalali_date,
+            input_start_create_time=start_time_in,
+            input_end_create_time=end_time_in,
+            input_status=schemas.record.StatusRecord.finished,
+            zone_id=zone.id,
         )
+        print(zone.id)
+        total_park_time = timedelta(hours=0)
+        for record in records:
+            if (
+                record.start_time < start_time_in
+                and record.end_time < end_time_in
+            ):
+                total_park_time += record.end_time - start_time_in
+            elif (
+                record.start_time > start_time_in
+                and record.end_time < end_time_in
+            ):
+                total_park_time += record.end_time - record.start_time
+            elif (
+                record.start_time < start_time_in
+                and record.end_time > end_time_in
+            ):
+                total_park_time += end_time_in - record.start_time
+            elif (
+                record.start_time > start_time_in
+                and record.end_time > end_time_in
+            ):
+                total_park_time += end_time_in - record.start_time
         effective_utilization_rate = 0
-        if park_time and zone.capacity > 0:
-            
+        print(records)
+        if (
+            capacity_zone > 0
+            and records != None
+            and total_park_time > timedelta(hours=0)
+        ):
             effective_utilization_rate = round(
                 (
-                    ((park_time.total_seconds() / 3600) / (zone.capacity * 24))
+                    (
+                        (total_park_time.total_seconds() / 3600)
+                        / (capacity_zone * 24)
+                    )
                     * 100
                 ),
                 2,
             )
-        list_effective_utilization_rate.append(
+
+        print(effective_utilization_rate)
+        zone_effective_utilization_rate.append(
             {
-                zone.name: effective_utilization_rate,
+                zone.name: {
+                    "start": start_time_in,
+                    "end": end_time_in,
+                    "effective_utilization_rate": effective_utilization_rate,
+                }
             }
         )
-        total_capacity += zone.capacity
 
-    total_park_time = await crud.record.get_time_park(
-        db,
-        start_time_in=start_time_in,
-        end_time_in=end_time_in,
-        jalali_date=jalali_date,
-    )
-    if total_park_time is not None and total_capacity > 0:
-        total_effective_utilization_rate = round(
-            (
-                (
-                    (total_park_time.total_seconds() / 3600)
-                    / (total_capacity * 24)
-                )
-                * 100
-            ),
-            2,
-        )
-    else:
-        total_effective_utilization_rate = 0
-    list_effective_utilization_rate.append(
-        {"total_effective_utilization_rate": total_effective_utilization_rate}
-    )
-
-    return list_effective_utilization_rate
+    return zone_effective_utilization_rate
 
 
 # Helper function to get the last day of a given month
@@ -284,7 +296,9 @@ def get_month_range(start_date: datetime, end_date: datetime):
         if current_end > end_date:
             current_end = end_date
 
-        month_ranges.append((current_start, current_end))
+        month_ranges.append(
+            (current_start, current_end.replace(hour=23, minute=59, second=59))
+        )
 
         # Move to the next month
         next_month = current_start + timedelta(days=31)
@@ -342,7 +356,7 @@ def create_ranges_date(
     return ranges
 
 
-async def get_count_referred(
+async def get_parking_occupancy_by_zone(
     db: AsyncSession,
     start_time_in: datetime,
     end_time_in: datetime,
@@ -350,82 +364,79 @@ async def get_count_referred(
     zone_id: int | None = None,
 ) -> list:
 
-    range_date = create_ranges_date(
+    range_date = create_ranges_datetime(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
-
+    get_zones = await crud.zone_repo.get_multi(db, limit=None)
     capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
-    count_record = await crud.record.get_count_referred_by_timing_status(
+    resualt = []
+    if zone_id is not None:
+        get_zones = [await crud.zone_repo.get(db, id=zone_id)]
+    for zone in get_zones:
+        zone_effective_utilization_rate = []
+        zone_data = {}
+
+        for date_time in range_date:
+            records = await crud.record.get_present_in_parking(
+                db,
+                input_start_create_time=date_time.get("start"),
+                input_end_create_time=date_time.get("end"),
+                input_status=schemas.record.StatusRecord.finished,
+                zone_id=zone.id,
+            )
+            total_park_time = timedelta(hours=0)
+            for record in records:
+                if record.start_time < date_time.get(
+                    "start"
+                ) and record.end_time < date_time.get("end"):
+                    total_park_time += record.end_time - date_time.get("start")
+                elif record.start_time > date_time.get(
+                    "start"
+                ) and record.end_time < date_time.get("end"):
+                    total_park_time += record.end_time - record.start_time
+                elif record.start_time < date_time.get(
+                    "start"
+                ) and record.end_time > date_time.get("end"):
+                    total_park_time += date_time.get("end") - record.start_time
+                elif record.start_time > date_time.get(
+                    "start"
+                ) and record.end_time > date_time.get("end"):
+                    total_park_time += date_time.get("end") - record.start_time
+            zone_effective_utilization_rate.append(
+                {
+                    "start": date_time.get("start"),
+                    "end": date_time.get("end"),
+                    "effective_utilization_rate": (
+                        round(
+                            (
+                                (
+                                    (total_park_time.total_seconds() / 3600)
+                                    / (capacity_zone * 24)
+                                )
+                                * 100
+                            ),
+                            2,
+                        )
+                        if records
+                        else 0
+                    ),
+                }
+            )
+        zone_data[zone.name] = zone_effective_utilization_rate
+        resualt.append(zone_data)
+
+    total_effective_utilization_rate = await get_parking_occupancy(
         db,
-        input_start_create_time=start_time_in,
-        input_end_create_time=end_time_in,
-        timing=(
-            timing
-            if timing != report_schemas.Timing.week
-            else report_schemas.Timing.day
-        ),
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+        timing=timing,
         zone_id=zone_id,
     )
-    convert_to_dict_record = {}
-    total_count_record = 0
-    for time, count, time_park in count_record:
-        total_count_record += count
-        record_date = time.date()
-        if record_date not in convert_to_dict_record:
-            convert_to_dict_record[record_date] = {}
-        convert_to_dict_record[record_date]["count"] = count
-        convert_to_dict_record[record_date]["effective_utilization_rate"] = (
-            round(
-                (
-                    ((time_park.total_seconds() / 3600) / (capacity_zone * 24))
-                    * 100
-                ),
-                2,
-            )
-        )
-
-    for item in range_date:
-        if timing == report_schemas.Timing.day:
-            if item["time"] in convert_to_dict_record:
-                item["count"] = convert_to_dict_record[item["time"]]
-            else:
-                item["count"] = {"count": 0, "effective_utilization_rate": 0}
-        if timing == report_schemas.Timing.week:
-            start_date = item["time"]
-            end_date = start_date + timedelta(days=7)
-            weekly_data = {"unfinished": 0, "finished": 0, "unknown": 0}
-
-            # Iterate through each day in the 7-day period and sum up the count
-            current_date = start_date
-            while current_date < end_date:
-                if current_date in convert_to_dict_record:
-                    for status, count in convert_to_dict_record[
-                        current_date
-                    ].items():
-                        if status in weekly_data:
-                            weekly_data[status] += count
-                        else:
-                            weekly_data[status] = count
-                current_date += timedelta(days=1)
-            item.update({"end_date": end_date})
-            item["count"] = weekly_data
-        if timing == report_schemas.Timing.month:
-            if item["time"] in convert_to_dict_record:
-
-                item["count"] = convert_to_dict_record[item["time"]]
-            else:
-                item["count"] = {"count": 0, "effective_utilization_rate": 0}
-            item.update({"end_time": last_day_of_month(item["time"])})
-        if timing == report_schemas.Timing.year:
-            if item["time"] in convert_to_dict_record:
-                item["count"] = convert_to_dict_record[item["time"]]
-            else:
-                item["count"] = {"count": 0, "effective_utilization_rate": 0}
-        item["start_time"] = item.pop("time")
-        item["data"] = item.pop("count")
-    range_date.append({"total_refferd": total_count_record})
-
-    return range_date
+    # dict_total_effective_utilization_rate = {item for item in total_effective_utilization_rate}
+    resualt.append(
+        {"total_effective_utilization_rate": total_effective_utilization_rate}
+    )
+    return resualt
 
 
 async def cal_count_with_out_status(
@@ -508,7 +519,7 @@ def create_ranges_datetime(
     return ranges
 
 
-async def get_effective_utilization_rate(
+async def get_parking_occupancy(
     db: AsyncSession,
     start_time_in: datetime,
     end_time_in: datetime,
@@ -553,12 +564,15 @@ async def get_effective_utilization_rate(
                 "start": date_time.get("start"),
                 "end": date_time.get("end"),
                 "effective_utilization_rate": (
-                    (
+                    round(
                         (
-                            (total_park_time.total_seconds() / 3600)
-                            / (capacity_zone * 24)
-                        )
-                        * 100
+                            (
+                                (total_park_time.total_seconds() / 3600)
+                                / (capacity_zone * 24)
+                            )
+                            * 100
+                        ),
+                        2,
                     )
                     if records
                     else 0

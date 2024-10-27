@@ -159,14 +159,19 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         input_status: StatusRecord,
         zone_id: int | None = None,
     ):
-        filters = [
-            Record.is_deleted == False,
-            Record.latest_status == input_status,
-            Record.end_time >= input_start_create_time,
-            Record.start_time <= input_end_create_time,
-        ]
+        filters = [Record.is_deleted == False]
+
         if zone_id is not None:
             filters.append(Record.zone_id == zone_id)
+
+        if input_start_create_time is not None:
+            filters.append(Record.end_time >= input_start_create_time)
+
+        if input_end_create_time is not None:
+            filters.append(Record.start_time <= input_end_create_time)
+
+        if input_status is not None:
+            filters.append(Record.latest_status == input_status)
 
         query = select(Record).filter(*filters)
 

@@ -60,9 +60,8 @@ async def get_effective_utilization_rate(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
-    start_time_in: datetime | None = None,
-    end_time_in: datetime | None = None,
-    jalali_date: report_schemas.JalaliDate = Depends(),
+    start_time_in: datetime,
+    end_time_in: datetime,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
@@ -74,12 +73,11 @@ async def get_effective_utilization_rate(
             db,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
-            jalali_date=jalali_date,
         )
     )
 
 
-@router.get("/referred")
+@router.get("/parking-occupancy-by-zone")
 async def avrage_referred(
     _: Annotated[
         bool,
@@ -106,7 +104,7 @@ async def avrage_referred(
     """
 
     return APIResponse(
-        await report_services.get_count_referred(
+        await report_services.get_parking_occupancy_by_zone(
             db,
             start_time_in=start_time_in,
             end_time_in=end_time_in,
@@ -116,7 +114,7 @@ async def avrage_referred(
     )
 
 
-@router.get("/referred-by-zone")
+@router.get("/parking-occupancy")
 async def avrage_referred(
     _: Annotated[
         bool,
@@ -143,7 +141,7 @@ async def avrage_referred(
     """
 
     return APIResponse(
-        await report_services.get_effective_utilization_rate(
+        await report_services.get_parking_occupancy(
             db,
             start_time_in=start_time_in,
             end_time_in=end_time_in,

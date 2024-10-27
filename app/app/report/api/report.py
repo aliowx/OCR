@@ -151,6 +151,43 @@ async def avrage_referred(
     )
 
 
+@router.get("/records-present")
+async def avrage_referred(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(
+        await crud.record.get_present_in_parking(
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+            zone_id=zone_id,
+        )
+    )
+
+
 @router.get("/avg-price-per-referred")
 async def avg_price_per_referred(
     _: Annotated[

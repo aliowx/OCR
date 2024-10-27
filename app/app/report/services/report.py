@@ -546,6 +546,7 @@ async def get_parking_occupancy(
                     if records
                     else 0
                 ),
+                "count":len(records)
             }
         )
     return resualt

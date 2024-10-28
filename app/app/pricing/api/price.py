@@ -56,14 +56,7 @@ async def read_price(
 async def create_price(
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
@@ -72,7 +65,7 @@ async def create_price(
 ) -> APIResponseType[schemas.Price]:
     """
     Create New price.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
 
     get_price_by_name = await price_repo.get_by_name(db, name=price_in.name)
@@ -175,14 +168,7 @@ async def update_price(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
@@ -191,7 +177,7 @@ async def update_price(
 ) -> APIResponseType[schemas.Price]:
     """
     Update Price.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
 
     get_price_by_name = await price_repo.get_by_name(
@@ -237,14 +223,7 @@ async def delete_price(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     id: int,
@@ -252,7 +231,7 @@ async def delete_price(
 ) -> APIResponseType[schemas.Price]:
     """
     Update Price.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
     price = await crud.price_repo.get(db, id=id)
     if not price:

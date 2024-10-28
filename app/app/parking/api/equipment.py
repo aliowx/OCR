@@ -76,15 +76,7 @@ async def create_equipment(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.TECHNICAL_SUPPORT,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     equipment_in: schemas.EquipmentCreate,
@@ -93,7 +85,7 @@ async def create_equipment(
     """
     Create equipment.
 
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+    user access to this [ ADMINISTRATOR ]
     EquipmentType = {
         CAMERA_ENTRANCE_DOOR = 1
         CAMERA_EXIT_DOOR = 2
@@ -125,15 +117,7 @@ async def create_equipment_bulk(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.TECHNICAL_SUPPORT,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     equipments: list[schemas.EquipmentCreate],
@@ -142,7 +126,7 @@ async def create_equipment_bulk(
     """
     Bulk create equipments.
 
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+    user access to this [ ADMINISTRATOR ]
 
     EquipmentType = {
         CAMERA_ENTRANCE_DOOR = 1
@@ -177,15 +161,7 @@ async def update_equipment(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.TECHNICAL_SUPPORT,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     equipment_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
@@ -195,7 +171,7 @@ async def update_equipment(
     """
     Update equipment.
 
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+    user access to this [ ADMINISTRATOR ]
 
     EquipmentType = {
         CAMERA_ENTRANCE_DOOR = 1
@@ -230,15 +206,7 @@ async def delete_equipment(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                    UserRoles.TECHNICAL_SUPPORT,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     equipment_id: int,
     db: AsyncSession = Depends(deps.get_db_async),
@@ -247,7 +215,7 @@ async def delete_equipment(
     """
     Delete equipment.
 
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
+    user access to this [ ADMINISTRATOR ]
 
     """
     equipment = await equipment_repo.get(db, id=equipment_id)

@@ -108,14 +108,7 @@ async def create_user(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     user_in: schemas.UserCreate,
@@ -123,7 +116,7 @@ async def create_user(
 ) -> APIResponseType[schemas.User]:
     """
     Create new user.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
     user = await crud.user.get_by_username(db, username=user_in.username)
     if user:
@@ -178,13 +171,7 @@ async def read_user_by_id(
 async def delete_user(
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     current_user: models.User = Depends(deps.get_current_active_superuser),
     db: AsyncSession = Depends(deps.get_db_async),
@@ -210,14 +197,7 @@ async def update_user(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     user_id: int,
@@ -226,7 +206,7 @@ async def update_user(
 ) -> APIResponseType[schemas.User]:
     """
     Update a user.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
     user = await crud.user.get(db, id=user_id)
     if not user:
@@ -240,23 +220,16 @@ async def update_user(
 
 @router.post("/introspection")
 async def introspection(
-        _: Annotated[
-            bool,
-            Depends(
-                RoleChecker(
-                    allowed_roles=[
-                        UserRoles.ADMINISTRATOR,
-                        UserRoles.PARKING_MANAGER,
-                    ]
-                )
-            ),
-        ],
-        token: str ,
-        db: AsyncSession = Depends(deps.get_db_async),
-) ->APIResponseType[schemas.User]:
+    _: Annotated[
+        bool,
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
+    ],
+    token: str,
+    db: AsyncSession = Depends(deps.get_db_async),
+) -> APIResponseType[schemas.User]:
     """
     Introspect the given token and return user information
     """
-    user = await deps.get_current_user(db,token)
+    user = await deps.get_current_user(db, token)
     user = await deps.get_current_active_user(current_user=user)
     return APIResponse(user)

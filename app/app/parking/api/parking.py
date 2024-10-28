@@ -45,7 +45,9 @@ async def read_main_parking(
     """
     main_parking = await parking_repo.get_main_parking(db)
     if not main_parking:
-        return APIResponse(schemas.ParkingBase(beneficiary_data=schemas.Beneficiary()))
+        return APIResponse(
+            schemas.ParkingBase(beneficiary_data=schemas.Beneficiary())
+        )
     return APIResponse(main_parking)
 
 
@@ -54,14 +56,7 @@ async def create_main_parking(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     parking_in: schemas.ParkingCreate,
@@ -70,7 +65,7 @@ async def create_main_parking(
     """
     Create main parking.
 
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR ]
     """
     # FIXME: add input validations
     main_parking = await parking_repo.get_main_parking(db)

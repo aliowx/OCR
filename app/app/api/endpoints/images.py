@@ -162,6 +162,7 @@ async def read_minio(
             RoleChecker(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
                 ]
             )
         ),
@@ -194,13 +195,7 @@ def delete_image(
     *,
     _: Annotated[
         bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                ]
-            )
-        ),
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
     ],
     db: Session = Depends(deps.get_db),
     id: int,

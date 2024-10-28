@@ -1,9 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.ticket.schemas.ticket import ParamsTicket
-from datetime import timedelta
-from typing import List, Optional
-from fastapi import Query
 from app.ticket.repo import ticket_repo
+from app import crud
 
 
 async def get_record_bill(db: AsyncSession, *, params: ParamsTicket):
@@ -19,5 +17,9 @@ async def get_record_bill(db: AsyncSession, *, params: ParamsTicket):
     for ticket in tickets:
         ticket[0].record = ticket[1]
         ticket[0].bill = ticket[2]
+        if ticket[2].record_id:
+            ticket[0].record = await crud.record.get(
+                db, id=ticket[2].record_id
+            )
         resualt_tickets.append(ticket[0])
     return resualt_tickets, total_count

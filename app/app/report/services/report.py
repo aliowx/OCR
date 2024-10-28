@@ -243,7 +243,6 @@ async def effective_utilization_rate(
             ):
                 total_park_time += end_time_in - record.start_time
         effective_utilization_rate = 0
-        print(records)
         if (
             capacity_zone > 0
             and records != None
@@ -259,8 +258,6 @@ async def effective_utilization_rate(
                 ),
                 2,
             )
-
-        print(effective_utilization_rate)
         zone_effective_utilization_rate.append(
             {
                 zone.name: {
@@ -363,19 +360,23 @@ async def get_parking_occupancy_by_zone(
     timing: report_schemas.Timing,
     zone_id: int | None = None,
 ) -> dict:
-    
+
     range_date = create_ranges_datetime(
         start_date=start_time_in, end_date=end_time_in, timing=timing
     )
-    
+
     # Retrieve zones and capacities
-    get_zones = await crud.zone_repo.get_multi(db, limit=None) if zone_id is None else [await crud.zone_repo.get(db, id=zone_id)]
+    get_zones = (
+        await crud.zone_repo.get_multi(db, limit=None)
+        if zone_id is None
+        else [await crud.zone_repo.get(db, id=zone_id)]
+    )
     total_utilization_rate = []
 
     result = {}
     for zone in get_zones:
         zone_effective_utilization_rate = []
-        
+
         for date_time in range_date:
             records = await crud.record.get_present_in_parking_count(
                 db,
@@ -392,19 +393,27 @@ async def get_parking_occupancy_by_zone(
                     "count": records or 0,
                 }
             )
-        
+
         # Append zone data
         result[zone.name] = zone_effective_utilization_rate
-        
+
         # Aggregate for total
         for date, entry in zip(range_date, zone_effective_utilization_rate):
             if len(total_utilization_rate) < len(range_date):
-                total_utilization_rate.append({"start": date["start"], "end": date["end"], "count": entry["count"]})
+                total_utilization_rate.append(
+                    {
+                        "start": date["start"],
+                        "end": date["end"],
+                        "count": entry["count"],
+                    }
+                )
             else:
-                total_utilization_rate[range_date.index(date)]["count"] += entry["count"]
+                total_utilization_rate[range_date.index(date)][
+                    "count"
+                ] += entry["count"]
 
     result["total"] = total_utilization_rate
-    
+
     return result
 
 
@@ -528,25 +537,28 @@ async def get_parking_occupancy(
                 "start"
             ) and record.end_time > date_time.get("end"):
                 total_park_time += date_time.get("end") - record.start_time
+        effective_utilization_rate = 0
+        if (
+            capacity_zone > 0
+            and records != None
+            and total_park_time > timedelta(hours=0)
+        ):
+            effective_utilization_rate = round(
+                (
+                    (
+                        (total_park_time.total_seconds() / 3600)
+                        / (capacity_zone * 24)
+                    )
+                    * 100
+                ),
+                2,
+            )
         resualt.append(
             {
                 "start": date_time.get("start"),
                 "end": date_time.get("end"),
-                "effective_utilization_rate": (
-                    round(
-                        (
-                            (
-                                (total_park_time.total_seconds() / 3600)
-                                / (capacity_zone * 24)
-                            )
-                            * 100
-                        ),
-                        2,
-                    )
-                    if records
-                    else 0
-                ),
-                "count":len(records)
+                "effective_utilization_rate": effective_utilization_rate,
+                "count": len(records),
             }
         )
     return resualt

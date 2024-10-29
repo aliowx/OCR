@@ -301,10 +301,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         #         )
 
         if params.input_plate is not None and bool(
-            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+            re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
-
-            filters.append(Record.plate.like(params.input_plate))
+            value_plate = params.input_plate.replace("?", "_")
+            filters.append(Record.plate.like(value_plate))
 
         if params.input_camera_exit_id is not None:
             filters.append(

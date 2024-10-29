@@ -97,7 +97,8 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_plate is not None and bool(
             re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
-            filters.append(Record.plate.like(params.input_plate))
+            value_plate = params.input_plate.replace("?", "_")
+            filters.append(Record.plate.like(value_plate))
 
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)

@@ -18,7 +18,7 @@ from app.schemas.event import (
 )
 from cache.redis import redis_client
 from sqlalchemy import func
-
+import re
 
 class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
     def create(
@@ -50,8 +50,10 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
 
         filters = [Event.is_deleted == False]
 
-        if params.input_plate is not None:
-            filters.append(Event.plate.ilike(f"%{params.input_plate}%"))
+        if params.input_plate is not None and bool(
+            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+        ):
+            filters.append(Event.plate.like(params.input_plate))
 
         if params.input_camera_id is not None:
             filters.append(Event.camera_id == params.input_camera_id)

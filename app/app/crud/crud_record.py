@@ -18,6 +18,7 @@ from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
 from app.report.schemas import JalaliDate as JalaliDateReport
 from fastapi import Query
+import re
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -299,8 +300,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         #             <= jalali_date.in_end_exit_jalali_date,
         #         )
 
-        if params.input_plate is not None:
-            filters.append(Record.plate.ilike(params.input_plate))
+        if params.input_plate is not None and bool(
+            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+        ):
+
+            filters.append(Record.plate.like(params.input_plate))
 
         if params.input_camera_exit_id is not None:
             filters.append(

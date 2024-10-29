@@ -17,7 +17,7 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         filters = [PlateList.is_deleted == False]
 
         if params.input_plate is not None and bool(
-            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+            re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
 
             filters.append(PlateList.plate.like(params.input_plate))

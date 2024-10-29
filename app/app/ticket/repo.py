@@ -23,7 +23,7 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
         filters = [Ticket.is_deleted == False]
 
         if params.input_plate is not None and bool(
-            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+            re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
             filters.append(Record.plate.like(params.input_plate))
 

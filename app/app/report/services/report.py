@@ -382,7 +382,6 @@ async def get_parking_occupancy_by_zone(
                 db,
                 input_start_create_time=date_time.get("start"),
                 input_end_create_time=date_time.get("end"),
-                input_status=schemas.record.StatusRecord.finished,
                 zone_id=zone.id,
             )
 

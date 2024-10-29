@@ -10,3 +10,4 @@ from .image import Image
 from .event import Event
 from .record import Record
 from app.ticket.models.ticket import Ticket
+from app.plate.models.plate import PlateList

@@ -7,6 +7,7 @@ from .models.plate import PlateList
 from .schemas import PlateCreate, PlateUpdate, ParamsPlate
 import re
 
+
 class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
     async def get_multi_by_filter(
         self, db: Session | AsyncSession, *, params: ParamsPlate
@@ -19,8 +20,8 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         if params.input_plate is not None and bool(
             re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
-
-            filters.append(PlateList.plate.like(params.input_plate))
+            value_plate = params.input_plate.replace("?", "_")
+            filters.append(PlateList.plate.like(value_plate))
 
         if params.input_name is not None:
             filters.append(PlateList.name == params.input_name)

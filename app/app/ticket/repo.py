@@ -6,6 +6,7 @@ from app.crud.base import CRUDBase
 from .models.ticket import Ticket
 from .schemas import TicketCreate, TicketUpdate, ParamsTicket
 from app.models import Record, Bill
+import re
 
 
 class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
@@ -21,8 +22,10 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
 
         filters = [Ticket.is_deleted == False]
 
-        if params.input_plate is not None:
-            filters.append(Ticket.correct_plate == params.input_plate)
+        if params.input_plate is not None and bool(
+            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+        ):
+            filters.append(Record.plate.like(params.input_plate))
 
         if params.ticket_status is not None:
             filters.append(Ticket.status == params.ticket_status)

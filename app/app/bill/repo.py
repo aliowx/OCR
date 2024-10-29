@@ -18,6 +18,7 @@ from datetime import datetime, UTC
 from typing import Awaitable
 from app.models import Record, Image
 from app.parking.models import Equipment
+import re
 
 
 class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -93,8 +94,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_camera_exit is not None:
             filters.append(Bill.camera_exit_id == params.input_camera_exit)
 
-        if params.input_plate is not None:
-            filters.append(Bill.plate == params.input_plate)
+        if params.input_plate is not None and bool(
+            re.fullmatch(r"[0-9?]{8}", params.input_plate)
+        ):
+            filters.append(Record.plate.like(params.input_plate))
 
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)

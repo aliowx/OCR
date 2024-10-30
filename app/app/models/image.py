@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, ForeignKey, String
+from sqlalchemy import Integer, ForeignKey, String, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import LargeBinary
 
@@ -19,3 +19,5 @@ class Image(Base):
         index=True,
     )
     camera_rel = relationship("Equipment", foreign_keys=camera_id)
+
+    additonal_data: Mapped[dict] = mapped_column(JSON, nullable=True)

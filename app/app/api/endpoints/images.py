@@ -37,7 +37,7 @@ async def create_image(
     file_in: UploadFile,
     camera_id: int | None = None,
     save_as: schemas.image.ImageSaveAs | None = None,
-    metadata_in: dict | None = None,
+    metadata: dict | None = None,
 ) -> APIResponseType[Any]:
     """
     Create new image.
@@ -57,10 +57,10 @@ async def create_image(
             content=file_bytes,
             name=file_in.filename,
             size=file_in.size,
-            metadata=metadata_in,
+            metadata=metadata,
         )
         obj_in = schemas.image.ImageCreate(
-            path_image=path_file, additional_data=metadata_in
+            path_image=path_file, additional_data=metadata
         )
         if camera_id is not None:
             obj_in.camera_id = camera_id
@@ -70,7 +70,7 @@ async def create_image(
         file_content = await file_in.read()
         file_base64 = base64.b64encode(file_content).decode("utf-8")
         obj_in = schemas.image.ImageCreate(
-            image=file_base64, additional_data=metadata_in
+            image=file_base64, additional_data=metadata
         )
         if camera_id is not None:
             obj_in.camera_id = camera_id

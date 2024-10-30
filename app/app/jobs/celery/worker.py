@@ -283,9 +283,9 @@ def update_record(self, event_id) -> str:
 def setup_periodic_tasks(sender, **kwargs):
 
     sender.add_periodic_task(
-        settings.AUTO_GEN_EVENT_FAKE,
+        settings.CHECKING_FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
         set_status_record.s(),
-        name="set status unknown for record after 24 hours becuse not exit",
+        name=f"set status unknown for record after {settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR} hours becuse not exit",
     )
     if settings.DATA_FAKE_SET:
         sender.add_periodic_task(

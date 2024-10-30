@@ -94,6 +94,8 @@ class StorageSettings(SettingsBase):
     AUTO_GEN_EVENT_FAKE: int | None = None
     DATA_FAKE_SET: bool | None = False
 
+
+    CHECKING_FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
     FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
 
     CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images

@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
 from app.schemas import EventUpdate, RecordUpdate, TypeEvent, StatusRecord
 import rapidjson
-
+from app.models.base import EquipmentType
 from app.bill.services.bill import calculate_price, convert_to_timezone_iran
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
@@ -108,6 +108,34 @@ def update_record(self, event_id) -> str:
             and event.type_event != TypeEvent.admin_exitRegistration.value
             and event.type_event
             != TypeEvent.admin_exitRegistration_and_billIssuance.value
+            or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and event.camera_id
+                == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                and event.direction_info.get("direction") is None
+                and event.invalid == False
+            )
+            or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and event.camera_id
+                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                and event.direction_info.get("direction") is None
+                and event.invalid == False
+            )
+            or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and event.camera_id
+                == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                and event.direction_info.get("direction") > 0
+                and event.invalid == False
+            )
+            or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and event.camera_id
+                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                and event.direction_info.get("direction") < 0
+                and event.invalid == False
+            )
         ):
             record = schemas.RecordCreate(
                 plate=event.plate,
@@ -173,6 +201,38 @@ def update_record(self, event_id) -> str:
                 or event.type_event
                 == TypeEvent.admin_exitRegistration_and_billIssuance.value
                 or event.type_event == TypeEvent.admin_exitRegistration.value
+                or (
+                    event.type_event
+                    == TypeEvent.approaching_leaving_unknown.value
+                    and event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                    and event.direction_info.get("direction") is None
+                    and (event.invalid == False or event.invalid == True)
+                )
+                or (
+                    event.type_event
+                    == TypeEvent.approaching_leaving_unknown.value
+                    and event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                    and event.direction_info.get("direction") is None
+                    and (event.invalid == False or event.invalid == True)
+                )
+                or (
+                    event.type_event
+                    == TypeEvent.approaching_leaving_unknown.value
+                    and event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                    and event.direction_info.get("direction") < 0
+                    and (event.invalid == False or event.invalid == True)
+                )
+                or (
+                    event.type_event
+                    == TypeEvent.approaching_leaving_unknown.value
+                    and event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                    and event.direction_info.get("direction") > 0
+                    and (event.invalid == False or event.invalid == True)
+                )
             ):
                 latest_status = StatusRecord.finished.value
             if record.start_time > event.record_time:

@@ -1,7 +1,7 @@
 import io
 import logging
 from typing import Any
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from starlette.responses import StreamingResponse
@@ -14,6 +14,8 @@ from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated
 from app.parking.repo import equipment_repo
+import json
+
 
 router = APIRouter()
 namespace = "images"
@@ -34,21 +36,26 @@ async def create_image(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
-    file_in: UploadFile,
+    metadata: str = Query(),
     camera_id: int | None = None,
     save_as: schemas.image.ImageSaveAs | None = None,
-    metadata: dict | None = None,
+    file_in: UploadFile,
 ) -> APIResponseType[Any]:
     """
     Create new image.
     user access to this [ ADMINISTRATOR ]
     """
-    camera_exist = await equipment_repo.get(db, id=camera_id)
-    if not camera_exist:
-        raise exc.ServiceFailure(
-            detail="Camera Not Found",
-            msg_code=utils.MessageCodes.not_found,
-        )
+    if camera_id is not None:
+        camera_exist = await equipment_repo.get(db, id=camera_id)
+        if not camera_exist:
+            raise exc.ServiceFailure(
+                detail="Camera Not Found",
+                msg_code=utils.MessageCodes.not_found,
+            )
+
+    if metadata is not None:
+        metadata = json.loads(metadata)
+
     if save_as == schemas.image.ImageSaveAs.minio:
         file_content = await file_in.read()
         file_bytes = io.BytesIO(file_content)

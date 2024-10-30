@@ -28,13 +28,16 @@ class MinIO:
             self.client.make_bucket(bucket_name)
         return bucket_name
 
-    def upload_file(self, content: BytesIO, name: str, size: int) -> str:
+    def upload_file(
+        self, content: BytesIO, name: str, size: int, metadata: dict
+    ) -> str:
         try:
             self.client.put_object(
                 bucket_name=self.bucket_name,
                 data=content,
                 object_name=name,
                 length=size,
+                metadata=metadata,
             )
             return f"{self.bucket_name}/{name}"
 

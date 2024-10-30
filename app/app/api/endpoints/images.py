@@ -37,6 +37,7 @@ async def create_image(
     file_in: UploadFile,
     camera_id: int | None = None,
     save_as: schemas.image.ImageSaveAs | None = None,
+    metadata_in: dict | None = None,
 ) -> APIResponseType[Any]:
     """
     Create new image.
@@ -53,9 +54,14 @@ async def create_image(
         file_bytes = io.BytesIO(file_content)
         client = storage.get_client(name=save_as)
         path_file = client.upload_file(
-            content=file_bytes, name=file_in.filename, size=file_in.size
+            content=file_bytes,
+            name=file_in.filename,
+            size=file_in.size,
+            metadata=metadata_in,
         )
-        obj_in = schemas.image.ImageCreate(path_image=path_file)
+        obj_in = schemas.image.ImageCreate(
+            path_image=path_file, additional_data=metadata_in
+        )
         if camera_id is not None:
             obj_in.camera_id = camera_id
         image = await crud.image.create_path(db, obj_in=obj_in.model_dump())
@@ -63,7 +69,9 @@ async def create_image(
     elif save_as == schemas.image.ImageSaveAs.database:
         file_content = await file_in.read()
         file_base64 = base64.b64encode(file_content).decode("utf-8")
-        obj_in = schemas.image.ImageCreate(image=file_base64)
+        obj_in = schemas.image.ImageCreate(
+            image=file_base64, additional_data=metadata_in
+        )
         if camera_id is not None:
             obj_in.camera_id = camera_id
         image = await crud.image.create_base64(

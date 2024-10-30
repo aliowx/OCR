@@ -8,6 +8,7 @@ class ImageBase(BaseModel):
     path_image: str | None = None
     image: Optional[str] = None
     camera_id: Optional[int] = None
+    additional_data: dict | None = None
 
 
 class ImageBinaryBase(ImageBase):

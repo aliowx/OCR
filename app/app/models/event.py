@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Boolean
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Boolean, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base, get_now_datetime_utc
@@ -78,3 +78,13 @@ class Event(Base):
     invalid: Mapped[bool] = mapped_column(
         Boolean, server_default="false", default=False, index=True
     )
+
+    additional_data: Mapped[dict] = mapped_column(
+        JSON, default=dict, nullable=True
+    )
+
+    direction_info: Mapped[dict] = mapped_column(
+        JSON, default=dict, nullable=True
+    )
+
+    correct_ocr: Mapped[str] = mapped_column(String, nullable=True)

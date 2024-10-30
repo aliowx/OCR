@@ -9,6 +9,7 @@ class TypeEvent(str, Enum):
     sensor = "sensor"
     entranceDoor = "entranceDoor"
     exitDoor = "exitDoor"
+    approaching_receding_unknown = "ApproachingRecedingUnknown"  # approaching receding unknown vehicle for camera zoom in/out
     admin_exitRegistration_and_billIssuance = "exitReg_billIssue"
     admin_exitRegistration = "exitReg"
 
@@ -31,6 +32,10 @@ class EventBase(BaseModel):
     type_event: TypeEvent | None = None
     user_id: int | None = None
     invalid: bool | None = False
+
+    additional_data: dict | None = None
+    direction_info: dict | None = None
+    correct_ocr: str | None = None
 
 
 class EventCreate(EventBase):

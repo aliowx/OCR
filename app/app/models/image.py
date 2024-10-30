@@ -20,4 +20,4 @@ class Image(Base):
     )
     camera_rel = relationship("Equipment", foreign_keys=camera_id)
 
-    additonal_data: Mapped[dict] = mapped_column(JSON, nullable=True)
+    additional_data: Mapped[dict] = mapped_column(JSON, nullable=True)

@@ -45,24 +45,25 @@ async def read_equipments(
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , TECHNICAL_SUPPORT ]
 
-    EquipmentType = {
-        CAMERA_ENTRANCE_DOOR = 1
-        CAMERA_EXIT_DOOR = 2
-        SENSOR = 3
-        ROADBLOCK = 4
-        DISPLAY = 5
-        ERS = 6
-        KIOSK = 7
-        PAYMENT_DEVICE = 8
-        REGIONAL_SWITCH = 9
-        REGIONAL_COMPUTER = 10
-        REGIONAL_CONTROLLER = 11
-        POS = 12
+    EquipmentType = {\n
+        CAMERA_ENTRANCE_DOOR = 1\n
+        CAMERA_EXIT_DOOR = 2\n
+        SENSOR = 3\n
+        ROADBLOCK = 4\n
+        DISPLAY = 5\n
+        CAMERA_DIRECTION_EXIT = 6\n
+        CAMERA_DIRECTION_ENTRANCE = 7\n
+        KIOSK = 8\n
+        PAYMENT_DEVICE = 9\n
+        REGIONAL_SWITCH = 10\n
+        REGIONAL_COMPUTER = 11\n
+        REGIONAL_CONTROLLER = 12\n
+        POS = 13\n
         }
-    EquipmentStatus = {
-        HEALTHY = 1
-        BROKEN = 2
-        DISCONNECTED = 3
+    EquipmentStatus = {\n
+        HEALTHY = 1\n
+        BROKEN = 2\n
+        DISCONNECTED = 3\n
         }
 
     """
@@ -86,24 +87,25 @@ async def create_equipment(
     Create equipment.
 
     user access to this [ ADMINISTRATOR ]
-    EquipmentType = {
-        CAMERA_ENTRANCE_DOOR = 1
-        CAMERA_EXIT_DOOR = 2
-        SENSOR = 3
-        ROADBLOCK = 4
-        DISPLAY = 5
-        ERS = 6
-        KIOSK = 7
-        PAYMENT_DEVICE = 8
-        REGIONAL_SWITCH = 9
-        REGIONAL_COMPUTER = 10
-        REGIONAL_CONTROLLER = 11
-        POS = 12
+    EquipmentType = {\n
+        CAMERA_ENTRANCE_DOOR = 1\n
+        CAMERA_EXIT_DOOR = 2\n
+        SENSOR = 3\n
+        ROADBLOCK = 4\n
+        DISPLAY = 5\n
+        CAMERA_DIRECTION_EXIT = 6\n
+        CAMERA_DIRECTION_ENTRANCE = 7\n
+        KIOSK = 8\n
+        PAYMENT_DEVICE = 9\n
+        REGIONAL_SWITCH = 10\n
+        REGIONAL_COMPUTER = 11\n
+        REGIONAL_CONTROLLER = 12\n
+        POS = 13\n
         }
-    EquipmentStatus = {
-        HEALTHY = 1
-        BROKEN = 2
-        DISCONNECTED = 3
+    EquipmentStatus = {\n
+        HEALTHY = 1\n
+        BROKEN = 2\n
+        DISCONNECTED = 3\n
         }
     """
     equipment = await equipment_services.create_equipment(
@@ -128,25 +130,25 @@ async def create_equipment_bulk(
 
     user access to this [ ADMINISTRATOR ]
 
-    EquipmentType = {
-        CAMERA_ENTRANCE_DOOR = 1
-        CAMERA_EXIT_DOOR = 2
-        SENSOR = 3
-        ROADBLOCK = 4
-        DISPLAY = 5
-        ERS = 6
-        KIOSK = 7
-        PAYMENT_DEVICE = 8
-        REGIONAL_SWITCH = 9
-        REGIONAL_COMPUTER = 10
-        REGIONAL_CONTROLLER = 11
-        POS = 12
+    EquipmentType = {\n
+        CAMERA_ENTRANCE_DOOR = 1\n
+        CAMERA_EXIT_DOOR = 2\n
+        SENSOR = 3\n
+        ROADBLOCK = 4\n
+        DISPLAY = 5\n
+        CAMERA_DIRECTION_EXIT = 6\n
+        CAMERA_DIRECTION_ENTRANCE = 7\n
+        KIOSK = 8\n
+        PAYMENT_DEVICE = 9\n
+        REGIONAL_SWITCH = 10\n
+        REGIONAL_COMPUTER = 11\n
+        REGIONAL_CONTROLLER = 12\n
+        POS = 13\n
         }
-
-    EquipmentStatus = {
-        HEALTHY = 1
-        BROKEN = 2
-        DISCONNECTED = 3
+    EquipmentStatus = {\n
+        HEALTHY = 1\n
+        BROKEN = 2\n
+        DISCONNECTED = 3\n
         }
 
     """
@@ -173,25 +175,25 @@ async def update_equipment(
 
     user access to this [ ADMINISTRATOR ]
 
-    EquipmentType = {
-        CAMERA_ENTRANCE_DOOR = 1
-        CAMERA_EXIT_DOOR = 2
-        SENSOR = 3
-        ROADBLOCK = 4
-        DISPLAY = 5
-        ERS = 6
-        KIOSK = 7
-        PAYMENT_DEVICE = 8
-        REGIONAL_SWITCH = 9
-        REGIONAL_COMPUTER = 10
-        REGIONAL_CONTROLLER = 11
-        POS = 12
+    EquipmentType = {\n
+        CAMERA_ENTRANCE_DOOR = 1\n
+        CAMERA_EXIT_DOOR = 2\n
+        SENSOR = 3\n
+        ROADBLOCK = 4\n
+        DISPLAY = 5\n
+        CAMERA_DIRECTION_EXIT = 6\n
+        CAMERA_DIRECTION_ENTRANCE = 7\n
+        KIOSK = 8\n
+        PAYMENT_DEVICE = 9\n
+        REGIONAL_SWITCH = 10\n
+        REGIONAL_COMPUTER = 11\n
+        REGIONAL_CONTROLLER = 12\n
+        POS = 13\n
         }
-
-    EquipmentStatus = {
-        HEALTHY = 1
-        BROKEN = 2
-        DISCONNECTED = 3
+    EquipmentStatus = {\n
+        HEALTHY = 1\n
+        BROKEN = 2\n
+        DISCONNECTED = 3\n
         }
 
     """

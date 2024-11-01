@@ -186,7 +186,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
-        input_status: StatusRecord,
+        input_status: StatusRecord | None = None,
         zone_id: int | None = None,
     ):
         filters = [Record.is_deleted == False]

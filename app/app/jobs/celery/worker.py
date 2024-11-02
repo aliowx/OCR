@@ -243,7 +243,31 @@ def update_record(self, event_id) -> str:
                     latest_status=latest_status,
                 )
 
-            if event.type_event == TypeEvent.exitDoor.value:
+            if event.type_event in (TypeEvent.exitDoor.value) or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and (
+                    (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        and event.direction_info.get("direction") is None
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        and event.direction_info.get("direction") is None
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        and event.direction_info.get("direction") < 0
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        and event.direction_info.get("direction") > 0
+                    )
+                )
+            ):
                 record.camera_exit_id = event.camera_id
                 record.img_exit_id = event.lpr_image_id
                 record.img_plate_exit_id = event.plate_image_id

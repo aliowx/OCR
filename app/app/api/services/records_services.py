@@ -38,17 +38,23 @@ async def get_multi_by_filters(
 
 def set_detail_records(db: Session, record):
     if record is not None:
+        camera_entrance = equipment_repo.get(
+            db=db, id=record.camera_entrance_id
+        ).tag
+        camera_exit = equipment_repo.get(db=db, id=record.camera_exit_id).tag
+        zone_name = zone_repo.get(db=db, id=record.zone_id).name
+
         record_detail = schemas.RecordForWS(**record.__dict__)
         record_detail.zone_name = (
-            (zone_repo.get(db=db, id=record.zone_id)).name or None
+            zone_name if zone_name is not None else zone_name
         )
         record_detail.time_park = (
             (record.end_time - record.start_time).total_seconds() / 60
         ) or None
         record_detail.camera_entrance = (
-            equipment_repo.get(db=db, id=record.camera_entrance_id).tag
-        ) or None
+            camera_entrance if camera_entrance is not None else None
+        )
         record_detail.camera_exit = (
-            equipment_repo.get(db=db, id=record.camera_exit_id).tag
-        ) or None
+            camera_exit if camera_exit is not None else None
+        )
     return record_detail

@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   backend: &base
-    image: dr.iranmall.com/parking-backend:${TAG-latest}
+    image: iranmall-dr.3bam.org/parking-backend:${TAG-latest}
     environment:
       - BUILD_TYPE=backend
     build:

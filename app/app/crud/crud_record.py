@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -263,7 +263,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
         filters = [Record.is_deleted == False]
-        order_by = None
+
         # if jalali_date is not None:
         #     column_date_jalali_for_entrance = select(
         #         Record.id,
@@ -342,15 +342,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_score is not None:
             filters.append(Record.score >= params.input_score)
 
-        if params.sort_by_entrance_time is True:
-            order_by = Record.start_time.desc()
-        if params.sort_by_entrance_time is False:
-            order_by = Record.start_time.asc()
+        order_by = Record.id
+        if params.sort_by == schemas.record.SortBy.entrance_time:
+            order_by = Record.start_time
 
-        if params.sort_by_exit_time is True:
-            order_by = Record.end_time.desc()
-        if params.sort_by_exit_time is False:
-            order_by = Record.end_time.asc()
+        if params.sort_by == schemas.record.SortBy.exit_time:
+            order_by = Record.end_time
 
         if (
             params.input_entrance_persent_time is not None
@@ -371,7 +368,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                     query.filter(*filters)
                     .offset(params.skip)
                     .order_by(
-                        order_by if order_by is not None else Record.id.asc()
+                        order_by.asc() if params.asc else order_by.desc()
                     )
                 )
             ).fetchall()
@@ -383,7 +380,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .offset(params.skip)
                 .limit(params.limit)
                 .order_by(
-                    order_by if order_by is not None else Record.id.asc()
+                    order_by.asc() if params.asc else order_by.desc()
                 )
             )
         ).fetchall()

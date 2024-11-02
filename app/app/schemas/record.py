@@ -85,6 +85,11 @@ class RecordInDB(RecordInDBBase):
     pass
 
 
+class SortBy(str, Enum):
+    entrance_time = "entrance_time"
+    exit_time = "exit_time"
+
+
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
     input_zone_id: int | None = None
@@ -95,12 +100,12 @@ class ParamsRecord(BaseModel):
     input_score: float | None = None
     input_camera_entrance_id: int | None = None
     input_camera_exit_id: int | None = None
-    sort_by_entrance_time: bool | None = None
-    sort_by_exit_time: bool | None = True
+    sort_by: SortBy | None = None
     input_entrance_persent_time: datetime | None = None
     input_exit_persent_time: datetime | None = None
     skip: int | None = 0
     limit: int | None = 100
+    asc: bool | None = True
 
 
 class GetRecords(BaseModel):

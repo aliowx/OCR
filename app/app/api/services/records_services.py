@@ -2,6 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
 from typing import List, Optional
 from fastapi import Query
+from app.parking.repo import zone_repo, equipment_repo
+from sqlalchemy.orm import Session
 
 
 async def get_multi_by_filters(
@@ -32,3 +34,21 @@ async def get_multi_by_filters(
         record[0].camera_exit = record[4]
         resualt_record.append(record[0])
     return schemas.GetRecords(items=resualt_record, all_items_count=records[1])
+
+
+def set_detail_records(db: Session, record):
+    if record is not None:
+        record_detail = schemas.RecordForWS(**record.__dict__)
+        record_detail.zone_name = (
+            (zone_repo.get(db=db, id=record.zone_id)).name or None
+        )
+        record_detail.time_park = (
+            (record.end_time - record.start_time).total_seconds() / 60
+        ) or None
+        record_detail.camera_entrance = (
+            equipment_repo.get(db=db, id=record.camera_entrance_id).tag
+        ) or None
+        record_detail.camera_exit = (
+            equipment_repo.get(db=db, id=record.camera_exit_id).tag
+        ) or None
+    return record_detail

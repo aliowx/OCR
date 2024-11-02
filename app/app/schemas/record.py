@@ -80,6 +80,34 @@ class Record(RecordInDBBase):
     camera_exit: str | None = None
 
 
+class RecordForWS(RecordBase):
+    time_park: int | None = None
+    zone_name: str | None = None
+    camera_entrance: str | None = None
+    camera_exit: str | None = None
+
+    @field_validator("start_time", "end_time", mode="before")
+    def convert_utc_to_iran_time(cls, value):
+
+        if value:
+            if isinstance(value, str):
+                value = datetime.fromisoformat(value)
+            # Define Iran Standard Time timezone
+            iran_timezone = pytz.timezone("Asia/Tehran")
+
+            # If value is naive (no timezone), localize it to UTC
+            if value.tzinfo is None:
+                # Localize the naive datetime to UTC
+                utc_time = pytz.utc.localize(value)
+            else:
+                # If it's already timezone aware, convert to UTC
+                utc_time = value.astimezone(pytz.utc)
+
+            # Convert to Iran Standard Time
+            return utc_time.astimezone(iran_timezone)
+        return value
+
+
 # Properties properties stored in DB
 class RecordInDB(RecordInDBBase):
     pass

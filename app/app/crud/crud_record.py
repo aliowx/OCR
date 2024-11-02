@@ -19,6 +19,7 @@ from app.parking.models import Zone, Equipment
 from app.report.schemas import JalaliDate as JalaliDateReport
 from fastapi import Query
 import re
+from app.api.services import records_services
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -32,10 +33,14 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
-        redis_client.publish(
-            "records:1", rapidjson.dumps(jsonable_encoder(db_obj))
+        commit_record = self._commit_refresh(db=db, db_obj=db_obj)
+        ws_records = records_services.set_detail_records(
+            db, record=commit_record
         )
-        return self._commit_refresh(db=db, db_obj=db_obj)
+        redis_client.publish(
+            "records:1", rapidjson.dumps(jsonable_encoder(ws_records))
+        )
+        return commit_record
 
     def get_by_event(
         self,
@@ -379,9 +384,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 query.filter(*filters)
                 .offset(params.skip)
                 .limit(params.limit)
-                .order_by(
-                    order_by.asc() if params.asc else order_by.desc()
-                )
+                .order_by(order_by.asc() if params.asc else order_by.desc())
             )
         ).fetchall()
 

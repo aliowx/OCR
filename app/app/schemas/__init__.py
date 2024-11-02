@@ -50,4 +50,5 @@ from .record import (
     RecordUpdate,
     ParamsRecord,
     StatusRecord,
+    RecordForWS
 )

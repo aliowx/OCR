@@ -153,14 +153,6 @@ class ZoneRepository(CRUDBase[Zone, ZoneCreate, ZoneUpdate]):
                 )
             )
 
-    async def get(
-        self, db: Session | AsyncSession, id: int
-    ) -> ModelType | Awaitable[ModelType] | None:
-        query = select(self.model).filter(
-            self.model.id == id, self.model.is_deleted == False
-        )
-
-        return await self._first(db.scalars(query))
 
     async def get_multi_by_filter(
         self,

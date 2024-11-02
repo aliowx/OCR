@@ -212,14 +212,13 @@ async def effective_utilization_rate(
     for zone in get_zones:
         capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone.id)
 
-        records = await crud.record.get_present_in_parking(
+        records, toatl_count = await crud.record.get_present_in_parking(
             db,
             input_start_create_time=start_time_in,
             input_end_create_time=end_time_in,
             input_status=schemas.record.StatusRecord.finished,
             zone_id=zone.id,
         )
-        print(zone.id)
         total_park_time = timedelta(hours=0)
         for record in records:
             if (
@@ -511,7 +510,7 @@ async def get_parking_occupancy(
     capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone_id)
     resualt = []
     for date_time in range_date:
-        records = await crud.record.get_present_in_parking(
+        records, total_count = await crud.record.get_present_in_parking(
             db,
             input_start_create_time=date_time.get("start"),
             input_end_create_time=date_time.get("end"),
@@ -557,7 +556,7 @@ async def get_parking_occupancy(
                 "start": date_time.get("start"),
                 "end": date_time.get("end"),
                 "effective_utilization_rate": effective_utilization_rate,
-                "count": len(records),
+                "count": total_count,
             }
         )
     return resualt

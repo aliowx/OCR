@@ -95,9 +95,12 @@ class ParamsRecord(BaseModel):
     input_score: float | None = None
     input_camera_entrance_id: int | None = None
     input_camera_exit_id: int | None = None
+    sort_by_entrance_time: bool | None = None
+    sort_by_exit_time: bool | None = True
+    input_entrance_persent_time: datetime | None = None
+    input_exit_persent_time: datetime | None = None
     skip: int | None = 0
     limit: int | None = 100
-    asc: bool | None = False
 
 
 class GetRecords(BaseModel):

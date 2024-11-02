@@ -176,9 +176,13 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         query = select(Record).filter(*filters)
 
+        count = await db.scalar(
+            query.filter(*filters).with_only_columns(func.count())
+        )
+
         records = await self._all(db.scalars(query))
 
-        return records
+        return records, count
 
     async def get_present_in_parking_count(
         self,
@@ -236,7 +240,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         input_status_record: Optional[
             List[schemas.record.StatusRecord]
         ] = Query(None),
-        jalali_date: schemas.record.JalaliDate,
     ) -> list[Record] | Awaitable[list[Record]]:
 
         equipment_entance = aliased(Equipment)
@@ -260,7 +263,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
 
         filters = [Record.is_deleted == False]
-
+        order_by = None
         # if jalali_date is not None:
         #     column_date_jalali_for_entrance = select(
         #         Record.id,
@@ -339,6 +342,25 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if params.input_score is not None:
             filters.append(Record.score >= params.input_score)
 
+        if params.sort_by_entrance_time is True:
+            order_by = Record.start_time.desc()
+        if params.sort_by_entrance_time is False:
+            order_by = Record.start_time.asc()
+
+        if params.sort_by_exit_time is True:
+            order_by = Record.end_time.desc()
+        if params.sort_by_exit_time is False:
+            order_by = Record.end_time.asc()
+
+        if (
+            params.input_entrance_persent_time is not None
+            and params.input_exit_persent_time is not None
+        ):
+            filters.append(
+                Record.end_time >= params.input_entrance_persent_time
+            )
+            filters.append(Record.start_time <= params.input_exit_persent_time)
+
         all_items_count = await db.scalar(
             query.filter(*filters).with_only_columns(func.count())
         )
@@ -349,9 +371,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                     query.filter(*filters)
                     .offset(params.skip)
                     .order_by(
-                        Record.start_time.asc()
-                        if params.asc
-                        else Record.start_time.desc()
+                        order_by if order_by is not None else Record.id.asc()
                     )
                 )
             ).fetchall()
@@ -363,9 +383,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 .offset(params.skip)
                 .limit(params.limit)
                 .order_by(
-                    Record.start_time.asc()
-                    if params.asc
-                    else Record.start_time.desc()
+                    order_by if order_by is not None else Record.id.asc()
                 )
             )
         ).fetchall()

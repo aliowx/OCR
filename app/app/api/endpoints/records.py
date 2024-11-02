@@ -36,7 +36,6 @@ async def read_records(
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     record_in: schemas.ParamsRecord = Depends(),
-    jalali_date: schemas.record.JalaliDate = Depends(),
     input_status_record: Optional[List[schemas.record.StatusRecord]] = Query(
         None
     ),  # List of StatusRecord as query parameter
@@ -50,7 +49,6 @@ async def read_records(
         db,
         params=record_in,
         input_status_record=input_status_record,
-        jalali_date=jalali_date,
     )
 
     return APIResponse(records)

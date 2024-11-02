@@ -88,10 +88,9 @@ def update_record(self, event_id) -> str:
             status=StatusRecord.unfinished.value,
             for_update=True,
         )
-        if (
-            event.type_event
-            == TypeEvent.admin_exitRegistration_and_billIssuance.value
-            or event.type_event == TypeEvent.admin_exitRegistration.value
+        if event.type_event in (
+            TypeEvent.admin_exitRegistration_and_billIssuance.value,
+            TypeEvent.admin_exitRegistration.value,
         ):
             record = crud.record.get_by_event_by_admin(
                 db=self.session,
@@ -109,33 +108,32 @@ def update_record(self, event_id) -> str:
             and event.type_event
             != TypeEvent.admin_exitRegistration_and_billIssuance.value
         ) and (
-            (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
-                and event.camera_id
-                == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                and event.direction_info.get("direction") is None
-                and event.invalid == False
-            )
-            or (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
-                and event.camera_id
-                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                and event.direction_info.get("direction") is None
-                and event.invalid == False
-            )
-            or (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
-                and event.camera_id
-                == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                and event.direction_info.get("direction") > 0
-                and event.invalid == False
-            )
-            or (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
-                and event.camera_id
-                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                and event.direction_info.get("direction") < 0
-                and event.invalid == False
+            (event.type_event == TypeEvent.approaching_leaving_unknown.value)
+            and (
+                (
+                    event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                    and event.direction_info.get("direction") is None
+                    and event.invalid == False
+                )
+                or (
+                    event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                    and event.direction_info.get("direction") is None
+                    and event.invalid == False
+                )
+                or (
+                    event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                    and event.direction_info.get("direction") > 0
+                    and event.invalid == False
+                )
+                or (
+                    event.camera_id
+                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                    and event.direction_info.get("direction") < 0
+                    and event.invalid == False
+                )
             )
         ):
             record = schemas.RecordCreate(
@@ -197,42 +195,33 @@ def update_record(self, event_id) -> str:
         elif record:
             record_update = None
             latest_status = StatusRecord.unfinished.value
-            if (
-                event.type_event == TypeEvent.exitDoor.value
-                or event.type_event
-                == TypeEvent.admin_exitRegistration_and_billIssuance.value
-                or event.type_event == TypeEvent.admin_exitRegistration.value
-                or (
-                    event.type_event
-                    == TypeEvent.approaching_leaving_unknown.value
-                    and event.camera_id
-                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                    and event.direction_info.get("direction") is None
-                    and (event.invalid == False or event.invalid == True)
-                )
-                or (
-                    event.type_event
-                    == TypeEvent.approaching_leaving_unknown.value
-                    and event.camera_id
-                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                    and event.direction_info.get("direction") is None
-                    and (event.invalid == False or event.invalid == True)
-                )
-                or (
-                    event.type_event
-                    == TypeEvent.approaching_leaving_unknown.value
-                    and event.camera_id
-                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                    and event.direction_info.get("direction") < 0
-                    and (event.invalid == False or event.invalid == True)
-                )
-                or (
-                    event.type_event
-                    == TypeEvent.approaching_leaving_unknown.value
-                    and event.camera_id
-                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                    and event.direction_info.get("direction") > 0
-                    and (event.invalid == False or event.invalid == True)
+            if event.type_event in (
+                TypeEvent.exitDoor.value,
+                TypeEvent.admin_exitRegistration_and_billIssuance.value,
+                TypeEvent.admin_exitRegistration.value,
+            ) or (
+                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                and (
+                    (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        and event.direction_info.get("direction") is None
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        and event.direction_info.get("direction") is None
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        and event.direction_info.get("direction") < 0
+                    )
+                    or (
+                        event.camera_id
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        and event.direction_info.get("direction") > 0
+                    )
                 )
             ):
                 latest_status = StatusRecord.finished.value

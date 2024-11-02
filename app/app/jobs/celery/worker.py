@@ -108,7 +108,8 @@ def update_record(self, event_id) -> str:
             and event.type_event != TypeEvent.admin_exitRegistration.value
             and event.type_event
             != TypeEvent.admin_exitRegistration_and_billIssuance.value
-            or (
+        ) and (
+            (
                 event.type_event == TypeEvent.approaching_leaving_unknown.value
                 and event.camera_id
                 == EquipmentType.CAMERA_DIRECTION_EXIT.value

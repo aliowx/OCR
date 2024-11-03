@@ -33,14 +33,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
-        commit_record = self._commit_refresh(db=db, db_obj=db_obj)
-        ws_records = records_services.set_detail_records(
-            db, record=commit_record
-        )
         redis_client.publish(
-            "records:1", rapidjson.dumps(jsonable_encoder(ws_records))
+            "records:1", rapidjson.dumps(jsonable_encoder(db_obj))
         )
-        return commit_record
+        return self._commit_refresh(db=db, db_obj=db_obj)
 
     def get_by_event(
         self,

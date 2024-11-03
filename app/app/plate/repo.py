@@ -57,5 +57,18 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         )
         return resualt, total_count
 
+    async def get_by_plate(
+        self, db: AsyncSession, *, plate: list[str]
+    ) -> PlateList:
+
+        query = select(PlateList.plate)
+
+        filters = [PlateList.is_deleted == False]
+
+        if plate is not None:
+            filters.append(PlateList.plate.in_(plate))
+
+        return await self._all(db.scalars(query.filter(*filters)))
+
 
 plate_repo = CRUDPlate(PlateList)

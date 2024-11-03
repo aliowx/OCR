@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, utils
 from app.plate import schemas
@@ -11,7 +11,7 @@ from app.plate.services import plate as ServicePlate
 
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated
+from typing import Annotated, Any
 
 router = APIRouter()
 namespace = "plate"
@@ -75,6 +75,7 @@ async def create_Plate(
     Create new plate.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
+
     plate, count = await plate_repo.get_multi_by_filter(
         db, params=schemas.ParamsPlate(input_plate=plate_in.plate)
     )
@@ -85,6 +86,35 @@ async def create_Plate(
         )
     plate = await plate_repo.create(db, obj_in=plate_in.model_dump())
     return APIResponse(plate)
+
+
+@router.post("/excel")
+async def create_Plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[Any]:
+    """
+    Create new plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+
+    plates = await ServicePlate.create_multi_by_excel(db, file=file)
+
+    return APIResponse(plates)
+    
 
 
 @router.get("/{id}")

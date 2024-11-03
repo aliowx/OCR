@@ -3,11 +3,6 @@ from datetime import datetime
 from enum import Enum
 
 
-class PlateStatus(str, Enum):
-    valid = "valid"
-    invalid = "invalid"
-
-
 class PlateType(str, Enum):
     white = "white"
     black = "black"
@@ -16,10 +11,9 @@ class PlateType(str, Enum):
 class PlateBase(BaseModel):
     name: str | None = None
     plate: str | None = None
-    expire_start: datetime | None = None
-    expire_end: datetime | None = None
     type: PlateType | None = None
-    status: PlateStatus | None = None
+    vehicle_model: str | None = None
+    vehicle_color: str | None = None
 
 
 class PlateCreate(PlateBase): ...
@@ -42,10 +36,7 @@ class PlateList(PlateInDBBase): ...
 class ParamsPlate(BaseModel):
     input_name: str | None = None
     input_plate: str | None = None
-    input_expire_start: datetime | None = None
-    input_expire_end: datetime | None = None
     input_type: PlateType | None = None
-    input_status: PlateStatus | None = None
     size: int | None = 100
     page: int = 1
     asc: bool = True

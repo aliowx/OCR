@@ -161,6 +161,48 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.add(db_obj)
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
+    def create_multi(
+        self,
+        db: Session | AsyncSession,
+        *,
+        objs_in: CreateSchemaType | list,
+        commit: bool = True
+    ) -> ModelType | Awaitable[ModelType]:
+        # asyncpg raises DataError for str datetime fields
+        # jsonable_encoder converts datetime fields to str
+        # to avoid asyncpg error pass obj_in data as a dict
+        # with datetime fields with python datetime type
+        if not isinstance(objs_in, list):
+            objs_in = [objs_in]
+
+        obj_in_data_list = [
+            jsonable_encoder(item) if not isinstance(item, dict) else item
+            for item in objs_in
+        ]
+        db_objs = [
+            self.model(**obj_in_data) for obj_in_data in obj_in_data_list
+        ]
+
+        db.add_all(db_objs)
+
+        if commit:
+            if isinstance(db, AsyncSession):
+
+                async def async_commit_refresh():
+                    await db.commit()
+                    for db_obj in db_objs:
+                        await db.refresh(
+                            db_obj
+                        )  # Refresh each instance individually
+                    return db_objs
+
+                return async_commit_refresh()
+            else:
+                db.commit()
+                for db_obj in db_objs:
+                    db.refresh(db_obj)  # Refresh each instance individually
+                return db_objs
+
     def update(
         self,
         db: Session | AsyncSession,

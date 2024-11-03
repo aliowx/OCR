@@ -206,7 +206,9 @@ def update_record(self, event_id) -> str:
                 TypeEvent.admin_exitRegistration_and_billIssuance.value,
                 TypeEvent.admin_exitRegistration.value,
             ) or (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                event.type_event
+                == TypeEvent.approaching_leaving_unknown.value,
+                record.start_time + timedelta(minutes=5) < event.record_time
                 and (
                     (
                         event.camera_id
@@ -228,7 +230,7 @@ def update_record(self, event_id) -> str:
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") > 0
                     )
-                )
+                ),
             ):
                 latest_status = StatusRecord.finished.value
             if record.start_time > event.record_time:
@@ -250,7 +252,9 @@ def update_record(self, event_id) -> str:
                 )
 
             if event.type_event in (TypeEvent.exitDoor.value) or (
-                event.type_event == TypeEvent.approaching_leaving_unknown.value
+                event.type_event
+                == TypeEvent.approaching_leaving_unknown.value,
+                record.start_time + timedelta(minutes=5) < event.record_time
                 and (
                     (
                         event.camera_id
@@ -272,7 +276,7 @@ def update_record(self, event_id) -> str:
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") > 0
                     )
-                )
+                ),
             ):
                 record.camera_exit_id = event.camera_id
                 record.img_exit_id = event.lpr_image_id

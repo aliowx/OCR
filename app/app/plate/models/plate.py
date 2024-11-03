@@ -1,6 +1,7 @@
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
+from app.db.base_class import Base
 
 
 class PlateList(Base):

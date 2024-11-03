@@ -26,6 +26,8 @@ asgi-logger = "^0.1.0"
 python-rapidjson = "^1.16"
 psycopg2-binary = "^2.9.9"
 minio = "^7.2.9"
+pandas = "^2.2.3"
+openpyxl = "^3.1.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.2"

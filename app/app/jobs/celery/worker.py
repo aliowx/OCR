@@ -42,8 +42,14 @@ def add_events(self, event: dict) -> str:
     try:
         create_event = crud.event.create(db=self.session, obj_in=event)
         if create_event.invalid == False or (
-            create_event.invalid == True
-            and create_event.type_event == TypeEvent.exitDoor
+            (
+                create_event.invalid == True
+                and create_event.type_event == TypeEvent.exitDoor
+            )
+            or (
+                create_event.type_event
+                == TypeEvent.approaching_leaving_unknown
+            )
         ):
             celery_app.send_task(
                 "update_record",

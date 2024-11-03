@@ -87,7 +87,9 @@ def update_record(self, event_id) -> str:
         self.session.execute(text("LOCK TABLE event IN EXCLUSIVE MODE"))
         event = crud.event.get(self.session, event_id)
         payment_type = crud.parking_repo.get_main_parking_sync(db=self.session)
-
+        get_type_camera = crud.equipment_repo.get(
+            self.session, id=event.camera_id
+        ).equipment_type
         record = crud.record.get_by_event(
             db=self.session,
             plate=event,
@@ -117,25 +119,25 @@ def update_record(self, event_id) -> str:
             (event.type_event == TypeEvent.approaching_leaving_unknown.value)
             and (
                 (
-                    event.camera_id
+                    get_type_camera
                     == EquipmentType.CAMERA_DIRECTION_EXIT.value
                     and event.direction_info.get("direction") is None
                     and event.invalid == False
                 )
                 or (
-                    event.camera_id
+                    get_type_camera
                     == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                     and event.direction_info.get("direction") is None
                     and event.invalid == False
                 )
                 or (
-                    event.camera_id
+                    get_type_camera
                     == EquipmentType.CAMERA_DIRECTION_EXIT.value
                     and event.direction_info.get("direction") > 0
                     and event.invalid == False
                 )
                 or (
-                    event.camera_id
+                    get_type_camera
                     == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                     and event.direction_info.get("direction") < 0
                     and event.invalid == False
@@ -211,22 +213,22 @@ def update_record(self, event_id) -> str:
                 record.start_time + timedelta(minutes=5) < event.record_time
                 and (
                     (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_EXIT.value
                         and event.direction_info.get("direction") is None
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") is None
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_EXIT.value
                         and event.direction_info.get("direction") < 0
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") > 0
                     )
@@ -257,22 +259,22 @@ def update_record(self, event_id) -> str:
                 record.start_time + timedelta(minutes=5) < event.record_time
                 and (
                     (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_EXIT.value
                         and event.direction_info.get("direction") is None
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") is None
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_EXIT.value
                         and event.direction_info.get("direction") < 0
                     )
                     or (
-                        event.camera_id
+                        get_type_camera
                         == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                         and event.direction_info.get("direction") > 0
                     )

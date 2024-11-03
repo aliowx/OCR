@@ -1,6 +1,5 @@
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
-from app.db.base_class import Base, get_now_datetime_utc
 from datetime import datetime
 
 

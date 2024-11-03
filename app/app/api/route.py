@@ -9,6 +9,8 @@ from app.bill.router import router as bill_router
 from app.payment.router import router as payment_router
 from app.ticket.router import router as ticket_router
 from app.plate.router import router as plate_router
+from app.notifications.router import router as notification_router
+
 
 api_router = APIRouter()
 api_router.include_router(users_router, prefix="/user", tags=["users"])
@@ -23,3 +25,4 @@ api_router.include_router(bill_router)
 api_router.include_router(payment_router)
 api_router.include_router(ticket_router)
 api_router.include_router(plate_router)
+api_router.include_router(notification_router)

@@ -128,7 +128,7 @@ class ParamsRecord(BaseModel):
     input_score: float | None = None
     input_camera_entrance_id: int | None = None
     input_camera_exit_id: int | None = None
-    sort_by: SortBy | None = None
+    sort_by: SortBy | None = SortBy.exit_time
     input_entrance_persent_time: datetime | None = None
     input_exit_persent_time: datetime | None = None
     skip: int | None = 0

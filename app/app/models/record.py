@@ -13,12 +13,12 @@ class Record(Base):
 
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=get_now_datetime_utc,
+        nullable=True,
         index=True,
     )
     end_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default=get_now_datetime_utc,
+        nullable=True,
         index=True,
     )
 

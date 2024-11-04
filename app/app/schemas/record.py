@@ -31,8 +31,6 @@ class RecordBase(BaseModel):
 # Properties to receive on item creation
 class RecordCreate(RecordBase):
     plate: str
-    start_time: datetime
-    end_time: datetime
     zone_id: int
     latest_status: StatusRecord
 

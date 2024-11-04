@@ -257,9 +257,12 @@ def update_record(self, event_id) -> str:
                 )
 
             if event.type_event in (TypeEvent.exitDoor.value) or (
-                event.type_event
-                == TypeEvent.approaching_leaving_unknown.value,
-                record.start_time + timedelta(minutes=5) < event.record_time
+                (
+                    event.type_event
+                    in TypeEvent.approaching_leaving_unknown.value
+                    and record.start_time + timedelta(minutes=5)
+                    < event.record_time
+                )
                 and (
                     (
                         get_type_camera

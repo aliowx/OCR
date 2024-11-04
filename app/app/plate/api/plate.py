@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, utils
 from app.plate import schemas
@@ -8,7 +8,7 @@ from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType, PaginatedContent
 from app.plate.services import plate as ServicePlate
-
+from collections import Counter
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
@@ -68,24 +68,51 @@ async def create_Plate(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
-    plate_in: schemas.PlateCreate,
+    plates_in: list[schemas.PlateCreate],
     current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> APIResponseType[schemas.PlateList]:
+) -> APIResponseType[Any]:
     """
     Create new plate.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    plate, count = await plate_repo.get_multi_by_filter(
-        db, params=schemas.ParamsPlate(input_plate=plate_in.plate)
+    list_plate = [plate.plate for plate in plates_in]
+    # Count occurrences of each plate number
+    plate_counts = Counter(list_plate)
+
+    # Find and print duplicate plates
+    duplicates = {plate for plate, count in plate_counts.items() if count > 1}
+
+    list_duplicate = [plates_duplicates for plates_duplicates in duplicates]
+
+    new_plates_in = [
+        plate for plate in plates_in if plate.plate not in duplicates
+    ]
+
+    plates_exist = await plate_repo.get_multi_by_plate(
+        db=db, plate=[plate.plate for plate in new_plates_in]
     )
-    if count > 0:
-        raise exc.ServiceFailure(
-            detail="plate already",
-            msg_code=utils.MessageCodes.not_found,
-        )
-    plate = await plate_repo.create(db, obj_in=plate_in.model_dump())
-    return APIResponse(plate)
+
+    pop_plates = set(
+        plate for plate in plates_exist
+    )  # Convert to set for faster lookup
+
+    # Filter out plates that already exist in the database
+    new_plates = [
+        plate.model_dump()
+        for plate in new_plates_in
+        if plate.plate not in pop_plates
+    ]
+    plate = await plate_repo.create_multi(db, objs_in=new_plates)
+    return APIResponse(
+        [
+            {
+                "new": plate,
+                "exists": pop_plates,
+                "duplicates": list(list_duplicate),
+            }
+        ]
+    )
 
 
 @router.post("/excel")
@@ -103,6 +130,7 @@ async def create_Plate(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
+    type_list: schemas.PlateType = Query(...),
     file: UploadFile = File(...),
     current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[Any]:
@@ -111,7 +139,9 @@ async def create_Plate(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    plates = await ServicePlate.create_multi_by_excel(db, file=file)
+    plates = await ServicePlate.create_multi_by_excel(
+        db, file=file, type_list=type_list
+    )
 
     return APIResponse(plates)
 

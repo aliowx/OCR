@@ -20,3 +20,7 @@ class PlateList(Base):
     vehicle_color: Mapped[str] = mapped_column(
         String, nullable=True, index=True
     )
+
+    phone_number: Mapped[str] = mapped_column(
+        String, nullable=True, index=True
+    )

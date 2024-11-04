@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from .models.plate import PlateList
-from .schemas import PlateCreate, PlateUpdate, ParamsPlate
+from .schemas import PlateCreate, PlateUpdate, ParamsPlate, PlateType
 import re
 
 
@@ -57,8 +57,12 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         )
         return resualt, total_count
 
-    async def get_by_plate(
-        self, db: AsyncSession, *, plate: list[str]
+    async def get_multi_by_plate(
+        self,
+        db: AsyncSession,
+        *,
+        plate: list[str],
+        type_list: PlateType | None = None
     ) -> PlateList:
 
         query = select(PlateList.plate)
@@ -67,6 +71,9 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
 
         if plate is not None:
             filters.append(PlateList.plate.in_(plate))
+
+        if type_list is not None:
+            filters.append(PlateList.type == type_list)
 
         return await self._all(db.scalars(query.filter(*filters)))
 

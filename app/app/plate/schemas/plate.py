@@ -6,6 +6,7 @@ from enum import Enum
 class PlateType(str, Enum):
     white = "white"
     black = "black"
+    phone = "phone"
 
 
 class PlateBase(BaseModel):
@@ -14,6 +15,7 @@ class PlateBase(BaseModel):
     type: PlateType | None = None
     vehicle_model: str | None = None
     vehicle_color: str | None = None
+    phone_number: str | None = None
 
 
 class PlateCreate(PlateBase): ...

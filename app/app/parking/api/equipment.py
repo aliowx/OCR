@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models
@@ -17,7 +17,9 @@ from app.utils import (
 )
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated
+from typing import Annotated, Optional
+from app.models.base import EquipmentType
+
 
 router = APIRouter()
 namespace = "equipments"
@@ -39,6 +41,8 @@ async def read_equipments(
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    type_eq: Optional[list[EquipmentType]] = Query(None),
     params: schemas.FilterEquipmentsParams = Depends(),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[PaginatedContent[list[schemas.Equipment]]]:
@@ -68,7 +72,9 @@ async def read_equipments(
 
     """
 
-    equipments = await equipment_services.read_equipments(db, params=params)
+    equipments = await equipment_services.get_multi_quipments(
+        db, params=params, type_eq=type_eq
+    )
     return APIResponse(equipments)
 
 

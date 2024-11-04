@@ -4,33 +4,28 @@ from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
 from app.parking.repo import equipment_repo, zone_repo
 from app.parking.schemas import equipment as schemas
-from app.parking.schemas import Zone as schemasZone
 from app.utils import MessageCodes, PaginatedContent
-from pydantic import TypeAdapter
+from typing import Optional
+from app.models.base import EquipmentType
 
 
 async def get_multi_quipments(
-    db: AsyncSession, params: schemas.FilterEquipmentsParams
-):
-    equipments, total_count = await equipment_repo.get_multi_with_filters(
-        db, params=params
-    )
-    return [equipments, total_count]
-
-
-async def read_equipments(
-    db: AsyncSession, params: schemas.FilterEquipmentsParams
+    db: AsyncSession,
+    params: schemas.FilterEquipmentsParams,
+    type_eq: Optional[list[EquipmentType]],
 ) -> PaginatedContent[list[schemas.Equipment]]:
-    equipments, total_count = await get_multi_quipments(db, params)
-    adapter = TypeAdapter(schemasZone)
-    for zone in equipments:
-        zone_detail = await zone_repo.get(db, id=zone.zone_id)
-        if zone_detail:
-            zone.zone_detail = jsonable_encoder(
-                adapter.validate_python(zone_detail, from_attributes=True)
-            )
+
+    equipments, total_count = await equipment_repo.get_multi_with_filters(
+        db, params=params, type_eq=type_eq
+    )
+    # equipments[0] --> equipment
+    # equipments[1] --> zone
+    resualt = []
+    for eq, zone in equipments:
+        eq.zone = zone
+        resualt.append(eq)
     return PaginatedContent(
-        data=equipments,
+        data=resualt,
         total_count=total_count,
         size=params.size,
         page=params.page,

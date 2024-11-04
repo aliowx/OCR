@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from app.models.base import EquipmentStatus, EquipmentType
+from app.parking.schemas.zone import Zone
 
 
 class EquipmentBase(BaseModel):
@@ -11,7 +12,6 @@ class EquipmentBase(BaseModel):
     serial_number: str | None = None
     ip_address: str | None = None
     zone_id: int | None = None
-    zone_detail: dict | None = None
     image_id: int | None = None
     tag: str | None = None
     additional_data: dict | None = None
@@ -38,7 +38,8 @@ class EquipmentInDBBase(EquipmentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Equipment(EquipmentInDBBase): ...
+class Equipment(EquipmentInDBBase):
+    zone: Zone | None = None
 
 
 class EquipmentInDB(EquipmentInDBBase): ...
@@ -48,7 +49,6 @@ class FilterEquipmentsParams(BaseModel):
     ip_address: str | None = None
     serial_number: str | None = None
     zone_id: int | None = None
-    equipment_type: Optional[EquipmentType] = None
     equipment_status: Optional[EquipmentStatus] = None
     tag: str | None = None
     start_date: datetime | None = None

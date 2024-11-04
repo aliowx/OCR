@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.db.base_class import Base
-
+from typing import Optional
 from .models import (
     Equipment,
     Parking,
@@ -272,17 +272,20 @@ class EquipmentRepository(
         db: AsyncSession,
         *,
         params: FilterEquipmentsParams,
+        type_eq: Optional[list[EquipmentType]],
     ) -> tuple[list[Equipment], int]:
 
         filters = [Equipment.is_deleted == false()]
 
-        query = select(Equipment)
+        query = select(Equipment, Zone).outerjoin(
+            Zone, Equipment.zone_id == Zone.id
+        )
 
         if params.zone_id:
             filters.append(self.model.zone_id == params.zone_id)
 
-        if params.equipment_type:
-            filters.append(self.model.equipment_type == params.equipment_type)
+        if type_eq is not None:
+            filters.append(self.model.equipment_type.in_(type_eq))
 
         if params.equipment_status:
             filters.append(
@@ -306,19 +309,21 @@ class EquipmentRepository(
 
         if params.size is None:
             return (
-                await self._all(
-                    db.scalars(query.filter(*filters).offset(params.skip))
-                ),
+                (
+                    await db.execute(
+                        query.filter(*filters).offset(params.skip)
+                    )
+                ).fetchall(),
                 await total_count,
             )
         return (
-            await self._all(
-                db.scalars(
+            (
+                await db.execute(
                     query.filter(*filters)
                     .offset(params.skip)
                     .limit(params.size)
                 )
-            ),
+            ).fetchall(),
             await total_count,
         )
 

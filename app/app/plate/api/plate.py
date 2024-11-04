@@ -90,7 +90,9 @@ async def create_Plate(
     ]
 
     plates_exist = await plate_repo.get_multi_by_plate(
-        db=db, plate=[plate.plate for plate in new_plates_in]
+        db=db,
+        plate=[plate.plate for plate in new_plates_in],
+        type_list=plates_in[0].type.value,
     )
 
     pop_plates = set(

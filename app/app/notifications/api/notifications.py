@@ -12,6 +12,8 @@ from cache.redis import redis_connect_async
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
+import rapidjson
+
 
 router = APIRouter()
 namespace = "notifications"
@@ -78,9 +80,10 @@ async def create_notifications(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    notifications = await notifications_repo.create(db, obj_in=notifications_in.model_dump())
+    notifications = await notifications_repo.create(
+        db, obj_in=notifications_in.model_dump()
+    )
     return APIResponse(notifications)
-
 
 
 @router.get("/{id}")
@@ -141,7 +144,9 @@ async def delete_notifications(
             detail="notifications not found",
             msg_code=utils.MessageCodes.not_found,
         )
-    del_notifications = await notifications_repo.remove(db, id=notifications.id, commit=True)
+    del_notifications = await notifications_repo.remove(
+        db, id=notifications.id, commit=True
+    )
     return APIResponse(del_notifications)
 
 
@@ -180,12 +185,12 @@ async def update_notifications(
     return APIResponse(notifications)
 
 
-@router.websocket("/notification")
+@router.websocket("/notifications")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connection = await redis_connect_async(240)  # 3 mins
     async with connection.pubsub() as channel:
-        await channel.subscribe("notification")
+        await channel.subscribe("notifications")
         try:
             while True:
                 data = await channel.get_message(
@@ -193,7 +198,19 @@ async def websocket_endpoint(websocket: WebSocket):
                 )
                 # data = await websocket.receive_text()
                 if data and "data" in data:
-                    print(data["data"])
-                    await websocket.send_text(data["data"])
-        except:
-            channel.unsubscribe("notification")
+                    try:
+                        # Decode JSON data if it’s a JSON string
+                        message = rapidjson.loads(data["data"])
+                        await websocket.send_json(
+                            message
+                        )  # Send JSON data directly to WebSocket
+                    except (rapidjson.JSONDecodeError, TypeError) as e:
+                        print(f"Error decoding message: {e}")
+                        await websocket.send_text(
+                            "Error: Invalid message format."
+                        )
+        except Exception as e:
+            print(f"Exception in WebSocket connection: {e}")
+            await channel.unsubscribe("notifications")
+        finally:
+            await websocket.close()

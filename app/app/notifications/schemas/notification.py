@@ -6,7 +6,7 @@ from app.plate.schemas import PlateList
 
 class NotificationsBase(BaseModel):
     plate_list_id: int | None = None
-    read: bool | None = None
+    is_read: bool | None = False
 
 
 class NotificationsCreate(NotificationsBase): ...

@@ -3,7 +3,6 @@ import math
 import random
 from datetime import datetime, timedelta, UTC
 from sqlalchemy import text
-
 from fastapi.encoders import jsonable_encoder
 from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
@@ -19,6 +18,9 @@ from app.plate.repo import plate_repo
 from app.db.init_data_fake import create_events
 from app.notifications.repo import notifications_repo
 from app.notifications.schemas import NotificationsCreate
+from app.plate.schemas import PlateType
+from app.plate.models import PlateList as PlateModel
+
 
 namespace = "job worker"
 logger = logging.getLogger(__name__)
@@ -43,7 +45,9 @@ def add_events(self, event: dict) -> str:
     try:
         create_event = crud.event.create(db=self.session, obj_in=event)
         for item in get_plate_black_white_list:
-            if item.plate == create_event.plate:
+            if (
+                item.plate == create_event.plate
+            ) and item.type == PlateType.black.value:
                 notification = notifications_repo.create(
                     self.session,
                     obj_in=NotificationsCreate(plate_list_id=item.id),
@@ -51,14 +55,23 @@ def add_events(self, event: dict) -> str:
                 logger.info(
                     f"find plate ===> {item.plate} with event id {create_event.id}"
                 )
+                notice = jsonable_encoder(item)
+                zone_name = (
+                    self.session.query(models.Zone.name)
+                    .filter(create_event.zone_id == models.Zone.id)
+                    .first()
+                )
+                notice["zone_name"] = zone_name[0] if zone_name else None
+
+                camera_name = (
+                    self.session.query(models.Equipment.tag)
+                    .filter(create_event.camera_id == models.Equipment.id)
+                    .first()
+                )
+                notice["camera_name"] = camera_name[0] if camera_name else None
                 redis_client.publish(
                     "notifications",
-                    rapidjson.dumps(
-                        [
-                            jsonable_encoder(item),
-                            jsonable_encoder(create_event),
-                        ]
-                    ),
+                    rapidjson.dumps(notice),
                 )
         if create_event.invalid == False or (
             (
@@ -93,7 +106,6 @@ def add_events(self, event: dict) -> str:
 )
 def update_record(self, event_id) -> str:
     logger.info(f"******** update_record: {event_id}")
-
     if event_id == {}:
         logger.warning(f"Invalid event id found: {event_id}")
         return None
@@ -129,93 +141,93 @@ def update_record(self, event_id) -> str:
                 for_update=True,
             )
         if (
-            record is None
-            and event.type_event != TypeEvent.admin_exitRegistration.value
-            and event.type_event
-            != TypeEvent.admin_exitRegistration_and_billIssuance.value
-        ) and (
-            (event.type_event == TypeEvent.approaching_leaving_unknown.value)
+            (record is None)
+            and (event.type_event != TypeEvent.admin_exitRegistration.value)
+            and (
+                event.type_event
+                != TypeEvent.admin_exitRegistration_and_billIssuance.value
+            )
             and (
                 (
-                    get_type_camera
-                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                    and event.direction_info.get("direction") is None
-                    and event.invalid == False
+                    event.type_event
+                    == TypeEvent.approaching_leaving_unknown.value
                 )
-                or (
-                    get_type_camera
-                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                    and event.direction_info.get("direction") is None
-                    and event.invalid == False
-                )
-                or (
-                    get_type_camera
-                    == EquipmentType.CAMERA_DIRECTION_EXIT.value
-                    and (
-                        event.direction_info.get("direction") > 0
-                        or event.direction_info.get("direction") < 0
-                    )
-                    and event.invalid == False
-                )
-                or (
-                    get_type_camera
-                    == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
-                    and (
-                        event.direction_info.get("direction") < 0
-                        or event.direction_info.get("direction") > 0
-                    )
-                    and event.invalid == False
-                )
+                and (event.invalid == False)
             )
         ):
             set_latest_status = StatusRecord.unfinished.value
-            start_time = None
-            end_time = None
-            if event.type_event != TypeEvent.exitDoor.value or not (
-                (
+            img_entrance_id = event.lpr_image_id
+            img_plate_entrance_id = event.plate_image_id
+            img_exit_id = None
+            img_plate_exit_id = None
+            if (
+                event.type_event in (TypeEvent.exitDoor.value)
+                or (
+                    event.type_event
+                    in (TypeEvent.approaching_leaving_unknown.value)
+                    and event.direction_info.get("direction") != None
+                )
+                and (
                     (
                         get_type_camera
-                        in (EquipmentType.CAMERA_DIRECTION_EXIT.value)
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
                     )
                     and (event.direction_info.get("direction") < 0)
                     or (
                         get_type_camera
-                        in (EquipmentType.CAMERA_DIRECTION_ENTRANCE.value)
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
                     )
                     and (event.direction_info.get("direction") > 0)
                 )
             ):
-                start_time = event.record_time
-                set_latest_status = StatusRecord.unfinished.value
-            if event.type_event in (TypeEvent.exitDoor.value) or (
-                (
-                    get_type_camera
-                    in (EquipmentType.CAMERA_DIRECTION_EXIT.value)
-                )
-                and (event.direction_info.get("direction") < 0)
-                or (
-                    get_type_camera
-                    in (EquipmentType.CAMERA_DIRECTION_ENTRANCE.value)
-                )
-                and (event.direction_info.get("direction") > 0)
-            ):
-                end_time = event.record_time
                 set_latest_status = StatusRecord.unknown.value
+                img_exit_id = event.lpr_image_id
+                img_plate_exit_id = event.plate_image_id
+                img_entrance_id = None
+                img_plate_entrance_id = None
+
             record = schemas.RecordCreate(
                 plate=event.plate,
-                start_time=start_time,
-                end_time=end_time,
+                start_time=event.record_time,
+                end_time=event.record_time,
                 score=0.01,
-                img_entrance_id=event.lpr_image_id,
-                img_plate_entrance_id=event.plate_image_id,
+                img_entrance_id=img_entrance_id,
+                img_plate_entrance_id=img_plate_entrance_id,
                 spot_id=event.spot_id,
                 zone_id=event.zone_id,
                 latest_status=set_latest_status,
                 camera_entrance_id=event.camera_id,
+                img_exit_id=img_exit_id,
+                img_plate_exit_id=img_plate_exit_id,
             )
             record = crud.record.create(db=self.session, obj_in=record)
-            if payment_type.payment_type in (
-                models.base.ParkingPaymentType.BEFORE_ENTER.value
+
+            if (
+                payment_type.payment_type
+                == models.base.ParkingPaymentType.BEFORE_ENTER.value
+                and (event.direction_info.get("direction") != None)
+                and not (
+                    (
+                        get_type_camera
+                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                    )
+                    and (event.direction_info.get("direction") < 0)
+                    or (
+                        get_type_camera
+                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                    )
+                    and (event.direction_info.get("direction") > 0)
+                )
+                and (
+                    bool(
+                        self.session.query(PlateModel)
+                        .filter(
+                            PlateModel.plate == event.plate,
+                            PlateModel.type != PlateType.white,
+                        )
+                        .first()
+                    )
+                )
             ):
                 price, get_price = calculate_price(
                     self.session,
@@ -278,8 +290,10 @@ def update_record(self, event_id) -> str:
                             EquipmentType.CAMERA_DIRECTION_EXIT.value,
                         )
                         and event.direction_info.get("direction") is None
-                        and record.start_time + timedelta(minutes=3)
-                        < event.record_time
+                        and (
+                            record.start_time + timedelta(minutes=3)
+                            < event.record_time
+                        )
                     )
                     or (
                         get_type_camera
@@ -320,7 +334,7 @@ def update_record(self, event_id) -> str:
                             in (TypeEvent.approaching_leaving_unknown.value)
                         )
                         and (
-                            record.start_time + timedelta(minutes=5)
+                            record.start_time + timedelta(minutes=3)
                             < event.record_time
                         )
                     )

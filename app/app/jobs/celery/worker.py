@@ -208,9 +208,12 @@ def update_record(self, event_id) -> str:
                 TypeEvent.admin_exitRegistration_and_billIssuance.value,
                 TypeEvent.admin_exitRegistration.value,
             ) or (
-                event.type_event
-                == TypeEvent.approaching_leaving_unknown.value,
-                record.start_time + timedelta(minutes=5) < event.record_time
+                (
+                    event.type_event
+                    in (TypeEvent.approaching_leaving_unknown.value)
+                    and record.start_time + timedelta(minutes=5)
+                    < event.record_time
+                )
                 and (
                     (
                         get_type_camera

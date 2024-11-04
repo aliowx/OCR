@@ -140,20 +140,17 @@ def update_record(self, event_id) -> str:
                 ],
                 for_update=True,
             )
-        if (
-            (record is None)
-            and (event.type_event != TypeEvent.admin_exitRegistration.value)
-            and (
-                event.type_event
-                != TypeEvent.admin_exitRegistration_and_billIssuance.value
-            )
-            and (
+        if (record is None) and (
+            event.type_event != TypeEvent.admin_exitRegistration.value,
+            event.type_event
+            != TypeEvent.admin_exitRegistration_and_billIssuance.value,
+            (
                 (
                     event.type_event
                     == TypeEvent.approaching_leaving_unknown.value
                 )
                 and (event.invalid == False)
-            )
+            ),
         ):
             set_latest_status = StatusRecord.unfinished.value
             img_entrance_id = event.lpr_image_id
@@ -169,15 +166,21 @@ def update_record(self, event_id) -> str:
                 )
                 and (
                     (
-                        get_type_camera
-                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        (
+                            get_type_camera
+                            == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        )
+                        and (event.direction_info.get("direction") < 0)
                     )
-                    and (event.direction_info.get("direction") < 0)
                     or (
-                        get_type_camera
-                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        (
+                            (
+                                get_type_camera
+                                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                            )
+                            and (event.direction_info.get("direction") > 0)
+                        )
                     )
-                    and (event.direction_info.get("direction") > 0)
                 )
             ):
                 set_latest_status = StatusRecord.unknown.value
@@ -208,15 +211,21 @@ def update_record(self, event_id) -> str:
                 and (event.direction_info.get("direction") != None)
                 and not (
                     (
-                        get_type_camera
-                        == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        (
+                            get_type_camera
+                            == EquipmentType.CAMERA_DIRECTION_EXIT.value
+                        )
+                        and (event.direction_info.get("direction") < 0)
                     )
-                    and (event.direction_info.get("direction") < 0)
                     or (
-                        get_type_camera
-                        == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                        (
+                            (
+                                get_type_camera
+                                == EquipmentType.CAMERA_DIRECTION_ENTRANCE.value
+                            )
+                            and (event.direction_info.get("direction") > 0)
+                        )
                     )
-                    and (event.direction_info.get("direction") > 0)
                 )
                 and (
                     bool(

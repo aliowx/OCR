@@ -196,7 +196,7 @@ def update_record(self, event_id) -> str:
         )
 
         logger.info(
-            f"update_record: {event_id}, {record.id}, {direction}, {get_type_camera}, {event.camera_id}"
+            f"update_record: {event_id}, {record}, {direction}, {get_type_camera}, {event.camera_id}"
         )
 
         if record is None:

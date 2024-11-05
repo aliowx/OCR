@@ -209,6 +209,11 @@ async def effective_utilization_rate(
 
     get_zones = await crud.zone_repo.get_multi(db, limit=None)
     zone_effective_utilization_rate = []
+    time_difference = (end_time_in - start_time_in).days
+
+    if time_difference <= 0:
+        time_difference = 1
+
     for zone in get_zones:
         capacity_zone = await crud.zone_repo.get_capacity(db, zone_id=zone.id)
 
@@ -251,7 +256,7 @@ async def effective_utilization_rate(
                 (
                     (
                         (total_park_time.total_seconds() / 3600)
-                        / (capacity_zone * 24)
+                        / (capacity_zone * 24 * time_difference)
                     )
                     * 100
                 ),

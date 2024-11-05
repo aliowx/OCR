@@ -24,16 +24,8 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
             filters.append(PlateList.plate.like(value_plate))
 
         if params.input_name is not None:
-            filters.append(PlateList.name == params.input_name)
-
-        if params.input_expire_start is not None:
-            filters.append(PlateList.expire_start >= params.input_expire_start)
-
-        if params.input_expire_end is not None:
-            filters.append(PlateList.expire_end <= params.input_expire_end)
-
-        if params.input_status is not None:
-            filters.append(PlateList.status == params.input_status)
+            if "%" not in params.input_name:
+                filters.append(PlateList.name.ilike(f"%{params.input_name}%"))
 
         if params.input_type is not None:
             filters.append(PlateList.type == params.input_type)
@@ -62,7 +54,7 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         db: AsyncSession,
         *,
         plate: list[str],
-        type_list: PlateType | None = None
+        type_list: PlateType | None = None,
     ) -> PlateList:
 
         query = select(PlateList.plate)

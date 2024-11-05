@@ -47,7 +47,7 @@ def add_events(self, event: dict) -> str:
         black_list = (
             self.session.query(PlateList)
             .filter(
-                PlateList.plate == event.plate,
+                PlateList.plate == create_event.plate,
                 PlateList.type == PlateType.black,
             )
             .first()

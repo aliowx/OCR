@@ -12,6 +12,7 @@ from collections import Counter
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 namespace = "plate"
@@ -51,6 +52,30 @@ async def read_plate(
             page=params.page,
         )
     )
+
+
+@router.get("/list-action")
+async def list_action(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[list[str]]:
+    """
+    Retrieve plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    plate_types = [ptype.value for ptype in schemas.PlateType]
+    return APIResponse(plate_types)
 
 
 @router.post("/")

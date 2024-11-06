@@ -28,12 +28,11 @@ def generate_excel_stream(data: dict, title: str = "Report") -> BytesIO:
     output = BytesIO()
     df = pd.DataFrame(data)
 
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    with pd.ExcelWriter(output) as writer:
         df.style.set_properties(**{"text-align": "center"}).to_excel(
-            writer,
-            title,
+            excel_writer=writer,
+            sheet_name=title,
             index=False,
-            na_rep="-",
         )
         worksheet = writer.sheets[title]
 
@@ -55,7 +54,7 @@ def get_excel_file_response(
         title=title,
     )
     headers = {
-        "Content-Desposition": "attachment; filename=report.xlsx; filename*=UTF-8''report.xlsx",
+        "Content-Disposition": f"attachment; filename={title}.xlsx; filename*=UTF-8''{title}.xlsx",
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;",
     }
 

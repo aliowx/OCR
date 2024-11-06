@@ -7,16 +7,21 @@ from fastapi.responses import StreamingResponse
 from pandas import ExcelWriter
 from pathlib import Path
 
+
 def generate_excel_file(
-    data: dict, path: str = str(Path.home() / "Downloads") + "/", title: str = "Report"
+    data: dict,
+    path: str = str(Path.home() / "Downloads") + "/",
+    title: str = "Report",
 ) -> tuple[str, str]:
     file_name = "{}-{}.xlsx".format(title, str(uuid.uuid4()))
     file_path = path + file_name
     df = pd.DataFrame(data)
     writer = ExcelWriter(file_path)
-    df.to_excel(writer, title, index=False, na_rep="-")
+    df.to_excel(
+        excel_writer=writer, sheet_name=title, index=False, engine="openpyxl"
+    )
     writer.close()
-    return file_path,file_name
+    return file_path, file_name
 
 
 def generate_excel_stream(data: dict, title: str = "Report") -> BytesIO:

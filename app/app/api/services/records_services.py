@@ -14,11 +14,15 @@ async def get_multi_by_filters(
     input_status_record: Optional[List[schemas.record.StatusRecord]] = Query(
         None
     ),
+    input_camera_entrance_id: Optional[list[int]] = Query(None),
+    input_camera_exit_id: Optional[list[int]] = Query(None),
 ):
     records = await crud.record.get_multi_by_filters(
         db=db,
         params=params,
         input_status_record=input_status_record,
+        input_camera_entrance_id=input_camera_entrance_id,
+        input_camera_exit_id=input_camera_exit_id,
     )
     ## ---> records
     #                   --> record[0] ==> records
@@ -35,5 +39,3 @@ async def get_multi_by_filters(
         record[0].camera_exit = record[4]
         resualt_record.append(record[0])
     return schemas.GetRecords(items=resualt_record, all_items_count=records[1])
-
-

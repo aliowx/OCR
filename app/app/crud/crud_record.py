@@ -241,6 +241,8 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         input_status_record: Optional[
             List[schemas.record.StatusRecord]
         ] = Query(None),
+        input_camera_entrance_id: Optional[list[int]] = Query(None),
+        input_camera_exit_id: Optional[list[int]] = Query(None),
     ) -> list[Record] | Awaitable[list[Record]]:
 
         equipment_entance = aliased(Equipment)
@@ -310,14 +312,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             value_plate = params.input_plate.replace("?", "_")
             filters.append(Record.plate.like(value_plate))
 
-        if params.input_camera_exit_id is not None:
-            filters.append(
-                Record.camera_exit_id == params.input_camera_exit_id
-            )
+        if input_camera_exit_id is not None:
+            filters.append(Record.camera_exit_id.in_(input_camera_exit_id))
 
-        if params.input_camera_entrance_id is not None:
+        if input_camera_entrance_id is not None:
             filters.append(
-                Record.camera_entrance_id == params.input_camera_entrance_id
+                Record.camera_entrance_id.in_(input_camera_entrance_id)
             )
 
         if params.input_zone_id is not None:

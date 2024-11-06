@@ -38,7 +38,9 @@ async def read_records(
     record_in: schemas.ParamsRecord = Depends(),
     input_status_record: Optional[List[schemas.record.StatusRecord]] = Query(
         None
-    ),  # List of StatusRecord as query parameter
+    ),
+    input_camera_entrance_id: Optional[list[int]] = Query(None),
+    input_camera_exit_id: Optional[list[int]] = Query(None),
 ) -> APIResponseType[schemas.GetRecords]:
     """
     All record
@@ -49,6 +51,8 @@ async def read_records(
         db,
         params=record_in,
         input_status_record=input_status_record,
+        input_camera_entrance_id=input_camera_entrance_id,
+        input_camera_exit_id=input_camera_exit_id,
     )
 
     return APIResponse(records)

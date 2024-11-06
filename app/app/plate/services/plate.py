@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.plate.schemas.plate import ParamsPlate, PlateCreate, PlateType
 from app.plate.repo import plate_repo
-from fastapi import Query, UploadFile
+from fastapi import UploadFile
 import io
 import pandas as pd
 from collections import Counter
+import re
 
 
 async def get_multi_plate_by_filter(db: AsyncSession, *, params: ParamsPlate):
@@ -92,30 +93,40 @@ async def create_multi_by_excel(
     plate_alphabet_reverse = {v: f"{k:0>2}" for k, v in plate_alphabet.items()}
 
     if plates is not None:
-        # Collect and modify all plate numbers from the file
+        # Initialize lists for valid modified plates and errors
+        list_error = []
         list_plate = []
+        valid_plates = []
+
         for plate in plates:
-            modified_plate = str(plate["شماره پلاک"])
+            original_plate = str(plate["شماره پلاک"])
+
+            # Validate and modify the plate format
+            # TODO for other type plate
+            if not re.fullmatch(r"[0-9\u0600-\u06FF?]{9}", original_plate):
+                list_error.append(original_plate)
+                continue  # Skip invalid plates
+
+            # Apply replacements based on plate_alphabet_reverse
+            modified_plate = original_plate
             for k, v in plate_alphabet_reverse.items():
                 modified_plate = modified_plate.replace(k, v)
+
             list_plate.append(modified_plate)
-
-        # Update plates with the modified list of plate numbers
-        for i, plate in enumerate(plates):
-            plate["شماره پلاک"] = list_plate[i]
-
-        # Count occurrences of each modified plate number
+            valid_plates.append({**plate, "شماره پلاک": modified_plate})
+        print(valid_plates)
+        # Count occurrences to identify duplicates
         plate_counts = Counter(list_plate)
-
-        # Find and store duplicate plates
         duplicates = {
             plate for plate, count in plate_counts.items() if count > 1
         }
-
         list_duplicate = list(duplicates)
 
+        # Filter out duplicates from valid plates
         new_plates_in = [
-            plate for plate in plates if plate["شماره پلاک"] not in duplicates
+            plate
+            for plate in valid_plates
+            if str(plate["شماره پلاک"]) not in duplicates
         ]
 
         # Fetch existing plates from the database
@@ -125,17 +136,17 @@ async def create_multi_by_excel(
             type_list=type_list,
         )
 
-        # Convert plates_exist to a set of plate numbers for faster lookup
-        pop_plates = set(plates_exist)
+        # Use a set for fast membership testing of existing plates
+        pop_plates = {plate for plate in plates_exist}
 
-        # Filter out plates that already exist in the database by comparing only the plate numbers
+        # Filter out existing plates and revalidate modified plates
         new_plates = [
             plate
             for plate in new_plates_in
             if plate["شماره پلاک"] not in pop_plates
         ]
 
-        # Prepare list_data_plate with only new plates
+        # Prepare list_data_plate for the database insert
         list_data_plate = [
             PlateCreate(
                 name=str(plate["نام و نام خانوادگی"]),
@@ -151,17 +162,17 @@ async def create_multi_by_excel(
             )
             for plate in new_plates
         ]
-        created_plates = []
+
         # Insert new plates into the database
+        created_plates = []
         if list_data_plate:
             created_plates = await plate_repo.create_multi(
                 db, objs_in=list_data_plate, commit=True
             )
 
-    return [
-        {
-            "new": created_plates,
-            "exists": pop_plates,
-            "duplicates": list(list_duplicate),
-        }
-    ]
+    return {
+        "new": created_plates,
+        "exists": list(pop_plates),
+        "duplicates": list(list_duplicate),
+        "errors": list_error,
+    }

@@ -12,7 +12,6 @@ from collections import Counter
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
-from fastapi.encoders import jsonable_encoder
 
 router = APIRouter()
 namespace = "plate"

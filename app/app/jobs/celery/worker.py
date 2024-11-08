@@ -209,6 +209,41 @@ def update_record(self, event_id) -> str:
             # img_exit_id = None
             # img_plate_exit_id = None
 
+            if direction in ("exit", "unknown"):
+                # check last minutes for any finished record
+                finished_record = crud.record.get_by_event_by_admin(
+                    db=self.session,
+                    plate=event,
+                    status=[
+                        StatusRecord.finished.value,
+                    ],
+                    for_update=True,
+                )
+                if (
+                    finished_record
+                    and abs(event.record_time - finished_record.end_time)
+                    < timedelta(minutes=5)
+                    and finished_record.camera_exit_id == event.camera_id
+                ):
+                    print(f"extend {event} {finished_record}")
+
+                    finished_record.end_time = max(
+                        finished_record.end_time, event.record_time
+                    )
+
+                    finished_record.img_exit_id = event.lpr_image_id
+                    finished_record.img_plate_exit_id = event.plate_image_id
+
+                    finished_record = crud.record.update(
+                        self.session, db_obj=finished_record
+                    )
+
+                    # update event relation to record
+                    event.record_id = finished_record.id
+                    event = crud.event.update(db=self.session, db_obj=event)
+
+                    return
+
             if direction in ("entry", "unknown", "sensor"):
                 set_latest_status = StatusRecord.unfinished.value
                 img_entrance_id = event.lpr_image_id
@@ -218,7 +253,6 @@ def update_record(self, event_id) -> str:
                 img_plate_exit_id = None
                 camera_exit_id = None
             elif direction == "exit":
-                # FIXME: we should check last 5 minutes for any finished record
                 set_latest_status = StatusRecord.finished.value
                 img_entrance_id = None
                 img_plate_entrance_id = None
@@ -292,10 +326,17 @@ def update_record(self, event_id) -> str:
                 return
 
             if direction in ("exit", "unknown"):
-                record.camera_exit_id = event.camera_id
-                record.img_exit_id = event.lpr_image_id
-                record.img_plate_exit_id = event.plate_image_id
-                record.latest_status = StatusRecord.finished.value
+                if (
+                    abs(event.record_time - record.start_time)
+                    < timedelta(minutes=2)
+                    and record.camera_exit_id == event.camera_id
+                ):
+                    logger.info(f"ignored {record}")
+                else:
+                    record.camera_exit_id = event.camera_id
+                    record.img_exit_id = event.lpr_image_id
+                    record.img_plate_exit_id = event.plate_image_id
+                    record.latest_status = StatusRecord.finished.value
 
             if direction in ("entry", "sensor"):
                 record.latest_status = StatusRecord.unfinished.value

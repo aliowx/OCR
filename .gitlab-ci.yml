@@ -45,17 +45,17 @@ deploy-iranmall-project-test-server:
     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
       when: manual
 
-deploy-anahid-project-test-server:
-  stage: deploy
-  script:
-    - "echo deploy to test server anahid parking"
-    - sudo scp -i /home/ubuntu/.ssh/id_rsa -o StrictHostKeyChecking=no $ENV_ANAHID_PROJECT_FILE_PARKING $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP:/home/ubuntu/projects/anahid-parking-backend/.env
-    - sudo ssh -i /home/ubuntu/.ssh/id_rsa -o StrictHostKeyChecking=no $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP "cd /home/ubuntu/projects/anahid-parking-backend && sudo TAG=latest-cicd docker compose pull && sudo TAG=latest-cicd docker compose down && sudo TAG=latest-cicd docker compose up -d && exit"
-  tags:
-    - shell_executer
-  rules:
-    - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
-      when: manual
+# deploy-anahid-project-test-server:
+#   stage: deploy
+#   script:
+#     - "echo deploy to test server anahid parking"
+#     - sudo scp -i /home/ubuntu/.ssh/id_rsa -o StrictHostKeyChecking=no $ENV_ANAHID_PROJECT_FILE_PARKING $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP:/home/ubuntu/projects/anahid-parking-backend/.env
+#     - sudo ssh -i /home/ubuntu/.ssh/id_rsa -o StrictHostKeyChecking=no $PARKING_TEST_SERVER_USER@$PARKING_TEST_SERVER_IP "cd /home/ubuntu/projects/anahid-parking-backend && sudo TAG=latest-cicd docker compose pull && sudo TAG=latest-cicd docker compose down && sudo TAG=latest-cicd docker compose up -d && exit"
+#   tags:
+#     - shell_executer
+#   rules:
+#     - if: "$CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'test'"
+#       when: manual
 
 
 build-project-image-productioon:

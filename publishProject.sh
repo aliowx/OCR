@@ -16,7 +16,7 @@ echo "start build project with TAG=$Tagvar"
 echo "------------"
 echo
 sleep 2
-docker compose build
+docker compose build --no-cache
 push() {
     if ! docker compose push; then
         echo "failed"

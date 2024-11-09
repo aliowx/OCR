@@ -10,7 +10,7 @@ from pathlib import Path
 
 def generate_excel_file(
     data: dict,
-    path: str = str(Path.home() / "Downloads") + "/",
+    path: str = "./",
     title: str = "Report",
 ) -> tuple[str, str]:
     file_name = "{}-{}.xlsx".format(title, str(uuid.uuid4()))

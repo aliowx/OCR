@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, Field
 import pytz
 
 
@@ -142,3 +142,21 @@ class JalaliDate(BaseModel):
     in_end_entrance_jalali_date: str | None = None
     in_start_exit_jalali_date: str | None = None
     in_end_exit_jalali_date: str | None = None
+
+
+class RecordExcelItem(BaseModel):
+    plate: str | None = Field(None, serialization_alias="شماره پلاک")
+    start_time: datetime | None = Field(None, serialization_alias="زمان ورود")
+    end_time: datetime | None = Field(None, serialization_alias="زمان خروج")
+    time_park: float | None = Field(
+        None, serialization_alias="مدت زمان توقف (ساعت)"
+    )
+    zone_name: str | None = Field(None, serialization_alias="محل پارک")
+    camera_entrance: str | None = Field(
+        None, serialization_alias="دوربین ورودی"
+    )
+    camera_exit: str | None = Field(None, serialization_alias="دوربین خروجی")
+    img_entrance_id: str | None = Field(
+        None, serialization_alias="دوربین خروجی"
+    )
+    latest_status: str | None = Field(None, serialization_alias="وضعیت")

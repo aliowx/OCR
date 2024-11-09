@@ -240,9 +240,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         params: schemas.ParamsRecord,
         input_status_record: Optional[
             List[schemas.record.StatusRecord]
-        ] = Query(None),
-        input_camera_entrance_id: Optional[list[int]] = Query(None),
-        input_camera_exit_id: Optional[list[int]] = Query(None),
+        ] = None,
+        input_camera_entrance_id: Optional[list[int]] = None,
+        input_camera_exit_id: Optional[list[int]] = None,
     ) -> list[Record] | Awaitable[list[Record]]:
 
         equipment_entance = aliased(Equipment)

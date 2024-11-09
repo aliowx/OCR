@@ -299,7 +299,8 @@ class EquipmentRepository(
             filters.append(self.model.serial_number == params.serial_number)
 
         if params.tag:
-            filters.append(self.model.tag == params.tag)
+            if "%" not in params.tag:
+                filters.append(self.model.tag.ilike(f"%{params.tag}%"))
 
         q = query.with_only_columns(func.count()).filter(*filters)
         total_count = db.scalar(q)

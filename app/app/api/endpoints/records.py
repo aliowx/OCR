@@ -113,6 +113,42 @@ async def read_record(
     return APIResponse(record)
 
 
+@router.get("/get-events-by-record-id/")
+async def get__events_by_record_id(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    record_id: int,
+) -> APIResponseType[schemas.GetEvents]:
+    """
+    Get events by record_id.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    record_exist = await crud.record.get(db, id=record_id)
+    if not record_exist:
+        raise exc.ServiceFailure(
+            detail="record Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    events, count = await records_services.get_events_by_record_id(
+        db=db, record_id=record_id
+    )
+    if not events:
+        raise exc.ServiceFailure(
+            detail="event Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    return APIResponse(schemas.GetEvents(items=events, all_items_count=count))
+
+
 @router.put("/")
 async def update_record(
     db: AsyncSession = Depends(deps.get_db_async),

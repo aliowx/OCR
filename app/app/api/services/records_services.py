@@ -38,6 +38,22 @@ async def get_multi_by_filters(
     return schemas.GetRecords(items=resualt_record, all_items_count=records[1])
 
 
+async def get_events_by_record_id(db: AsyncSession, *, record_id: int):
+    events = await crud.record.get_events_by_record_id(db, record_id=record_id)
+    ## ---> event
+    #                   --> event[0] ==> events
+    #                   --> event[1] ==> camera_name
+    #                   --> event[2] ==> zone_name
+
+    resualt_events = []
+    for event in events[0]:
+        event[0].camera_name = event[1]
+        event[0].zone_name = event[2]
+        resualt_events.append(event[0])
+
+    return resualt_events, events[1]
+
+
 async def gen_excel_record(
     db: AsyncSession,
     *,

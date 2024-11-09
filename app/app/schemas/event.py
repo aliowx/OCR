@@ -60,7 +60,9 @@ class EventInDBBase(EventBase):
 
 
 # Properties to return to client
-class Event(EventInDBBase): ...
+class Event(EventInDBBase):
+    zone_name: str | None = None
+    camera_name: str | None = None
 
 
 # Properties properties stored in DB

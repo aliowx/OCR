@@ -11,15 +11,14 @@ from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.models.record import Record
+from app.models.event import Event
 from app.schemas.record import RecordCreate, RecordUpdate, StatusRecord
 from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
 from app.report.schemas import JalaliDate as JalaliDateReport
-from fastapi import Query
 import re
-from app.api.services import records_services
 
 
 class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
@@ -597,6 +596,28 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         result = (await db.execute(query.filter(*filters))).fetchall()
 
         return result
+
+    async def get_events_by_record_id(
+        self,
+        db: AsyncSession,
+        *,
+        record_id: int = None,
+    ):
+        query = (
+            select(Event, Equipment.tag, Zone.name)
+            .outerjoin(Equipment, Event.camera_id == Equipment.id)
+            .outerjoin(Zone, Event.zone_id == Zone.id)
+        )
+        filters = [Record.is_deleted == False]
+
+        if record_id is not None:
+            filters.append(Event.record_id.in_([record_id]))
+        count = await db.scalar(
+            query.filter(*filters).with_only_columns(func.count())
+        )
+        result = (await db.execute(query.filter(*filters))).fetchall()
+
+        return result, count
 
 
 record = CRUDRecord(Record)

@@ -114,7 +114,7 @@ async def read_record(
 
 
 @router.get("/get-events-by-record-id/")
-async def get__events_by_record_id(
+async def get_events_by_record_id(
     _: Annotated[
         bool,
         Depends(

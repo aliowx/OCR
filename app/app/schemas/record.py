@@ -128,7 +128,7 @@ class ParamsRecord(BaseModel):
     input_entrance_persent_time: datetime | None = None
     input_exit_persent_time: datetime | None = None
     skip: int | None = 0
-    limit: int | None = 100
+    limit: int | None = None
     asc: bool | None = True
 
 

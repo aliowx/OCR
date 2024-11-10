@@ -39,7 +39,7 @@ class EquipmentInDBBase(EquipmentBase):
 
 
 class Equipment(EquipmentInDBBase):
-    zone: Zone | None = None
+    zone_name: str | None = None
 
 
 class EquipmentInDB(EquipmentInDBBase): ...

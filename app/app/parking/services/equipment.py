@@ -19,10 +19,10 @@ async def get_multi_quipments(
         db, params=params, type_eq=type_eq
     )
     # equipments[0] --> equipment
-    # equipments[1] --> zone
+    # equipments[1] --> zone_name
     resualt = []
     for eq, zone in equipments:
-        eq.zone = zone
+        eq.zone_name = zone
         resualt.append(eq)
     return PaginatedContent(
         data=resualt,

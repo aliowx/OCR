@@ -20,9 +20,8 @@ class ApiResponseHeader(BaseModel, Generic[T]):
 
     status: int = 0
     message: str = "Successful Operation"
-    persianMessage: str = "عملیات موفق"
     messageCode: int = Field(
-        ..., description=str(utils.MessageCodes.messages_names)
+        ..., description=str(utils.MessageCodes.english_messages_names)
     )
 
 
@@ -64,8 +63,7 @@ class APIResponse:
     ) -> None:
         self.header = ApiResponseHeader(
             status=msg_status,
-            message=utils.MessageCodes.messages_names[msg_code],
-            persianMessage=utils.MessageCodes.persian_message_names[msg_code],
+            message=utils.MessageCodes.get_message(msg_code),
             messageCode=msg_code,
         )
         if isinstance(data, BaseModel):
@@ -90,10 +88,7 @@ class APIErrorResponse(JSONResponse):
     ) -> None:
         header_data = {
             "status": msg_status,
-            "message": utils.MessageCodes.messages_names[msg_code],
-            "persianMessage": utils.MessageCodes.persian_message_names[
-                msg_code
-            ],
+            "message": utils.MessageCodes.get_message(msg_code),
             "messageCode": msg_code,
         }
         if header:

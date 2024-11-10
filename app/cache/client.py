@@ -1,9 +1,9 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
-from aioredis import client
 from fastapi import Request, Response
+from redis.asyncio import client
 
 from cache.enums import RedisEvent, RedisStatus
 from cache.key_gen import get_cache_key, get_cache_key_pattern
@@ -174,7 +174,7 @@ class Cache(metaclass=MetaSingleton):
         ttl: int = None,
     ) -> None:
         response.headers[self.response_header] = "Hit" if cache_hit else "Miss"
-        expires_at = datetime.utcnow() + timedelta(seconds=ttl)
+        expires_at = datetime.now(UTC).replace(tzinfo=None) + timedelta(seconds=ttl)
         response.headers["Expires"] = expires_at.strftime(HTTP_TIME)
         response.headers["Cache-Control"] = f"max-age={ttl}"
         response.headers["ETag"] = self.get_etag(response_data)
@@ -212,4 +212,4 @@ class Cache(metaclass=MetaSingleton):
     @staticmethod
     def get_log_time():
         """Get a timestamp to include with a log message."""
-        return datetime.now().strftime(LOG_TIMESTAMP)
+        return datetime.now(UTC).replace(tzinfo=None).strftime(LOG_TIMESTAMP)

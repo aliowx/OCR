@@ -1,5 +1,5 @@
 from asyncio import iscoroutine
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Awaitable, Generic, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 
-from app.db.base_class import Base
+from app.db.base_class import Base, get_now_datetime_utc
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -161,6 +161,48 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.add(db_obj)
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
+    def create_multi(
+        self,
+        db: Session | AsyncSession,
+        *,
+        objs_in: CreateSchemaType | list,
+        commit: bool = True
+    ) -> ModelType | Awaitable[ModelType]:
+        # asyncpg raises DataError for str datetime fields
+        # jsonable_encoder converts datetime fields to str
+        # to avoid asyncpg error pass obj_in data as a dict
+        # with datetime fields with python datetime type
+        if not isinstance(objs_in, list):
+            objs_in = [objs_in]
+
+        obj_in_data_list = [
+            jsonable_encoder(item) if not isinstance(item, dict) else item
+            for item in objs_in
+        ]
+        db_objs = [
+            self.model(**obj_in_data) for obj_in_data in obj_in_data_list
+        ]
+
+        db.add_all(db_objs)
+
+        if commit:
+            if isinstance(db, AsyncSession):
+
+                async def async_commit_refresh():
+                    await db.commit()
+                    for db_obj in db_objs:
+                        await db.refresh(
+                            db_obj
+                        )  # Refresh each instance individually
+                    return db_objs
+
+                return async_commit_refresh()
+            else:
+                db.commit()
+                for db_obj in db_objs:
+                    db.refresh(db_obj)  # Refresh each instance individually
+                return db_objs
+
     def update(
         self,
         db: Session | AsyncSession,
@@ -174,12 +216,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if isinstance(obj_in, dict):
                 update_data = obj_in
             else:
-                update_data = obj_in.model_dump(exclude_unset=True)
+                update_data = obj_in.model_dump(
+                    mode="json", exclude_unset=True
+                )
             for field in obj_data:
                 if field in update_data:
                     setattr(db_obj, field, update_data[field])
         if hasattr(self.model, "modified"):
-            setattr(db_obj, "modified", datetime.now())
+            setattr(db_obj, "modified", datetime.now(UTC).replace(tzinfo=None))
         db.add(db_obj)
         return self._commit_refresh(db=db, db_obj=db_obj, commit=commit)
 
@@ -188,7 +232,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType] | Awaitable[list[ModelType]]:
         if hasattr(self.model, "modified"):
             for db_obj in db_objs:
-                setattr(db_obj, "modified", datetime.now())
+                setattr(
+                    db_obj, "modified", datetime.now(UTC).replace(tzinfo=None)
+                )
+
         db.add_all(db_objs)
         return self._commit_refresh_all(db=db, db_objs=db_objs)
 
@@ -201,9 +248,25 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db.scalar(q)
 
     def remove(
-        self, db: Session, *, id: int, commit: bool = True
+        self, db: Session | AsyncSession, *, id: int, commit: bool = True
     ) -> ModelType:
+        if isinstance(db, AsyncSession):
+            return self._remove_async(db, id=id, commit=commit)
         obj = db.query(self.model).get(id)
         return self.update(
             db=db, db_obj=obj, obj_in={"is_deleted": True}, commit=commit
         )
+
+    async def _remove_async(
+        self, db: AsyncSession, *, id: int, commit: bool = True
+    ) -> ModelType:
+        obj = await self.get(db, id=id)
+        return await self.update(
+            db=db, db_obj=obj, obj_in={"is_deleted": True}, commit=commit
+        )
+
+    async def count_by_filter(
+        self, db: Session | AsyncSession, *, filters: list
+    ) -> int | Awaitable[int]:
+        q = select(self.model).with_only_columns(func.count()).filter(*filters)
+        return await db.scalar(q)

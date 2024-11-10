@@ -5,8 +5,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, Set, Tuple, Union
 
-from fastapi.encoders import jsonable_encoder
 from dateutil import parser
+from fastapi.encoders import jsonable_encoder
 from pydantic.v1.json import ENCODERS_BY_TYPE
 from pydantic.version import VERSION as PYDANTIC_VERSION
 
@@ -65,9 +65,9 @@ DictIntStrAny = Dict[Union[int, str], Any]
 def generate_encoders_by_class_tuples(
     type_encoder_map: Dict[Any, Callable[[Any], Any]]
 ) -> Dict[Callable[[Any], Any], Tuple[Any, ...]]:
-    encoders_by_class_tuples: Dict[
-        Callable[[Any], Any], Tuple[Any, ...]
-    ] = defaultdict(tuple)
+    encoders_by_class_tuples: Dict[Callable[[Any], Any], Tuple[Any, ...]] = (
+        defaultdict(tuple)
+    )
     for type_, encoder in type_encoder_map.items():
         encoders_by_class_tuples[encoder] += (type_,)
     return encoders_by_class_tuples

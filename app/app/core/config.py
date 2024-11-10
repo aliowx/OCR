@@ -2,13 +2,14 @@ import enum
 import logging
 import secrets
 from pathlib import Path
+from typing import Optional
 
 from pydantic import (
     AnyHttpUrl,
-    EmailStr,
     PostgresDsn,
     RedisDsn,
     field_validator,
+    HttpUrl,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -36,10 +37,9 @@ class SettingsBase(BaseSettings):
     PROJECT_NAME: str
     API_V1_STR: str = "/api/v1"
     SUB_PATH: str | None = None
-    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER: str
     FIRST_SUPERUSER_PASSWORD: str
     DEBUG: bool = False
-    CORE_ID: int
     TZ: str = "Asia/Tehran"
     PGTZ: str = "Asia/Tehran"
 
@@ -91,11 +91,54 @@ class StorageSettings(SettingsBase):
     REDIS_TIMEOUT: int | None = 5
     REDIS_URI: RedisDsn | None = None
 
+    AUTO_GEN_EVENT_FAKE: int | None = None
+    DATA_FAKE_SET: bool | None = False
+
+
+    CHECKING_FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
+    FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
+
+    CLEANUP_COUNT: Optional[int] = 1000  # cleanup 1000 images
+    CLEANUP_PERIOD: Optional[int] = 30  # every 30 seconds
+    CLEANUP_AGE: Optional[float] = 2.5  # which are older than 2.5 days
+    CLEANUP_EVENTS_AGE: Optional[float] = (
+        30.5  # which are older than 30.5 days
+    )
+    CLEANUP_RECORDS_AGE: Optional[float] = (
+        90.5  # which are older than 30.5 days
+    )
+
     SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     SQLALCHEMY_POOL_SIZE: int = 15
     SQLALCHEMY_POOL_TIMEOUT: int = 30
     SQLALCHEMY_POOL_RECYCLE: int = 3600
     SQLALCHEMY_MAX_OVERFLOW: int = 5
+
+    URL_FOR_SET_DATA_FAKE: str = None
+
+    # database test
+    TEST_SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
+    # dsn database test
+    TEST_DSN_POSTGRES_NAME: str = None
+    TEST_DSN_POSTGRES_PASSWORD: str = None
+    TEST_DSN_POSTGRES_IP: str = None
+    TEST_DSN_POSTGRES_PORT: str = None
+    TEST_DSN_POSTGRES_DB_NAME: str = None
+
+    TEST_FIRST_SUPERUSER: str = None
+    TEST_FIRST_SUPERUSER_PASSWORD: str = None
+
+    # payment
+    PAYMENT_ADDRESS: HttpUrl
+    PAYMENT_USER_NAME: str
+    PAYMENT_PASSWORD: str
+
+    # MinIO
+    MINIO_URL: str
+    MINIO_ACCESS_KEY: str
+    MINIO_SECRET_KEY: str
+    MINIO_SECURE: bool
+    MINIO_BUCKET_NAME: str
 
     @property
     def async_database_url(self) -> str | None:

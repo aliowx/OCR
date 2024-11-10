@@ -10,9 +10,8 @@ from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud
-from app import exceptions as exc
-from app import models, schemas, utils
+from app import crud, models, schemas, utils
+from app.core import exceptions as exc
 from app.core import security
 from app.core.config import AuthMethod, settings
 from app.db.session import AsyncSessionLocal, SessionLocal
@@ -46,9 +45,7 @@ class APIBasicAuth(HTTPBasic):
         return await super().__call__(request)
 
 
-reusable_oauth2 = APIOAuth2(
-    tokenUrl=f"{settings.API_V1_STR}/user/login/access-token"
-)
+reusable_oauth2 = APIOAuth2(tokenUrl=f"{settings.API_V1_STR}/user/login")
 
 
 def get_db() -> Generator:
@@ -65,7 +62,6 @@ async def get_db_async() -> AsyncGenerator:
     """
     async with AsyncSessionLocal() as db:
         yield db
-        await db.commit()
 
 
 def get_user_id_from_bearer_token(token: str) -> int:
@@ -93,7 +89,7 @@ async def get_current_user(
         user = await crud.user.get(db, id=user_id)
     elif credentials:
         user = await crud.user.authenticate_async(
-            db, email=credentials.username, password=credentials.password
+            db, username=credentials.username, password=credentials.password
         )
     else:
         raise exc.InternalServiceError(
@@ -111,22 +107,25 @@ async def get_current_user(
     return user
 
 
+CurrentUser = Annotated[models.User, Depends(get_current_user)]
+
+
 async def get_current_active_user(
-    current_user: models.User = Depends(get_current_user),
+    current_user: CurrentUser,
 ) -> models.User:
-    if not crud.user.is_active(current_user):
+    if not current_user.is_active:
         raise exc.InternalServiceError(
             status_code=401,
             detail="Inactive user",
-            msg_code=utils.MessageCodes.inactive_user,
+            msg_code=utils.MessageCodes.forbidden,
         )
     return current_user
 
 
 async def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
+    current_user: CurrentUser,
 ) -> models.User:
-    if not crud.user.is_superuser(current_user):
+    if not CurrentUser.is_superuser:
         raise exc.InternalServiceError(
             status_code=403,
             detail="The user doesn't have enough privileges",
@@ -147,7 +146,7 @@ async def basic_auth_superuser(
         return credentials.username
 
     user = await crud.user.authenticate_async(
-        db, email=credentials.username, password=credentials.password
+        db, username=credentials.username, password=credentials.password
     )
     if not user or not user.is_superuser:
         raise HTTPException(
@@ -155,4 +154,4 @@ async def basic_auth_superuser(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Basic"},
         )
-    return user.email
+    return user.username

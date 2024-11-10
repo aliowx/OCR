@@ -103,6 +103,7 @@ async def get_bills_by_plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.APP_IRANMALL,
                 ]
             )
         ),
@@ -114,7 +115,7 @@ async def get_bills_by_plate(
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
     """
 
     checking_phone_number = servicesBill.validate_iran_phone_number(

@@ -64,7 +64,4 @@ class User(Base):
         op.drop_column("user", "role")
         op.execute("DROP TYPE userroles;")
     """
-    role = mapped_column(
-        Enum(UserRoles, name="userroles", create_type=True),
-        nullable=True,
-    )
+    role: Mapped[str] = mapped_column(String, nullable=True, index=True)

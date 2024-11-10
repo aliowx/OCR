@@ -156,7 +156,4 @@ class RecordExcelItem(BaseModel):
         None, serialization_alias="دوربین ورودی"
     )
     camera_exit: str | None = Field(None, serialization_alias="دوربین خروجی")
-    img_entrance_id: str | None = Field(
-        None, serialization_alias="دوربین خروجی"
-    )
     latest_status: str | None = Field(None, serialization_alias="وضعیت")

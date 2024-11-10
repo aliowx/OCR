@@ -1,15 +1,33 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from app.db.base_class import get_now_datetime_utc
 from app.bill.schemas import bill as billSchemas
-from app.schemas.record import StatusRecord
 from app.bill.repo import bill_repo
 from app.core.exceptions import ServiceFailure
 from app.utils import MessageCodes
 from app.parking.repo import zone_repo
 import pytz
 import math
+import re
+
+
+def validate_iran_phone_number(phone_number: str):
+    iran_phone_pattern = r"^(09\d{9}|(\+98)9\d{9})$"
+    if not re.match(iran_phone_pattern, phone_number):
+        raise ServiceFailure(
+            detail="phone number incorrect",
+            msg_code=MessageCodes.not_found,
+        )
+
+
+def validate_iran_plate(plate: str):
+    iran_plate = r"[0-9?]{9}"
+    if not re.match(iran_plate, plate):
+        raise ServiceFailure(
+            detail="plate incorrect",
+            msg_code=MessageCodes.not_found,
+        )
+
 
 def convert_to_timezone_iran(time: datetime):
     if isinstance(time, str):
@@ -106,114 +124,22 @@ async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
     return bill
 
 
-async def kiosk(db: AsyncSession, *, record, issue: bool = None):
-    bill_unpaid = await bill_repo.get_bill_by_record_id(
+async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
+    bill_unpaid = await bill_repo.get_bills_by_plate(
         db,
-        record_id=record.id,
+        plate=plate,
         bill_status=billSchemas.StatusBill.unpaid.value,
     )
-    bill_paid = await bill_repo.get_bill_by_record_id(
-        db, record_id=record.id, bill_status=billSchemas.StatusBill.paid.value
+    bills_unpaid = [
+        billSchemas.BillUnpaidShow(**unpaid.__dict__) for unpaid in bill_unpaid
+    ]
+    bill_paid = await bill_repo.get_bills_by_plate(
+        db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
     )
-    if bill_unpaid:
-        if (
-            bill_unpaid.created + timedelta(minutes=15)
-            > get_now_datetime_utc()
-        ):
-            return bill_unpaid
-    end_time = get_now_datetime_utc()
-    # TODO fix hard code
-    if bill_paid:
-        if (
-            bill_paid.time_paid + timedelta(minutes=15)
-            > get_now_datetime_utc()
-        ):
-            return (
-                billSchemas.BillShowBykiosk(
-                    plate=bill_paid.plate,
-                    start_time=bill_paid.start_time,
-                    end_time=bill_paid.end_time,
-                    issued_by=bill_paid.issued_by,
-                    price=bill_paid.price,
-                    entrance_fee=bill_paid.entrance_fee,
-                    hourly_fee=bill_paid.hourly_fee,
-                    time_park_so_far=convert_time_to_hour_and_ceil(
-                        bill_paid.start_time, bill_paid.end_time
-                    ),
-                    status=bill_paid.status,
-                ),
-            )
-        if (
-            bill_paid.time_paid + timedelta(minutes=15)
-            < get_now_datetime_utc()
-            and record.latest_status == StatusRecord.unfinished
-        ):
-            price, get_price = await calculate_price_async(
-                db,
-                start_time_in=bill_paid.end_time,
-                end_time_in=get_now_datetime_utc(),
-                zone_id=bill_paid.zone_id,
-            )
-            bill = billSchemas.BillShowBykiosk(
-                plate=bill_paid.plate,
-                start_time=bill_paid.start_time,
-                end_time=bill_paid.end_time,
-                issued_by=bill_paid.issued_by,
-                price=bill_paid.price,
-                entrance_fee=get_price.entrance_fee,
-                hourly_fee=get_price.hourly_fee,
-                time_park_so_far=convert_time_to_hour_and_ceil(
-                    bill_paid.start_time, bill_paid.end_time
-                ),
-            )
-            # isuue True create bill
-            if issue:
-                bill = await bill_repo.create(
-                    db,
-                    obj_in=billSchemas.BillCreate(
-                        plate=bill.plate,
-                        start_time=bill.end_time,
-                        end_time=get_now_datetime_utc(),
-                        issued_by=bill.issued_by,
-                        price=bill.price,
-                        record_id=record.id,
-                    ).model_dump(),
-                )
-            return bill
-    else:
-        price, get_price = await calculate_price_async(
-            db,
-            start_time_in=record.start_time,
-            end_time_in=end_time,
-            zone_id=record.zone_id,
-        )
-        bill = billSchemas.BillShowBykiosk(
-            plate=record.plate,
-            start_time=record.start_time,
-            end_time=end_time,
-            issued_by=billSchemas.Issued.kiosk.value,
-            price=price,
-            entrance_fee=get_price.entrance_fee,
-            hourly_fee=get_price.hourly_fee,
-            time_park_so_far=convert_time_to_hour_and_ceil(
-                record.start_time, end_time
-            ),
-        )
-        # isuue True create bill
-        if issue:
-            bill = await bill_repo.create(
-                db,
-                obj_in=billSchemas.BillCreate(
-                    plate=bill.plate,
-                    start_time=bill.start_time,
-                    end_time=bill.end_time,
-                    issued_by=bill.issued_by,
-                    price=bill.price,
-                    record_id=record.id,
-                ).model_dump(),
-            )
-
-        return bill
+    bills_paid = [
+        billSchemas.BillPaidShow(**paid.__dict__) for paid in bill_paid
+    ]
+    return bills_paid, bills_unpaid
 
 
 async def update_multi_bill(

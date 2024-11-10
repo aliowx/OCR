@@ -102,6 +102,59 @@ class Bill(BillInDBBase):
     camera_exit: str | None = None
 
 
+class BillPaidShow(BaseModel):
+    plate: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    price: float | None = None
+    issued_by: Issued | None = None
+    status: StatusBill | None = StatusBill.paid
+    bill_number: int | None = None
+    img_entrance_id: int | None = None
+    img_exit_id: int | None = None
+    rrn_number: str | None = None
+    time_paid: datetime | None = None
+    entrance_fee: float | None = None
+    hourly_fee: float | None = None
+    bill_type: BillType | None = None
+    time_park: int | None = None
+    zone_name: str | None = None
+    camera_entrance: str | None = None
+    camera_exit: str | None = None
+    id: int | None = None
+
+
+class BillUnpaidShow(BaseModel):
+    plate: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    price: float | None = None
+    issued_by: Issued | None = None
+    status: StatusBill | None = StatusBill.unpaid
+    bill_number: int | None = None
+    img_entrance_id: int | None = None
+    img_exit_id: int | None = None
+    entrance_fee: float | None = None
+    hourly_fee: float | None = None
+    bill_type: BillType | None = None
+    time_park: int | None = None
+    zone_name: str | None = None
+    camera_entrance: str | None = None
+    camera_exit: str | None = None
+    id: int | None = None
+
+
+class PlateInfo(BaseModel):
+    plate: str | None = None
+    phone_number: str | None = None
+
+
+class billsPaidUnpaidplate(BaseModel):
+    paid: list[BillPaidShow] = []
+    unpaid: list[BillUnpaidShow] = []
+    user_info: PlateInfo
+
+
 class BillNotAdditionalDetail(BillInDBBase): ...
 
 

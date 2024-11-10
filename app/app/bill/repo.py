@@ -38,27 +38,25 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             db.scalars(query.order_by(Bill.created.desc()).filter(*filters))
         )
 
-    async def get_bill_by_record_id(
+    async def get_bills_by_plate(
         self,
         db: AsyncSession,
         *,
+        plate: str = None,
         bill_status: StatusBill,
-        record_id: int = None,
     ) -> Bill:
 
         query = select(Bill)
 
-        filters = [
-            Bill.is_deleted == false(),
-            Bill.status == bill_status,
-        ]
+        filters = [Bill.is_deleted == false()]
 
-        if record_id is not None:
-            filters.append(Bill.record_id == record_id)
+        if plate is not None:
+            filters.append(Bill.plate == plate)
+            
+        if bill_status is not None:
+            filters.append(Bill.status == bill_status)
 
-        return await self._first(
-            db.scalars(query.order_by(Bill.created.desc()).filter(*filters))
-        )
+        return await self._all(db.scalars(query.filter(*filters)))
 
     async def get_multi_by_filters(
         self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate

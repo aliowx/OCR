@@ -1,5 +1,5 @@
 from typing import Awaitable
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
@@ -68,6 +68,53 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
             filters.append(PlateList.type == type_list)
 
         return await self._all(db.scalars(query.filter(*filters)))
+
+    async def get_plate(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        type_list: PlateType | None = None,
+        phone_number: str | None = None,
+    ) -> PlateList:
+
+        query = select(PlateList)
+
+        filters = [
+            PlateList.is_deleted == False,
+            and_(
+                PlateList.plate == plate,
+                PlateList.type == type_list,
+                PlateList.phone_number == phone_number,
+            ),
+        ]
+        return await self._first(db.scalars(query.filter(*filters)))
+
+    async def cheking_and_create_phone_number(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        phone_number: str,
+        type_list: PlateType | None = None,
+    ) -> PlateList:
+
+        exist_plates_phone = await self.get_plate(
+            db,
+            plate=plate,
+            type_list=type_list,
+            phone_number=phone_number,
+        )
+        if not exist_plates_phone:
+            exist_plates_phone = await self.create(
+                db,
+                obj_in=PlateCreate(
+                    type=type_list,
+                    plate=plate,
+                    phone_number=phone_number,
+                ),
+            )
+        return exist_plates_phone
 
 
 plate_repo = CRUDPlate(PlateList)

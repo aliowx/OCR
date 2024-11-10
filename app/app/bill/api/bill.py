@@ -18,6 +18,8 @@ from app.acl.role import UserRoles
 from typing import Annotated, Any
 import rapidjson
 from cache.redis import redis_client
+from app.plate.repo import plate_repo
+from app.plate.schemas import PlateType
 
 router = APIRouter()
 namespace = "bill"
@@ -92,8 +94,8 @@ async def get_bill(
     return APIResponse(bill)
 
 
-@router.post("/kiosk")
-async def create_bill_by_kiosk(
+@router.get("/get-bills-by-plate-phone/")
+async def get_bills_by_plate(
     _: Annotated[
         bool,
         Depends(
@@ -105,28 +107,39 @@ async def create_bill_by_kiosk(
             )
         ),
     ],
-    plate_in: str,
-    issue: bool = None,
     db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    plate_in: str,
+    phone_number: str,
 ) -> APIResponseType[Any]:
     """
-    create bill.
+    Retrieve bills by plate and phone number.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    record = await crud.record.get_record(
-        db,
-        input_plate=plate_in,
-        input_status=schemas.StatusRecord.unfinished.value,
+
+    checking_phone_number = servicesBill.validate_iran_phone_number(
+        phone_number
     )
-    if record:
-        record = await servicesBill.kiosk(db, record=record, issue=issue)
-    else:
-        record = await crud.record.get_record(
-            db,
-            input_plate=plate_in,
-            input_status=schemas.StatusRecord.finished.value,
+    cheking_plate = servicesBill.validate_iran_plate(plate_in)
+
+    plates_phone_number = await plate_repo.cheking_and_create_phone_number(
+        db,
+        phone_number=phone_number,
+        plate=plate_in,
+        type_list=PlateType.phone,
+    )
+
+    bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
+        db, plate=plate_in
+    )
+
+    return APIResponse(
+        billSchemas.billsPaidUnpaidplate(
+            paid=bills_paid,
+            unpaid=bills_unpaid,
+            user_info=billSchemas.PlateInfo(**plates_phone_number.__dict__),
         )
-    return APIResponse(record)
+    )
 
 
 @router.get("/get_by_ids/")

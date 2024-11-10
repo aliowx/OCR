@@ -61,7 +61,8 @@ class ListMaxTimePark(BaseModel):
 class CountEntranceExitDoor(BaseModel):
     count_entrance: dict | None = {}
     count_exit: dict | None = {}
-
+    total_entrance: int | None = None
+    total_exit: int | None = None
 
 class JalaliDate(BaseModel):
     in_start_jalali_date: str | None = None

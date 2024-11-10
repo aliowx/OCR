@@ -607,6 +607,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             select(Event, Equipment.tag, Zone.name)
             .outerjoin(Equipment, Event.camera_id == Equipment.id)
             .outerjoin(Zone, Event.zone_id == Zone.id)
+            .join(Record)
         )
         filters = [Record.is_deleted == False]
 

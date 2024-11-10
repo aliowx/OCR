@@ -597,19 +597,25 @@ async def count_entrance_exit_zone(
         start_time_in=start_time_in,
         end_time_in=end_time_in,
     )
+    total_entrance = 0
+    total_exit = 0
     for zone_name, cameras in obj_camera_entrance.items():
         for camera_name in cameras:
             obj_camera_entrance[zone_name][camera_name] = count_entrance.get(
                 camera_name, 0
             )
+            total_entrance += count_entrance.get(camera_name, 0)
     for zone_name, cameras in obj_camera_exit.items():
         for camera_name in cameras:
             obj_camera_exit[zone_name][camera_name] = count_exit.get(
                 camera_name, 0
             )
-
+            total_exit += count_exit.get(camera_name, 0)
     return report_schemas.CountEntranceExitDoor(
-        count_entrance=obj_camera_entrance, count_exit=obj_camera_exit
+        count_entrance=obj_camera_entrance,
+        count_exit=obj_camera_exit,
+        total_entrance=total_entrance,
+        total_exit=total_exit,
     )
 
 

@@ -329,7 +329,7 @@ def update_record(self, event_id) -> str:
                 if (
                     abs(event.record_time - record.start_time)
                     < timedelta(minutes=2)
-                    and record.camera_exit_id == event.camera_id
+                    and record.camera_entrance_id == event.camera_id
                 ):
                     logger.info(f"ignored {record}")
                 else:

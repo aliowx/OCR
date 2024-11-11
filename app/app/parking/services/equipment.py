@@ -12,7 +12,7 @@ from app.models.base import EquipmentType
 async def get_multi_quipments(
     db: AsyncSession,
     params: schemas.FilterEquipmentsParams,
-    type_eq: Optional[list[EquipmentType]],
+    type_eq: Optional[list[EquipmentType]] = None,
 ) -> PaginatedContent[list[schemas.Equipment]]:
 
     equipments, total_count = await equipment_repo.get_multi_with_filters(
@@ -47,8 +47,8 @@ async def create_equipment(
     params = schemas.FilterEquipmentsParams(
         ip_address=equipment_data.ip_address,
     )
-    ip_address_check, total_count_ip = await get_multi_quipments(db, params)
-    if total_count_ip:
+    ip_address_check = await get_multi_quipments(db, params)
+    if ip_address_check.total_count:
         raise ServiceFailure(
             detail="Duplicate ip address",
             msg_code=MessageCodes.duplicate_ip_address,
@@ -56,8 +56,8 @@ async def create_equipment(
     params = schemas.FilterEquipmentsParams(
         tag=equipment_data.tag,
     )
-    tag_check, total_count_tag = await get_multi_quipments(db, params)
-    if total_count_tag:
+    tag_check = await get_multi_quipments(db, params)
+    if tag_check.total_count:
         raise ServiceFailure(
             detail="Duplicate tag",
             msg_code=MessageCodes.duplicate_name,
@@ -65,8 +65,8 @@ async def create_equipment(
     params = schemas.FilterEquipmentsParams(
         ip_address=equipment_data.ip_address,
     )
-    ip_address_check, total_count_ip = await get_multi_quipments(db, params)
-    if total_count_ip:
+    ip_address_check = await get_multi_quipments(db, params)
+    if ip_address_check.total_count:
         raise ServiceFailure(
             detail="Duplicate ip address",
             msg_code=MessageCodes.duplicate_ip_address,
@@ -78,10 +78,8 @@ async def create_equipment(
             "equipment_type": equipment_data.equipment_type,
         }
     )
-    serial_number_check, total_count_serial_number = await get_multi_quipments(
-        db, params
-    )
-    if total_count_serial_number:
+    serial_number_check = await get_multi_quipments(db, params)
+    if serial_number_check.total_count:
         raise ServiceFailure(
             detail="Duplicate equipment serial number",
             msg_code=MessageCodes.duplicate_serial_number,
@@ -129,9 +127,7 @@ async def update_equipment(
             ip_address=equipment_data.ip_address,
             size=1,
         )
-        ip_address_check, total_count = await get_multi_quipments(
-            db, params=params
-        )
+        ip_address_check = (await get_multi_quipments(db, params=params)).data
         if ip_address_check:
             if (
                 ip_address_check[0].ip_address
@@ -147,9 +143,9 @@ async def update_equipment(
             serial_number=equipment_data.serial_number,
             size=1,
         )
-        serial_number_check, total_count = await get_multi_quipments(
-            db, params=params
-        )
+        serial_number_check = (
+            await get_multi_quipments(db, params=params)
+        ).data
         if serial_number_check:
             if (
                 serial_number_check[0].serial_number
@@ -165,14 +161,14 @@ async def update_equipment(
             tag=equipment_data.tag,
             size=1,
         )
-        tag_check, total_count = await get_multi_quipments(db, params=params)
-        if total_count:
+        tag_check = (await get_multi_quipments(db, params=params)).data
+        if tag_check:
             if tag_check[0].tag and equipment.tag != tag_check[0].tag:
                 raise ServiceFailure(
                     detail="Duplicate equipment tag",
                     msg_code=MessageCodes.duplicate_name,
                 )
-    if equipment_data.additional_data:
+    if equipment_data.additional_data is not None:
         current_additional_data = equipment.additional_data.copy()
         current_additional_data.update(equipment_data.additional_data)
         equipment.additional_data = current_additional_data

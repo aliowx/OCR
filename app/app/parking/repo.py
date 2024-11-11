@@ -272,12 +272,12 @@ class EquipmentRepository(
         db: AsyncSession,
         *,
         params: FilterEquipmentsParams,
-        type_eq: Optional[list[EquipmentType]],
+        type_eq: Optional[list[EquipmentType]] = None,
     ) -> tuple[list[Equipment], int]:
 
         filters = [Equipment.is_deleted == false()]
 
-        query = select(Equipment, Zone).outerjoin(
+        query = select(Equipment, Zone.name).outerjoin(
             Zone, Equipment.zone_id == Zone.id
         )
 

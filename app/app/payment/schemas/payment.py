@@ -15,19 +15,23 @@ class SumBillsByIdSchema(BaseModel):
     amount: int
 
 
-class BillPaymentSchema(BaseModel):
-    bill_ids: list[int]
-    serial_number: str
-
-
 class _GatewayTypes(str, Enum):
     pos = "pos"
     wspos = "wspos"
+    ipg = "ipg"
+    mock = "mock"
 
 
 class _Providers(StrEnum):
     parsian = "parsian"
     internal = "internal"
+    rayanpay = "rayanpay"
+
+
+class BillPaymentSchema(BaseModel):
+    bill_ids: list[int]
+    serial_number: str | None = None
+    phone_number: str | None = None
 
 
 class _PaymentStatus(str, Enum):

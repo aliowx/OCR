@@ -420,6 +420,69 @@ async def get_parking_occupancy_by_zone(
     return result
 
 
+async def get_count_referred_by_zone(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+    zone_id: int | None = None,
+) -> dict:
+
+    range_date = create_ranges_datetime(
+        start_date=start_time_in, end_date=end_time_in, timing=timing
+    )
+
+    # Retrieve zones and capacities
+    get_zones = (
+        await crud.zone_repo.get_multi(db, limit=None)
+        if zone_id is None
+        else [await crud.zone_repo.get(db, id=zone_id)]
+    )
+    total_utilization_rate = []
+
+    result = {}
+    for zone in get_zones:
+        zone_effective_utilization_rate = []
+
+        for date_time in range_date:
+            records = await crud.record.get_today_count_referred_by_zone(
+                db,
+                zone_id=zone.id,
+                start_time_in=date_time.get("start"),
+                end_time_in=date_time.get("end"),
+            )
+
+            zone_effective_utilization_rate.append(
+                {
+                    "start": date_time.get("start"),
+                    "end": date_time.get("end"),
+                    "count": records or 0,
+                }
+            )
+
+        # Append zone data
+        result[zone.name] = zone_effective_utilization_rate
+
+        # Aggregate for total
+        for date, entry in zip(range_date, zone_effective_utilization_rate):
+            if len(total_utilization_rate) < len(range_date):
+                total_utilization_rate.append(
+                    {
+                        "start": date["start"],
+                        "end": date["end"],
+                        "count": entry["count"],
+                    }
+                )
+            else:
+                total_utilization_rate[range_date.index(date)][
+                    "count"
+                ] += entry["count"]
+
+    result["total"] = total_utilization_rate
+
+    return result
+
+
 async def cal_count_with_out_status(
     data: Any, start_time_in, end_time_in, timing
 ):

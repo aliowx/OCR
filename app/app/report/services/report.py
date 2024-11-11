@@ -175,7 +175,7 @@ async def report_zone(db: AsyncSession):
             convert_time = time_park.total_seconds() / 60
 
         effective_utilization_rate = 0
-        if convert_time > 0:
+        if convert_time > 0 and zone.capacity > 0:
             effective_utilization_rate = round(
                 ((((convert_time / 60) / (zone.capacity * 24)) * 100)), 2
             )

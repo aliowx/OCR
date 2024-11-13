@@ -167,12 +167,12 @@ async def get_bills_by_plate(
 
     cheking_plate = servicesBill.validate_iran_plate(plate_in)
 
-    plates_phone_number = await plate_repo.cheking_palte_have_phone_number(
+    plates_phone_number = await plate_repo.exist_plate(
         db,
         plate=plate_in,
         type_list=PlateType.phone,
     )
-    if plates_phone_number.phone_number is None:
+    if plates_phone_number is None or plates_phone_number.phone_number:
         raise exc.ServiceFailure(
             detail="phone number not Found",
             msg_code=MessageCodes.not_found,

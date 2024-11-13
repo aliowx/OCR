@@ -96,7 +96,6 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         *,
         plate: str,
         type_list: PlateType | None = None,
-        phone_number: str | None = None,
     ) -> PlateList:
 
         query = select(PlateList)

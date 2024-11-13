@@ -154,24 +154,19 @@ async def pay_bills_by_id_ipg(
     response_json = response.json()
     if (
         response.status_code != 200
-        or response_json["content"]["status"] != _PaymentStatus.Verified
-        or response_json["content"]["amount"] != get_transaction.amount
+        or response_json["content"]["status"] == _PaymentStatus.Verified
+        or response_json["content"]["amount"] == get_transaction.amount
     ):
-        logger.error(
-            f"Payment failed., {response.status_code = }, {response.text = }"
+
+        result, msg_code = await servicesBill.update_bills(
+            db=db,
+            bill_ids_in=get_transaction.bill_ids,
+            rrn_number_in=response_json["content"]["reference_number"],
+            time_paid_in=datetime.now(UTC).replace(tzinfo=None),
+            status_in=billSchemas.StatusBill.paid,
         )
-        raise exc.InternalServiceError(
-            msg_code=MessageCodes.unsuccessfully_pay
-        )
-    result, msg_code = await servicesBill.update_bills(
-        db=db,
-        bill_ids_in=get_transaction.bill_ids,
-        rrn_number_in=response_json["content"]["reference_number"],
-        time_paid_in=datetime.now(UTC).replace(tzinfo=None),
-        status_bill_in=billSchemas.StatusBill.paid,
-    )
     return RedirectResponse(
-        f"{get_transaction.callback_url}/amount={response_json["content"]["amount"]}?status={response_json["content"]["status"]}",
+        f"{get_transaction.callback_url}?amount={response_json["content"]["amount"]}?status={response_json["content"]["status"]}?transaction_id={get_transaction.id}",
         status_code=StatusCode.HTTP_303_SEE_OTHER,
     )
 

@@ -58,7 +58,7 @@ class BillShowBykiosk(BillCreate):
 
 # Properties to receive on item update
 class BillUpdate(BillBase):
-    id: int
+    id: int | None = None
     rrn_number: str
     time_paid: datetime
     status: StatusBill

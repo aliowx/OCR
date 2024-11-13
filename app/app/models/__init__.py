@@ -12,3 +12,4 @@ from .record import Record
 from app.ticket.models.ticket import Ticket
 from app.plate.models.plate import PlateList
 from app.notifications.models import Notifications
+from app.payment.models.bill_payments import Transaction

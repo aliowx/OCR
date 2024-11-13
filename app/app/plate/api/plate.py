@@ -141,7 +141,7 @@ async def create_Plate(
     )
 
 
-@router.post("/excel")
+@router.post("/upload-excel")
 async def create_Plate(
     _: Annotated[
         bool,

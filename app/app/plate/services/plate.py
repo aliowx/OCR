@@ -103,7 +103,7 @@ async def create_multi_by_excel(
 
             # Validate and modify the plate format
             # TODO for other type plate
-            if not re.fullmatch(r"[0-9\u0600-\u06FF?]{9}", original_plate):
+            if not re.fullmatch(r"[0-9\u0600-\u06FF?]{8}", original_plate):
                 list_error.append(original_plate)
                 continue  # Skip invalid plates
 
@@ -114,7 +114,6 @@ async def create_multi_by_excel(
 
             list_plate.append(modified_plate)
             valid_plates.append({**plate, "شماره پلاک": modified_plate})
-        print(valid_plates)
         # Count occurrences to identify duplicates
         plate_counts = Counter(list_plate)
         duplicates = {

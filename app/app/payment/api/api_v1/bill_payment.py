@@ -202,6 +202,7 @@ async def pay_bills_by_id_ipg(
         or settings.PROVIDER_PAY is None
         or settings.TERMINAL_PAY is None
         or params.call_back is None
+        or params.phone_number is None
     ):
         raise exc.ServiceFailure(
             detail="set GATEWAY_TYPE_PAY or serial_number or TERMINAL_PAY or PROVIDER_PAY not None or phone_number or call_back",
@@ -223,7 +224,7 @@ async def pay_bills_by_id_ipg(
         provider=settings.PROVIDER_PAY,
         terminal=settings.TERMINAL_PAY,
         mobile=params.phone_number,
-        callback_url=f"/call-back/{craete_transaction.id}",
+        callback_url=f"{settings.CALL_BACK_PAY}/{craete_transaction.id}",
         amount=pay_info.amount,
         additional_data=(
             {"time": str(datetime.now()), "plate": pay_info.plate}

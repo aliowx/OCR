@@ -172,7 +172,7 @@ async def get_bills_by_plate(
         plate=plate_in,
         type_list=PlateType.phone,
     )
-    if plates_phone_number is None or plates_phone_number.phone_number:
+    if plates_phone_number is None or plates_phone_number.phone_number is None:
         raise exc.ServiceFailure(
             detail="phone number not Found",
             msg_code=MessageCodes.not_found,

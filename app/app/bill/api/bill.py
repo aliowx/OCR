@@ -129,6 +129,54 @@ async def get_bills_by_plate(
         plate=plate_in,
         type_list=PlateType.phone,
     )
+    bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
+        db, plate=plate_in
+    )
+
+    return APIResponse(
+        billSchemas.billsPaidUnpaidplate(
+            paid=bills_paid,
+            unpaid=bills_unpaid,
+            user_info=billSchemas.PlateInfo(**plates_phone_number.__dict__),
+        )
+    )
+
+
+@router.get("/get-bills-by-plate/")
+async def get_bills_by_plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.APP_IRANMALL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    plate_in: str,
+) -> APIResponseType[Any]:
+    """
+    Retrieve bills by plate and phone number.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
+    """
+
+    cheking_plate = servicesBill.validate_iran_plate(plate_in)
+
+    plates_phone_number = await plate_repo.cheking_palte_have_phone_number(
+        db,
+        plate=plate_in,
+        type_list=PlateType.phone,
+    )
+    if plates_phone_number.phone_number is None:
+        raise exc.ServiceFailure(
+            detail="phone number not Found",
+            msg_code=MessageCodes.not_found,
+        )
 
     bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
         db, plate=plate_in

@@ -89,6 +89,26 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
             ),
         ]
         return await self._first(db.scalars(query.filter(*filters)))
+    
+    async def exist_plate(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        type_list: PlateType | None = None,
+        phone_number: str | None = None,
+    ) -> PlateList:
+
+        query = select(PlateList)
+
+        filters = [
+            PlateList.is_deleted == False,
+            and_(
+                PlateList.plate == plate,
+                PlateList.type == type_list
+            ),
+        ]
+        return await self._first(db.scalars(query.filter(*filters)))
 
     async def cheking_and_create_phone_number(
         self,
@@ -114,6 +134,22 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
                     phone_number=phone_number,
                 ),
             )
+        return exist_plates_phone
+
+    async def cheking_palte_have_phone_number(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        type_list: PlateType | None = None,
+    ) -> PlateList:
+
+        exist_plates_phone = await self.exist_plate(
+            db,
+            plate=plate,
+            type_list=type_list,
+        )
+
         return exist_plates_phone
 
 

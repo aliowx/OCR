@@ -56,14 +56,6 @@ async def pay_bills_by_id(
     """
 
     # !!! defualt pay by pos
-    print(
-        settings.GATEWAY_TYPE_PAY
-        in (
-            _GatewayTypes.ipg,
-            _GatewayTypes.mock,
-        )
-        and (params.serial_number is None)
-    )
     if settings.GATEWAY_TYPE_PAY is None and params.serial_number is None:
         raise exc.ServiceFailure(
             detail="set GATEWAY_TYPE_PAY or serial_number",

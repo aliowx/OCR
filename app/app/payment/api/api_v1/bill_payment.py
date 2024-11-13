@@ -151,7 +151,6 @@ async def pay_bills_by_id_ipg(
     response = await pay_repo.payment_request_post(
         data=data.model_dump(), url=PaymentUrlEndpoint.verify
     )
-    #
     response_json = response.json()
     if (
         response.status_code != 200
@@ -169,10 +168,11 @@ async def pay_bills_by_id_ipg(
         bill_ids_in=get_transaction.bill_ids,
         rrn_number_in=response_json["content"]["reference_number"],
         time_paid_in=datetime.now(UTC).replace(tzinfo=None),
-        status_in=billSchemas.StatusBill.paid,
+        status_bill_in=billSchemas.StatusBill.paid,
     )
     return RedirectResponse(
-        get_transaction.callback_url, status_code=StatusCode.HTTP_303_SEE_OTHER
+        f"{get_transaction.callback_url}/amount={response_json["content"]["amount"]}?status={response_json["content"]["status"]}",
+        status_code=StatusCode.HTTP_303_SEE_OTHER,
     )
 
 

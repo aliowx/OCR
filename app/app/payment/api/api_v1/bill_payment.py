@@ -70,9 +70,10 @@ async def pay_bills_by_id(
             (settings.PROVIDER_PAY is None)
             or (settings.TERMINAL_PAY is None)
             or (params.phone_number is None)
+            or (params.call_back is None)
         ):
             raise exc.ServiceFailure(
-                detail="checking TERMINAL_PAY or PROVIDER_PAY not None or phone_number",
+                detail="checking TERMINAL_PAY or PROVIDER_PAY not None or phone_number or call_back",
                 msg_code=MessageCodes.not_permission,
             )
         data = MakePaymentRequest(
@@ -80,7 +81,7 @@ async def pay_bills_by_id(
             provider=settings.PROVIDER_PAY,
             terminal=settings.TERMINAL_PAY,
             mobile=params.phone_number,
-            callback_url=settings.CALL_BACK_PAY,
+            callback_url=params.call_back,
             amount=pay_info.amount,
             additional_data=(
                 {"time": str(datetime.now()), "plate": pay_info.plate}

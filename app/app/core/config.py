@@ -136,7 +136,7 @@ class StorageSettings(SettingsBase):
     GATEWAY_TYPE_PAY: str = None
     PROVIDER_PAY: str = None
     TERMINAL_PAY: str = None
-    CALL_BACK_PAY: str = HttpUrl
+    # CALL_BACK_PAY: str = HttpUrl
 
 
     # MinIO

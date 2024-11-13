@@ -32,6 +32,7 @@ class BillPaymentSchema(BaseModel):
     bill_ids: list[int]
     serial_number: str | None = None
     phone_number: str | None = None
+    call_back: str | None = None
 
 
 class _PaymentStatus(str, Enum):

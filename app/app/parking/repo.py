@@ -281,6 +281,9 @@ class EquipmentRepository(
             Zone, Equipment.zone_id == Zone.id
         )
 
+        if params.id:
+            filters.append(self.model.id == params.id)
+
         if params.zone_id:
             filters.append(self.model.zone_id == params.zone_id)
 

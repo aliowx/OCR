@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, utils
 from app.plate import schemas
-from app.plate.repo import plate_repo
+from app.plate.repo import plate_repo, auth_otp_repo
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType, PaginatedContent
@@ -12,6 +12,11 @@ from collections import Counter
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
+from random import randint
+import requests
+from datetime import datetime, UTC, timedelta
+from app.core.config import settings
+
 
 router = APIRouter()
 namespace = "plate"
@@ -141,7 +146,7 @@ async def create_Plate(
     )
 
 
-@router.post("/excel")
+@router.post("/upload-excel")
 async def create_Plate(
     _: Annotated[
         bool,
@@ -267,3 +272,133 @@ async def update_plate(
         db, db_obj=plate, obj_in=plate_in.model_dump()
     )
     return APIResponse(plate)
+
+
+@router.post("/sending-otp-code")
+async def create_Plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    params: schemas.PlateCreateOTP,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[Any]:
+    """
+    Create new plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    plate_validate = models.base.validate_iran_plate(params.plate)
+    phone_number_validate = models.base.validate_iran_phone_number(
+        params.phone_number
+    )
+
+    plates_exist = await plate_repo.get_plate(
+        db=db,
+        phone_number=params.phone_number,
+        type_list=schemas.plate.PlateType.phone,
+        plate=params.plate,
+    )
+    if plates_exist is not None:
+        return APIResponse(plates_exist)
+
+    gen_code = randint(10000, 99999)
+
+    create_otp = await auth_otp_repo.create(
+        db,
+        obj_in=schemas.AuthOTPCreate(
+            phone_number=params.phone_number,
+            code=gen_code,
+            expire_at=datetime.now(UTC).replace(tzinfo=None),
+            is_used=False,
+        ).model_dump(),
+    )
+
+    params_sending_code = {
+        "phoneNumber": params.phone_number,
+        "textMessage": f"بازار بزرگ ایران (ایران مال) \n {gen_code}کد تایید شما :",
+    }
+    send_code = requests.post(
+        settings.URL_SEND_SMS,
+        params=params_sending_code,
+    )
+
+    return APIResponse({"data": "sending code"})
+
+
+@router.post("/create-plate-with-code-otp")
+async def create_Plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    code_in: int,
+    params: schemas.PlateCreateOTP,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> APIResponseType[Any]:
+    """
+    Create new plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+
+    plate_validate = models.base.validate_iran_plate(params.plate)
+    phone_number_validate = models.base.validate_iran_phone_number(
+        params.phone_number
+    )
+    cheking_code = await auth_otp_repo.chking_code(
+        db, code_in=code_in, phone_number_in=params.phone_number
+    )
+
+    if not cheking_code:
+        raise exc.ServiceFailure(
+            detail="code not found",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    if cheking_code.expire_at + timedelta(minutes=2) < datetime.now(
+        UTC
+    ).replace(tzinfo=None):
+        cheking_code.is_used = True
+        update_otp = await auth_otp_repo.update(db, db_obj=cheking_code)
+        raise exc.ServiceFailure(
+            detail="expire code",
+            msg_code=utils.MessageCodes.not_found,
+        )
+
+    create_plate = await plate_repo.create(
+        db,
+        obj_in=schemas.PlateCreateOTP(
+            plate=params.plate,
+            type=schemas.PlateType.phone,
+            phone_number=params.phone_number,
+        ),
+    )
+
+    params_sending_code = {
+        "phoneNumber": params.phone_number,
+        "textMessage": " بازار بزرگ ایران (ایران مال) \nشماره شما در سیستم با موفقیت ذخیره شد",
+    }
+    send_code = requests.post(
+        settings.URL_SEND_SMS,
+        params=params_sending_code,
+    )
+    cheking_code.is_used = True
+    update_otp = await auth_otp_repo.update(db, db_obj=cheking_code)
+
+    return APIResponse({"data": "save phone number in system"})

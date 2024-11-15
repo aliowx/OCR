@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 from datetime import datetime, UTC
-from app import crud, schemas
+from app import crud, schemas, models
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
@@ -118,10 +118,10 @@ async def get_bills_by_plate(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
     """
 
-    checking_phone_number = servicesBill.validate_iran_phone_number(
+    checking_phone_number = models.base.validate_iran_phone_number(
         phone_number
     )
-    cheking_plate = servicesBill.validate_iran_plate(plate_in)
+    cheking_plate = models.base.validate_iran_plate(plate_in)
 
     plates_phone_number = await plate_repo.cheking_and_create_phone_number(
         db,
@@ -129,6 +129,54 @@ async def get_bills_by_plate(
         plate=plate_in,
         type_list=PlateType.phone,
     )
+    bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
+        db, plate=plate_in
+    )
+
+    return APIResponse(
+        billSchemas.billsPaidUnpaidplate(
+            paid=bills_paid,
+            unpaid=bills_unpaid,
+            user_info=billSchemas.PlateInfo(**plates_phone_number.__dict__),
+        )
+    )
+
+
+@router.get("/get-bills-by-plate/")
+async def get_bills_by_plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.APP_IRANMALL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    plate_in: str,
+) -> APIResponseType[Any]:
+    """
+    Retrieve bills by plate and phone number.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
+    """
+
+    cheking_plate = models.base.validate_iran_plate(plate_in)
+
+    plates_phone_number = await plate_repo.exist_plate(
+        db,
+        plate=plate_in,
+        type_list=PlateType.phone,
+    )
+    if plates_phone_number is None or plates_phone_number.phone_number is None:
+        raise exc.ServiceFailure(
+            detail="phone number not Found",
+            msg_code=MessageCodes.not_found,
+        )
 
     bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
         db, plate=plate_in

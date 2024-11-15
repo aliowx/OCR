@@ -281,6 +281,9 @@ class EquipmentRepository(
             Zone, Equipment.zone_id == Zone.id
         )
 
+        if params.id:
+            filters.append(self.model.id == params.id)
+
         if params.zone_id:
             filters.append(self.model.zone_id == params.zone_id)
 
@@ -341,6 +344,7 @@ class EquipmentRepository(
                     (
                         EquipmentType.CAMERA_ENTRANCE_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
+                        EquipmentType.CAMERA_DIRECTION_EXIT.value,
                     )
                 ),
             )
@@ -354,6 +358,7 @@ class EquipmentRepository(
                     (
                         EquipmentType.CAMERA_EXIT_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_EXIT.value,
+                        EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
                     )
                 ),
             )

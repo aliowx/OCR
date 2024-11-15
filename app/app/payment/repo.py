@@ -1,14 +1,19 @@
 import logging
 from app.core.config import settings
 from app.bill.models import Bill
-
 from app.crud.base import CRUDBase
 from app.bill.schemas.bill import (
     BillCreate,
     BillUpdate,
     StatusBill,
 )
-from app.payment.schemas.payment import BillPaymentSchema, SumBillsByIdSchema
+from app.payment.schemas.payment import (
+    BillPaymentSchemaPOS,
+    SumBillsByIdSchema,
+    BillPaymentSchemaIPG,
+    TransactionUpdate,
+    TransactionCreate,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, and_
@@ -17,7 +22,7 @@ from sqlalchemy.sql.expression import false, null
 from app.core import exceptions as exc
 from app.utils import MessageCodes, make_requests
 from httpx import BasicAuth
-
+from app.payment.models import Transaction
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -44,7 +49,9 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         return bills
 
     async def sum_bills_by_id(
-        self, db: AsyncSession, bill_payment: BillPaymentSchema
+        self,
+        db: AsyncSession,
+        bill_payment: BillPaymentSchemaPOS | BillPaymentSchemaIPG,
     ) -> SumBillsByIdSchema:
         """gets a list of bills ID and checks and return the plate and the total amount"""
 
@@ -128,4 +135,10 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             )
 
 
+class TransactionRepository(
+    CRUDBase[Transaction, TransactionCreate, TransactionUpdate]
+): ...
+
+
 pay_repo = PaymentRepository(Bill)
+transaction_repo = TransactionRepository(Transaction)

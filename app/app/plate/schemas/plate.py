@@ -21,6 +21,12 @@ class PlateBase(BaseModel):
 class PlateCreate(PlateBase): ...
 
 
+class PlateCreateOTP(BaseModel):
+    plate: str
+    type: PlateType
+    phone_number: str
+
+
 class PlateUpdate(PlateBase): ...
 
 
@@ -49,3 +55,14 @@ class ParamsPlate(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
+
+
+class AuthOTPCreate(BaseModel):
+    phone_number: str
+    code: int
+    expire_at: datetime
+    is_used: bool = False
+
+
+class AuthOTPUpdate(BaseModel):
+    is_used: bool = False

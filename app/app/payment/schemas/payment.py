@@ -28,10 +28,15 @@ class _Providers(StrEnum):
     rayanpay = "rayanpay"
 
 
-class BillPaymentSchema(BaseModel):
+class BillPaymentSchemaPOS(BaseModel):
     bill_ids: list[int]
     serial_number: str | None = None
+
+
+class BillPaymentSchemaIPG(BaseModel):
+    bill_ids: list[int]
     phone_number: str | None = None
+    call_back: str | None = None
 
 
 class _PaymentStatus(str, Enum):
@@ -72,6 +77,17 @@ class VerifyPaymentRequest(BaseModel):
     order_id: int
     username: str = ""
     password: str = ""
+
+
+class TransactionUpdate(BaseModel):
+    order_id: int | None = None
+
+
+class TransactionCreate(BaseModel):
+    bill_ids: list[int] | None = None
+    order_id: int | None = None
+    amount: int | None = None
+    callback_url: str | None = None
 
 
 class MakePaymentRequest(BaseModel):

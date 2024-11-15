@@ -11,24 +11,6 @@ import math
 import re
 
 
-def validate_iran_phone_number(phone_number: str):
-    iran_phone_pattern = r"^(09\d{9}|(\+98)9\d{9})$"
-    if not re.match(iran_phone_pattern, phone_number):
-        raise ServiceFailure(
-            detail="phone number incorrect",
-            msg_code=MessageCodes.not_found,
-        )
-
-
-def validate_iran_plate(plate: str):
-    iran_plate = r"[0-9?]{9}"
-    if not re.match(iran_plate, plate):
-        raise ServiceFailure(
-            detail="plate incorrect",
-            msg_code=MessageCodes.not_found,
-        )
-
-
 def convert_to_timezone_iran(time: datetime):
     if isinstance(time, str):
         time = datetime.fromisoformat(time)
@@ -166,6 +148,44 @@ async def update_multi_bill(
         if not bill:
             list_bills_not_update.append(
                 {"bill by this id not found": bill_in.id}
+            )
+    resualt.update({"list_bills_update": list_bills_update})
+    if list_bills_not_update != []:
+        resualt.update({"list_bills_not_update": list_bills_not_update})
+    return resualt, msg_code
+
+
+async def update_bills(
+    db: AsyncSession,
+    bill_ids_in: list[int],
+    rrn_number_in: str,
+    status_in: billSchemas.StatusBill,
+    time_paid_in: datetime,
+):
+    resualt = {}
+
+    list_bills_update = []
+    list_bills_not_update = []
+    msg_code = 0
+    for bill_id in bill_ids_in:
+        bill = await bill_repo.get(db, id=bill_id)
+        if bill:
+            if bill.rrn_number is not None:
+                msg_code = 14
+                list_bills_not_update.append(bill)
+            if bill.rrn_number is None:
+                bill.rrn_number = rrn_number_in
+                bill.status = status_in
+                bill.time_paid = time_paid_in
+                bill_update = await bill_repo.update(
+                    db,
+                    db_obj=bill,
+                )
+                list_bills_update.append(bill_update)
+
+        if not bill:
+            list_bills_not_update.append(
+                {"bill by this id not found": bill_id}
             )
     resualt.update({"list_bills_update": list_bills_update})
     if list_bills_not_update != []:

@@ -344,6 +344,7 @@ class EquipmentRepository(
                     (
                         EquipmentType.CAMERA_ENTRANCE_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
+                        EquipmentType.CAMERA_DIRECTION_EXIT.value,
                     )
                 ),
             )
@@ -357,6 +358,7 @@ class EquipmentRepository(
                     (
                         EquipmentType.CAMERA_EXIT_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_EXIT.value,
+                        EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
                     )
                 ),
             )

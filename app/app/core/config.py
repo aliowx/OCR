@@ -94,7 +94,6 @@ class StorageSettings(SettingsBase):
     AUTO_GEN_EVENT_FAKE: int | None = None
     DATA_FAKE_SET: bool | None = False
 
-
     CHECKING_FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
     FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR: int | None = None
 
@@ -132,6 +131,15 @@ class StorageSettings(SettingsBase):
     PAYMENT_ADDRESS: HttpUrl
     PAYMENT_USER_NAME: str
     PAYMENT_PASSWORD: str
+
+    # pay
+    GATEWAY_TYPE_PAY: str = None
+    PROVIDER_PAY: str = None
+    TERMINAL_PAY: str = None
+    CALL_BACK_PAY: str = HttpUrl
+
+    # sms
+    URL_SEND_SMS: str = None
 
     # MinIO
     MINIO_URL: str

@@ -3,9 +3,35 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
-from .models.plate import PlateList
-from .schemas import PlateCreate, PlateUpdate, ParamsPlate, PlateType
+from .models.plate import PlateList, AuthOTP
+from .schemas import (
+    PlateCreate,
+    PlateUpdate,
+    ParamsPlate,
+    PlateType,
+    AuthOTPCreate,
+    AuthOTPUpdate,
+)
 import re
+
+
+class CRUDAuthOTP(CRUDBase[AuthOTP, AuthOTPCreate, AuthOTPUpdate]):
+
+    async def chking_code(
+        self, db: AsyncSession, *, code_in: int, phone_number_in: str
+    ):
+        query = select(AuthOTP)
+
+        filters = [
+            and_(
+                AuthOTP.is_deleted == False,
+                AuthOTP.is_used == False,
+                AuthOTP.code == code_in,
+                AuthOTP.phone_number == phone_number_in,
+            )
+        ]
+
+        return await self._first(db.scalars(query.filter(*filters)))
 
 
 class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
@@ -90,6 +116,22 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
         ]
         return await self._first(db.scalars(query.filter(*filters)))
 
+    async def exist_plate(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        type_list: PlateType | None = None,
+    ) -> PlateList:
+
+        query = select(PlateList)
+
+        filters = [
+            PlateList.is_deleted == False,
+            and_(PlateList.plate == plate, PlateList.type == type_list),
+        ]
+        return await self._first(db.scalars(query.filter(*filters)))
+
     async def cheking_and_create_phone_number(
         self,
         db: AsyncSession,
@@ -116,5 +158,22 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
             )
         return exist_plates_phone
 
+    async def cheking_palte_have_phone_number(
+        self,
+        db: AsyncSession,
+        *,
+        plate: str,
+        type_list: PlateType | None = None,
+    ) -> PlateList:
+
+        exist_plates_phone = await self.exist_plate(
+            db,
+            plate=plate,
+            type_list=type_list,
+        )
+
+        return exist_plates_phone
+
 
 plate_repo = CRUDPlate(PlateList)
+auth_otp_repo = CRUDAuthOTP(AuthOTP)

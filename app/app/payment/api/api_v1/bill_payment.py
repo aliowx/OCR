@@ -186,7 +186,7 @@ async def pay_bills_by_id_ipg(
     ],
     params: BillPaymentSchemaIPG,
     db: AsyncSession = Depends(deps.get_db_async),
-) -> APIResponseType[Any]:
+):
     """
     pay bill by bill id.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
@@ -237,7 +237,7 @@ async def pay_bills_by_id_ipg(
         raise exc.InternalServiceError(
             msg_code=MessageCodes.unsuccessfully_pay
         )
-    response_json: dict[str, Any] = response.json()
+    response_json = response.json()
     update_transaction = await transaction_repo.update(
         db,
         db_obj=craete_transaction,
@@ -246,7 +246,7 @@ async def pay_bills_by_id_ipg(
         ),
     )
 
-    return APIResponse(response_json)
+    return response_json
 
 
 @router.get("/payments")

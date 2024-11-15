@@ -166,7 +166,7 @@ async def pay_bills_by_id_ipg(
             status_in=billSchemas.StatusBill.paid,
         )
     return RedirectResponse(
-        f"{get_transaction.callback_url}?amount={response_json["content"]["amount"]}?status={response_json["content"]["status"]}?transaction_id={get_transaction.id}",
+        f"{get_transaction.callback_url}?amount={response_json["content"]["amount"]}&status={response_json["content"]["status"]}&transaction_id={get_transaction.id}",
         status_code=StatusCode.HTTP_303_SEE_OTHER,
     )
 

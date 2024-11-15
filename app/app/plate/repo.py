@@ -3,9 +3,35 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
-from .models.plate import PlateList
-from .schemas import PlateCreate, PlateUpdate, ParamsPlate, PlateType
+from .models.plate import PlateList, AuthOTP
+from .schemas import (
+    PlateCreate,
+    PlateUpdate,
+    ParamsPlate,
+    PlateType,
+    AuthOTPCreate,
+    AuthOTPUpdate,
+)
 import re
+
+
+class CRUDAuthOTP(CRUDBase[AuthOTP, AuthOTPCreate, AuthOTPUpdate]):
+
+    async def chking_code(
+        self, db: AsyncSession, *, code_in: int, phone_number_in: str
+    ):
+        query = select(AuthOTP)
+
+        filters = [
+            and_(
+                AuthOTP.is_deleted == False,
+                AuthOTP.is_used == False,
+                AuthOTP.code == code_in,
+                AuthOTP.phone_number == phone_number_in,
+            )
+        ]
+
+        return await self._first(db.scalars(query.filter(*filters)))
 
 
 class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
@@ -89,7 +115,7 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
             ),
         ]
         return await self._first(db.scalars(query.filter(*filters)))
-    
+
     async def exist_plate(
         self,
         db: AsyncSession,
@@ -102,10 +128,7 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
 
         filters = [
             PlateList.is_deleted == False,
-            and_(
-                PlateList.plate == plate,
-                PlateList.type == type_list
-            ),
+            and_(PlateList.plate == plate, PlateList.type == type_list),
         ]
         return await self._first(db.scalars(query.filter(*filters)))
 
@@ -153,3 +176,4 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
 
 
 plate_repo = CRUDPlate(PlateList)
+auth_otp_repo = CRUDAuthOTP(AuthOTP)

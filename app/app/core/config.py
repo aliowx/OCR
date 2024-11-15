@@ -138,6 +138,8 @@ class StorageSettings(SettingsBase):
     TERMINAL_PAY: str = None
     CALL_BACK_PAY: str = HttpUrl
 
+    # sms
+    URL_SEND_SMS: str = None
 
     # MinIO
     MINIO_URL: str

@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 from datetime import datetime, UTC
-from app import crud, schemas
+from app import crud, schemas, models
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
@@ -118,10 +118,10 @@ async def get_bills_by_plate(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
     """
 
-    checking_phone_number = servicesBill.validate_iran_phone_number(
+    checking_phone_number = models.base.validate_iran_phone_number(
         phone_number
     )
-    cheking_plate = servicesBill.validate_iran_plate(plate_in)
+    cheking_plate = models.base.validate_iran_plate(plate_in)
 
     plates_phone_number = await plate_repo.cheking_and_create_phone_number(
         db,
@@ -165,7 +165,7 @@ async def get_bills_by_plate(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , APP_IRANMALL ]
     """
 
-    cheking_plate = servicesBill.validate_iran_plate(plate_in)
+    cheking_plate = models.base.validate_iran_plate(plate_in)
 
     plates_phone_number = await plate_repo.exist_plate(
         db,

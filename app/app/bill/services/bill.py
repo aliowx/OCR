@@ -11,24 +11,6 @@ import math
 import re
 
 
-def validate_iran_phone_number(phone_number: str):
-    iran_phone_pattern = r"^(09\d{9}|(\+98)9\d{9})$"
-    if not re.match(iran_phone_pattern, phone_number):
-        raise ServiceFailure(
-            detail="phone number incorrect",
-            msg_code=MessageCodes.not_found,
-        )
-
-
-def validate_iran_plate(plate: str):
-    iran_plate = r"[0-9?]{9}"
-    if not re.match(iran_plate, plate):
-        raise ServiceFailure(
-            detail="plate incorrect",
-            msg_code=MessageCodes.not_found,
-        )
-
-
 def convert_to_timezone_iran(time: datetime):
     if isinstance(time, str):
         time = datetime.fromisoformat(time)

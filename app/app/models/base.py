@@ -1,6 +1,9 @@
 from enum import IntEnum
-
 from fastapi.params import Query
+from app.core.exceptions import ServiceFailure
+from app.utils import MessageCodes
+
+import re
 
 
 class QueryParam(Query): ...
@@ -126,3 +129,21 @@ plate_alphabet = {
 }
 
 plate_alphabet_reverse = {v: f"{k:0>2}" for k, v in plate_alphabet.items()}
+
+
+def validate_iran_phone_number(phone_number: str):
+    iran_phone_pattern = r"^(09\d{9}|(\+98)9\d{9})$"
+    if not re.match(iran_phone_pattern, phone_number):
+        raise ServiceFailure(
+            detail="phone number incorrect",
+            msg_code=MessageCodes.not_found,
+        )
+
+
+def validate_iran_plate(plate: str):
+    iran_plate = r"[0-9?]{9}"
+    if not re.match(iran_plate, plate):
+        raise ServiceFailure(
+            detail="plate incorrect",
+            msg_code=MessageCodes.not_found,
+        )

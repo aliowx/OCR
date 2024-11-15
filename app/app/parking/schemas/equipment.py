@@ -46,6 +46,7 @@ class EquipmentInDB(EquipmentInDBBase): ...
 
 
 class FilterEquipmentsParams(BaseModel):
+    id: int | None = Field(None, gt=0)
     ip_address: str | None = None
     serial_number: str | None = None
     zone_id: int | None = None

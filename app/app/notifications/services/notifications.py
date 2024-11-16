@@ -14,7 +14,7 @@ async def get_multi_notifications_by_filter(
         db, params=params
     )
     resualt = []
-    for notice in notifications[0]:
+    for notice in notifications:
         notice[0].plate = notice[1]
         resualt.append(notice[0])
 

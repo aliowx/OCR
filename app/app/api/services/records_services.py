@@ -89,7 +89,6 @@ async def gen_excel_record(
                 fa_alfabet = "در پارکینگ"
             case schemas.record.StatusRecord.unknown:
                 fa_alfabet = "نامشخص"
-        print(record.time_park)
         excel_record.append(
             schemas.record.RecordExcelItem(
                 plate=modified_plate,

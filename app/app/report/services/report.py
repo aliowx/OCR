@@ -211,6 +211,10 @@ async def report_zone(
         zone.children = []
         zone.rules = []
 
+    def _sort_by_key(k):
+        return k.full
+
+    zones.sort(reverse=True, key=_sort_by_key)
     return zones
 
 

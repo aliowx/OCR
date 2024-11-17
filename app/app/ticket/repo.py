@@ -1,5 +1,5 @@
 from typing import Awaitable
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
@@ -34,7 +34,7 @@ class CRUDTicket(CRUDBase[Ticket, TicketCreate, TicketUpdate]):
         if params.ticket_type is not None:
             filters.append(Ticket.type == params.ticket_type)
 
-        total_count = await self.count_by_filter(db, filters=filters)
+        total_count = await db.scalar(query.filter(*filters).with_only_columns(func.count()))
 
         order_by = Ticket.id.asc() if params.asc else Ticket.id.desc()
 

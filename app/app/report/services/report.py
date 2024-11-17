@@ -84,11 +84,11 @@ def calculate_percentage(start_time, end_time):
 
 async def capacity(db: AsyncSession):
     start_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=20, minute=30, second=0, microsecond=0
-    )
+        tzinfo=None, hour=0, minute=0, second=0, microsecond=0
+    ) - timedelta(hours=3, minutes=30)
     end_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=20, minute=29, second=59, microsecond=9999
-    )
+        tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
+    ) - timedelta(hours=3, minutes=30)
     count_referred = await crud.record.get_count_referred(
         db,
         input_start_create_time=start_today,

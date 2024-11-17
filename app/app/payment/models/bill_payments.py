@@ -18,3 +18,5 @@ class Transaction(Base):
     amount: Mapped[int] = mapped_column(BigInteger, nullable=True)
 
     callback_url: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    user_id: Mapped[int] = mapped_column(Integer, nullable=True)

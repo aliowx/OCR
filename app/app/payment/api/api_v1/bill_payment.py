@@ -18,6 +18,8 @@ from app.payment.schemas.payment import (
     _GatewayTypes,
     TransactionCreate,
     TransactionUpdate,
+    CallBackCreate,
+    CallBackUserCreate,
 )
 
 from app.api import deps
@@ -31,6 +33,9 @@ from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
 from fastapi.responses import RedirectResponse
+from app import models
+from sqlalchemy.exc import IntegrityError
+
 
 router = APIRouter()
 namespace = "pay"
@@ -169,6 +174,43 @@ async def pay_bills_by_id_ipg(
         f"{get_transaction.callback_url}?amount={response_json["content"]["amount"]}&status={response_json["content"]["status"]}&transaction_id={get_transaction.id}",
         status_code=StatusCode.HTTP_303_SEE_OTHER,
     )
+
+
+@router.post("/call-back")
+async def pay_bills_by_id_ipg(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.ITOLL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    params: CallBackCreate,
+) -> APIResponseType[Any]:
+    """
+    pay bill by bill id.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
+    """
+
+    data = CallBackUserCreate(**params.__dict__, user_id=current_user.id)
+
+    try:
+        transaction = await transaction_repo.create(db, obj_in=data)
+    except IntegrityError as e:
+        if "duplicate key value violates unique constraint" in str(e):
+            raise exc.ServiceFailure(
+                detail=f"Order ID '{data.order_id}' already exists. Please use a unique order ID.",
+                msg_code=MessageCodes.operation_failed,
+            )
+    return APIResponse({"transaction_id": transaction.id})
 
 
 @router.post("/ipg")

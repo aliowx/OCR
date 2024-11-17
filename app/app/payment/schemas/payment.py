@@ -90,6 +90,17 @@ class TransactionCreate(BaseModel):
     callback_url: str | None = None
 
 
+class CallBackCreate(BaseModel):
+    bill_ids: list[int]
+    order_id: int
+    amount: int
+    status: str
+
+
+class CallBackUserCreate(CallBackCreate):
+    user_id: int
+
+
 class MakePaymentRequest(BaseModel):
     gateway: _GatewayTypes = _GatewayTypes.wspos
     provider: _Providers = _Providers.internal

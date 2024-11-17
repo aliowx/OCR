@@ -155,6 +155,11 @@ class billsPaidUnpaidplate(BaseModel):
     user_info: PlateInfo
 
 
+class billsPaidUnpaid(BaseModel):
+    paid: list[BillPaidShow] = []
+    unpaid: list[BillUnpaidShow] = []
+
+
 class BillNotAdditionalDetail(BillInDBBase): ...
 
 

@@ -191,6 +191,43 @@ async def get_bills_by_plate(
     )
 
 
+@router.get("/get-bills-by-plate-with-out-phone-number/")
+async def get_bills_by_plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.ITOLL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    plate_in: str,
+) -> APIResponseType[Any]:
+    """
+    Retrieve bills by plate and phone number.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
+    """
+
+    cheking_plate = models.base.validate_iran_plate(plate_in)
+
+    bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
+        db, plate=plate_in
+    )
+
+    return APIResponse(
+        billSchemas.billsPaidUnpaid(
+            paid=bills_paid,
+            unpaid=bills_unpaid,
+        )
+    )
+
+
 @router.get("/get_by_ids/")
 async def get_by_ids(
     _: Annotated[

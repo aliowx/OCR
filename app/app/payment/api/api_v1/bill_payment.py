@@ -212,13 +212,20 @@ async def pay_bills_by_id_ipg(
             )
     before_paid = []
     update_bills = []
+    total_amount = 0
     for bill_id in params.bill_ids:
         bill = await bill_repo.get(db, id=bill_id)
+        total_amount += bill.price
         if bill.status == StatusBill.paid:
             before_paid.append(bill.id)
         else:
             update_bills.append(bill)
-    if update_bills is not None and update_bills != []:
+
+    if (
+        update_bills != []
+        and params.status == "paid"
+        and total_amount == params.amount
+    ):
         for bill in update_bills:
             bill.rrn_number = params.rrn_number
             bill.status = StatusBill.paid
@@ -228,7 +235,10 @@ async def pay_bills_by_id_ipg(
     if before_paid != []:
         msg_code = 14
     return APIResponse(
-        {"transaction_id": transaction.id, "bill_ids_before_paid": before_paid},
+        {
+            "transaction_id": transaction.id,
+            "bill_ids_before_paid": before_paid,
+        },
         msg_code=msg_code,
     )
 

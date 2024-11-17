@@ -200,6 +200,9 @@ async def pay_bills_by_id_ipg(
     pay bill by bill id.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
     """
+
+    checking_plate = await pay_repo.checking_in_list_one_plate(db, params.bill_ids)
+
     data = CallBackUserCreate(**params.__dict__, user_id=current_user.id)
 
     try:
@@ -234,13 +237,18 @@ async def pay_bills_by_id_ipg(
     msg_code = 0
     if before_paid != []:
         msg_code = 14
-    return APIResponse(
+    response = APIResponse(
         {
             "transaction_id": transaction.id,
             "bill_ids_before_paid": before_paid,
         },
         msg_code=msg_code,
     )
+    if total_amount != params.amount:
+        response.content.update(
+            {"amount": params.amount, "total_amount_bills": total_amount}
+        )
+    return response
 
 
 @router.post("/ipg")

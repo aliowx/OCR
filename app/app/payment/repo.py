@@ -29,6 +29,23 @@ logger = logging.getLogger(__name__)
 
 
 class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
+
+    async def checking_in_list_one_plate(self, db: AsyncSession, bill_ids: list[int]):
+        plate_check = select(Bill.plate).where(Bill.id.in_(bill_ids)).distinct()
+        result = await db.execute(plate_check)
+        plates = result.scalars().all()
+
+        if len(plates) == 0:
+            raise exc.ServiceFailure(
+                detail="No bills found for the given IDs",
+                msg_code=MessageCodes.not_found,
+            )
+        elif len(plates) > 1:
+            raise exc.ServiceFailure(
+                detail="Bills have different plates",
+                msg_code=MessageCodes.input_error,
+            )
+        return True
     async def get_bills_by_ids(
         self, db: AsyncSession, bill_ids: list[int]
     ) -> list[Bill]:

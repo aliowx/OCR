@@ -341,11 +341,11 @@ class EquipmentRepository(
             .filter(
                 *filters,
                 Equipment.equipment_type.in_(
-                    (
+                    [
                         EquipmentType.CAMERA_ENTRANCE_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
                         EquipmentType.CAMERA_DIRECTION_EXIT.value,
-                    )
+                    ]
                 ),
             )
             .join(Zone, Equipment.zone_id == Zone.id)
@@ -355,11 +355,11 @@ class EquipmentRepository(
             .filter(
                 *filters,
                 Equipment.equipment_type.in_(
-                    (
+                    [
                         EquipmentType.CAMERA_EXIT_DOOR.value,
                         EquipmentType.CAMERA_DIRECTION_EXIT.value,
                         EquipmentType.CAMERA_DIRECTION_ENTRANCE.value,
-                    )
+                    ]
                 ),
             )
             .join(Zone, Equipment.zone_id == Zone.id)

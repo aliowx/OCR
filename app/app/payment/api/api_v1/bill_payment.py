@@ -228,7 +228,7 @@ async def pay_bills_by_id_ipg(
     if before_paid != []:
         msg_code = 14
     return APIResponse(
-        {"transaction_id": transaction.id, "before_paid": before_paid},
+        {"transaction_id": transaction.id, "bill_ids_before_paid": before_paid},
         msg_code=msg_code,
     )
 

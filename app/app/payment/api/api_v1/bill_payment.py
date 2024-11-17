@@ -18,8 +18,11 @@ from app.payment.schemas.payment import (
     _GatewayTypes,
     TransactionCreate,
     TransactionUpdate,
+    CallBackCreate,
+    CallBackUserCreate,
 )
-
+from app.bill.repo import bill_repo
+from app.bill.schemas.bill import StatusBill
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
@@ -31,6 +34,9 @@ from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
 from typing import Annotated, Any
 from fastapi.responses import RedirectResponse
+from app import models
+from sqlalchemy.exc import IntegrityError
+
 
 router = APIRouter()
 namespace = "pay"
@@ -168,6 +174,62 @@ async def pay_bills_by_id_ipg(
     return RedirectResponse(
         f"{get_transaction.callback_url}?amount={response_json["content"]["amount"]}&status={response_json["content"]["status"]}&transaction_id={get_transaction.id}",
         status_code=StatusCode.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/call-back")
+async def pay_bills_by_id_ipg(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.ITOLL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    params: CallBackCreate,
+) -> APIResponseType[Any]:
+    """
+    pay bill by bill id.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
+    """
+    data = CallBackUserCreate(**params.__dict__, user_id=current_user.id)
+
+    try:
+        transaction = await transaction_repo.create(db, obj_in=data)
+    except IntegrityError as e:
+        if "duplicate key value violates unique constraint" in str(e):
+            raise exc.ServiceFailure(
+                detail=f"Order ID '{data.order_id}' already exists. Please use a unique order ID.",
+                msg_code=MessageCodes.operation_failed,
+            )
+    before_paid = []
+    update_bills = []
+    for bill_id in params.bill_ids:
+        bill = await bill_repo.get(db, id=bill_id)
+        if bill.status == StatusBill.paid:
+            before_paid.append(bill.id)
+        else:
+            update_bills.append(bill)
+    if update_bills is not None and update_bills != []:
+        for bill in update_bills:
+            bill.rrn_number = params.rrn_number
+            bill.status = StatusBill.paid
+            bill.time_paid = datetime.now(UTC).replace(tzinfo=None)
+            update = await bill_repo.update(db, db_obj=bill)
+    msg_code = 0
+    if before_paid != []:
+        msg_code = 14
+    return APIResponse(
+        {"transaction_id": transaction.id, "bill_ids_before_paid": before_paid},
+        msg_code=msg_code,
     )
 
 

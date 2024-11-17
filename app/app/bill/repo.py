@@ -52,7 +52,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if plate is not None:
             filters.append(Bill.plate == plate)
-            
+
         if bill_status is not None:
             filters.append(Bill.status == bill_status)
 
@@ -182,15 +182,14 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         return total_price, total_income
 
-    async def get_total_amount_bill(self, db: AsyncSession):
+    async def get_total_amount_bill(
+        self, db: AsyncSession, start_time: datetime | None = None
+    ):
 
         return await db.scalar(
             select(func.sum(Bill.price)).filter(
                 Bill.is_deleted == False,
-                Bill.created
-                >= datetime.now(UTC).replace(
-                    tzinfo=None, hour=0, minute=0, second=0, microsecond=0
-                ),
+                Bill.created >= start_time,
             )
         )
 

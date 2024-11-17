@@ -279,12 +279,16 @@ async def report_zone(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     current_user: models.User = Depends(deps.get_current_active_user),
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
 ) -> APIResponseType[Any]:
     """
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
     """
 
-    return APIResponse(await report_services.report_zone(db))
+    return APIResponse(
+        await report_services.report_zone(db, start_time, end_time)
+    )
 
 
 @router.get("/bill")

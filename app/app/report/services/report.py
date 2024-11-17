@@ -82,27 +82,35 @@ def calculate_percentage(start_time, end_time):
     return round(percentage_difference)
 
 
-async def capacity(db: AsyncSession):
-    start_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=0, minute=0, second=0, microsecond=0
-    ) - timedelta(hours=3, minutes=30)
-    end_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
-    ) - timedelta(hours=3, minutes=30)
+async def capacity(
+    db: AsyncSession,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+):
+    if start_time is None:
+        start_time = datetime.now(UTC).replace(
+            tzinfo=None, hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(hours=3, minutes=30)
+    if end_time is None:
+        end_time = datetime.now(UTC).replace(
+            tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
+        ) - timedelta(hours=3, minutes=30)
     count_referred = await crud.record.get_count_referred(
         db,
-        input_start_create_time=start_today,
-        input_end_create_time=end_today,
+        input_start_create_time=start_time,
+        input_end_create_time=end_time,
     )
 
-    total_amount_bill = await bill_repo.get_total_amount_bill(db)
+    total_amount_bill = await bill_repo.get_total_amount_bill(
+        db, start_time=start_time
+    )
     if total_amount_bill is None:
         total_amount_bill = 0
 
     time_park = await crud.record.get_time_park(
         db,
-        start_time_in=start_today,
-        end_time_in=end_today,
+        start_time_in=start_time,
+        end_time_in=end_time,
     )
     if time_park:
         time_park = round(time_park.total_seconds() / 60)
@@ -144,13 +152,19 @@ async def capacity(db: AsyncSession):
     )
 
 
-async def report_zone(db: AsyncSession):
-    start_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=0, minute=0, second=0, microsecond=0
-    )
-    end_today = datetime.now(UTC).replace(
-        tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
-    )
+async def report_zone(
+    db: AsyncSession,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
+):
+    if start_time is None:
+        start_time = datetime.now(UTC).replace(
+            tzinfo=None, hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(hours=3, minutes=30)
+    if end_time is None:
+        end_time = datetime.now(UTC).replace(
+            tzinfo=None, hour=23, minute=59, second=59, microsecond=9999
+        ) - timedelta(hours=3, minutes=30)
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
         zone_id = {zone.id}
@@ -159,15 +173,15 @@ async def report_zone(db: AsyncSession):
             await crud.record.get_today_count_referred_by_zone(
                 db,
                 zone_id=zone.id,
-                start_time_in=start_today,
-                end_time_in=end_today,
+                start_time_in=start_time,
+                end_time_in=end_time,
             )
         )
         time_park = await crud.record.get_time_park(
             db,
             zone_id_in=zone.id,
-            start_time_in=start_today,
-            end_time_in=end_today,
+            start_time_in=start_time,
+            end_time_in=end_time,
         )
 
         convert_time = 0
@@ -186,8 +200,8 @@ async def report_zone(db: AsyncSession):
         total_price, total_income = await bill_repo.get_price_income(
             db,
             zone_id=zone_id,
-            start_time_in=start_today,
-            end_time_in=end_today,
+            start_time_in=start_time,
+            end_time_in=end_time,
         )
 
         zone.avrage_amount_bill_today = round(total_price)

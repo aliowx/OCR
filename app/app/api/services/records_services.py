@@ -82,21 +82,22 @@ async def gen_excel_record(
                 + modified_plate[4:]
             )
         fa_alfabet = record.latest_status
-        end_time = None
         match fa_alfabet:
             case schemas.record.StatusRecord.finished:
                 fa_alfabet = "خارج شده"
-                end_time = record.end_time
             case schemas.record.StatusRecord.unfinished:
                 fa_alfabet = "در پارکینگ"
             case schemas.record.StatusRecord.unknown:
                 fa_alfabet = "نامشخص"
+        print(record.time_park)
         excel_record.append(
             schemas.record.RecordExcelItem(
                 plate=modified_plate,
-                start_time=record.start_time,
-                end_time=end_time,
-                time_park=record.time_park / 60,
+                start_date=str(record.start_time.date()),
+                start_time=str(record.start_time.time()),
+                end_date=str(record.end_time.date()),
+                end_time=str(record.end_time.time()),
+                time_park=record.time_park,
                 camera_entrance=record.camera_entrance,
                 camera_exit=record.camera_exit,
                 latest_status=fa_alfabet,

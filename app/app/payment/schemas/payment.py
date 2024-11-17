@@ -95,6 +95,7 @@ class CallBackCreate(BaseModel):
     order_id: int
     amount: int
     status: str
+    rrn_number: str
 
 
 class CallBackUserCreate(CallBackCreate):

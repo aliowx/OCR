@@ -21,7 +21,8 @@ from app.payment.schemas.payment import (
     CallBackCreate,
     CallBackUserCreate,
 )
-
+from app.bill.repo import bill_repo
+from app.bill.schemas.bill import StatusBill
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
@@ -199,7 +200,6 @@ async def pay_bills_by_id_ipg(
     pay bill by bill id.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
     """
-
     data = CallBackUserCreate(**params.__dict__, user_id=current_user.id)
 
     try:
@@ -210,7 +210,27 @@ async def pay_bills_by_id_ipg(
                 detail=f"Order ID '{data.order_id}' already exists. Please use a unique order ID.",
                 msg_code=MessageCodes.operation_failed,
             )
-    return APIResponse({"transaction_id": transaction.id})
+    before_paid = []
+    update_bills = []
+    for bill_id in params.bill_ids:
+        bill = await bill_repo.get(db, id=bill_id)
+        if bill.status == StatusBill.paid:
+            before_paid.append(bill.id)
+        else:
+            update_bills.append(bill)
+    if update_bills is not None and update_bills != []:
+        for bill in update_bills:
+            bill.rrn_number = params.rrn_number
+            bill.status = StatusBill.paid
+            bill.time_paid = datetime.now(UTC).replace(tzinfo=None)
+            update = await bill_repo.update(db, db_obj=bill)
+    msg_code = 0
+    if before_paid != []:
+        msg_code = 14
+    return APIResponse(
+        {"transaction_id": transaction.id, "before_paid": before_paid},
+        msg_code=msg_code,
+    )
 
 
 @router.post("/ipg")

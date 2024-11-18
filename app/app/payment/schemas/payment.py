@@ -4,7 +4,7 @@ from pydantic import Field
 from datetime import datetime
 from enum import Enum, StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from fastapi.params import Query
 
 PAYMENT_SUCCESS_STATUS = 0
@@ -25,7 +25,7 @@ class _GatewayTypes(str, Enum):
 class _Providers(StrEnum):
     parsian = "parsian"
     internal = "internal"
-    rayanpay = "rayanpay"
+    ebluestore = "ebluestore"
 
 
 class BillPaymentSchemaPOS(BaseModel):
@@ -42,6 +42,7 @@ class BillPaymentSchemaIPG(BaseModel):
 class _PaymentStatus(str, Enum):
     Verified = "Verified"  # Payment was verified and is considered successful
     Failed = "Failed"  # The payment was not successful
+    created = "created"  # The payment was not successful
     SentToPos = "SentToPos"  # The payment has just been Sent To Pos
 
 
@@ -65,7 +66,8 @@ class PaymentReportInput(BaseModel):
 
 
 class MakePaymentResponse(BaseModel):
-    order_id: int
+    order_id_paymet_switch: int
+    order_id_b2b: int
     token: str
     amount: int
     amount_in_currency: int
@@ -79,23 +81,49 @@ class VerifyPaymentRequest(BaseModel):
     password: str = ""
 
 
+class TransactionBase(BaseModel):
+    bill_ids: list[int] | None = None
+    status: _PaymentStatus | None = None
+    order_id_paymet_switch: int | None = None
+    order_id_b2b: int | None = None
+    amount: float | None = None
+    callback_url: str | None = None
+    user_id: int | None = None
+    rrn: str | None = None
+
+
+class TransactionInDBBase(TransactionBase):
+    id: int | None = None
+    created: datetime | None = None
+    modified: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Transaction(TransactionInDBBase): ...
+
+
 class TransactionUpdate(BaseModel):
-    order_id: int | None = None
+    order_id_paymet_switch: int | None = None
+    status: _PaymentStatus | None = None
 
 
 class TransactionCreate(BaseModel):
     bill_ids: list[int] | None = None
-    order_id: int | None = None
+    order_id_paymet_switch: int | None = None
+    order_id_b2b: int | None = None
     amount: int | None = None
+    status: _PaymentStatus | None = _PaymentStatus.created
     callback_url: str | None = None
 
 
 class CallBackCreate(BaseModel):
     bill_ids: list[int]
-    order_id: int
+    order_id_paymet_switch: int
+    order_id_b2b: int
     amount: int
     status: str
-    rrn_number: str
+    rrn: str
 
 
 class CallBackUserCreate(CallBackCreate):

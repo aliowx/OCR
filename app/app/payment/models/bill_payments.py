@@ -11,7 +11,11 @@ class Transaction(Base):
 
     status: Mapped[str] = mapped_column(String, nullable=True)
 
-    order_id: Mapped[int | None] = mapped_column(
+    order_id_paymet_switch: Mapped[int | None] = mapped_column(
+        BigInteger, nullable=True, unique=True
+    )
+
+    order_id_b2b: Mapped[int | None] = mapped_column(
         BigInteger, nullable=True, unique=True
     )
 
@@ -21,4 +25,4 @@ class Transaction(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
-    rrn_number: Mapped[str] = mapped_column(String, nullable=True)
+    rrn: Mapped[str] = mapped_column(String, nullable=True)

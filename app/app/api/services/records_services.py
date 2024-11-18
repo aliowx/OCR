@@ -4,6 +4,7 @@ from typing import List, Optional
 from app.models.base import plate_alphabet_reverse
 from app.utils import generate_excel
 from datetime import datetime
+from app import crud
 
 
 async def get_multi_by_filters(
@@ -109,3 +110,16 @@ async def gen_excel_record(
         )
         return file
     return {"data": "not exist"}
+
+
+async def update_record_and_events(
+    db: AsyncSession,
+    *,
+    record_in: schemas.Record,
+    params_in: schemas.RecordUpdatePlate,
+):
+    events, count = await crud.record.get_events_by_record_id(
+        db, record_id=record_in.id
+    )
+    print(events)
+    return

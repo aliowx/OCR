@@ -12,7 +12,7 @@ from app.parking.schemas.spot import (
     SpotInDBBase,
     SpotShowDetailByCamera,
     SpotUpdateStatus,
-    ReverseCoordinatesRectangles
+    ReverseCoordinatesRectangles,
 )
 from app.parking.schemas.zone import *
 from app.pricing.schemas import *
@@ -50,5 +50,6 @@ from .record import (
     RecordUpdate,
     ParamsRecord,
     StatusRecord,
-    RecordForWS
+    RecordForWS,
+    RecordUpdatePlate,
 )

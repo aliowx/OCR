@@ -40,6 +40,13 @@ class RecordUpdate(RecordBase):
     latest_status: StatusRecord
 
 
+class RecordUpdatePlate(BaseModel):
+    plate: str
+    latest_status: StatusRecord | None = None
+    end_time: datetime | None = None
+
+
+
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int

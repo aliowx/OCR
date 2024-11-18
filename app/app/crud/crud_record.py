@@ -619,5 +619,21 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return result, count
 
+    async def get_events_by_record_id(
+        self,
+        db: AsyncSession,
+        *,
+        record_id: int = None,
+    ):
+        query = select(Event)
+        filters = [Event.is_deleted == False]
+
+        if record_id is not None:
+            filters.append(Event.record_id.in_([record_id]))
+        
+        result = await db.execute(query.filter(*filters))
+
+        return result, count
+
 
 record = CRUDRecord(Record)

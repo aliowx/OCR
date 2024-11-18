@@ -84,26 +84,33 @@ def calculate_price(
     return price, get_price
 
 
-async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
+async def get_multi_by_filters(
+    db: AsyncSession,
+    params: billSchemas.ParamsBill,
+    jalali_date: billSchemas.JalaliDate,
+):
 
-    bill.time_park = round(
-        (bill.end_time - bill.start_time).total_seconds() / 60
+    bills = await bill_repo.get_multi_by_filters(
+        db, params=params, jalali_date=jalali_date
     )
-    if bill.zone_id:
-        zone = await zone_repo.get(db, id=bill.zone_id)
-        bill.zone_name = zone.name
 
-    if bill.img_entrance_id:
-        bill.camera_entrance = await bill_repo.get_camera_by_image_id(
-            db, img_id=bill.img_entrance_id
-        )
+    # bills
+    #       bills -> bills[0]
+    #             bill -> bill[0]
+    #             time_park -> bill[1]
+    #             zone_name -> bill[2]
+    #             camera_entrance -> bill[3]
+    #             camera_exit -> bill[4]
+    #       count -> bills[1]
+    resualt = []
+    for bill in bills[0]:
+        bill[0].time_park = round(bill[1].total_seconds() / 60)
+        bill[0].zone_name = bill[2]
+        bill[0].camera_entrance = bill[3]
+        bill[0].camera_exit = bill[3]
+        resualt.append(bill[0])
 
-    if bill.img_exit_id:
-        bill.camera_exit = await bill_repo.get_camera_by_image_id(
-            db, img_id=bill.img_exit_id
-        )
-
-    return bill
+    return resualt, bills[1]
 
 
 async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):

@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 from datetime import datetime, UTC
-from app import crud, schemas, models
+from app import models
 from app.api import deps
 from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
@@ -49,15 +49,13 @@ async def read_bill(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    bills = await bill_repo.get_multi_by_filters(
+    bills, count = await servicesBill.get_multi_by_filters(
         db, params=params, jalali_date=jalali_date
     )
-    for bill in bills[0]:
-        await servicesBill.set_detail(db, bill=bill)
     return APIResponse(
         PaginatedContent(
-            data=bills[0],
-            total_count=bills[1],
+            data=bills,
+            total_count=count,
             page=params.page,
             size=params.size,
         )

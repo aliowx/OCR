@@ -218,12 +218,7 @@ async def get_bills_by_plate(
         db, plate=plate_in
     )
 
-    return APIResponse(
-        billSchemas.billsPaidUnpaid(
-            paid=bills_paid,
-            unpaid=bills_unpaid,
-        )
-    )
+    return APIResponse(bills_unpaid)
 
 
 @router.get("/get_by_ids/")

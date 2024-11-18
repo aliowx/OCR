@@ -120,14 +120,12 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
         bill_status=billSchemas.StatusBill.unpaid.value,
     )
     bills_unpaid = [
-        billSchemas.BillUnpaidShow(**unpaid.__dict__) for unpaid in bill_unpaid
+        billSchemas.BillB2B(**unpaid.__dict__) for unpaid in bill_unpaid
     ]
     bill_paid = await bill_repo.get_bills_by_plate(
         db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
     )
-    bills_paid = [
-        billSchemas.BillPaidShow(**paid.__dict__) for paid in bill_paid
-    ]
+    bills_paid = [billSchemas.BillB2B(**paid.__dict__) for paid in bill_paid]
     return bills_paid, bills_unpaid
 
 
@@ -175,7 +173,7 @@ async def update_bills(
     list_bills_not_update = []
     msg_code = 0
     for bill_id in bill_ids_in:
-        bill = await bill_repo.get(db, id=bill_id)
+        bill = await bill_repo.get(db, id=bill_id, for_update=True)
         if bill:
             if bill.rrn_number is not None:
                 msg_code = 14

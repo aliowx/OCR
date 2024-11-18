@@ -365,6 +365,18 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             return 0
 
         return round(total_price / count)
+    
+    async def get_and_lock(
+        self, db: AsyncSession, id: int, for_update: bool = False
+    ) -> Bill | Awaitable[Bill]:
+
+        query = select(self.model).filter(
+            self.model.id == id, self.model.is_deleted == False
+        )
+        if for_update:
+            return await self._first(db.scalars(query.with_for_update()))
+
+        return await self._first(db.scalars(query))
 
 
 bill_repo = BillRepository(Bill)

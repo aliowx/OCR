@@ -1,6 +1,14 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import (
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base, get_now_datetime_utc
@@ -97,3 +105,12 @@ class Record(Base):
         nullable=True,
     )
     camera_exit_rel = relationship("Equipment", foreign_keys=camera_exit_id)
+
+    __table_args__ = (
+        Index(
+            "record_plate_trgm_idx",
+            "plate",
+            postgresql_ops={"plate": "gin_trgm_ops"},
+            postgresql_using="gin",
+        ),
+    )

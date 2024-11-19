@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, text
 from app import schemas
 from app.core.config import settings
 from app.crud.base import CRUDBase
@@ -314,6 +314,11 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_camera_exit_id is not None:
             filters.append(Record.camera_exit_id.in_(input_camera_exit_id))
 
+        if params.similar_plate is not None:
+            # Adjust similarity threshold if necessary
+            await db.execute(text("SET pg_trgm.similarity_threshold = 0.9"))
+            filters.append(text(f"plate % :similar_plate"))
+
         if input_camera_entrance_id is not None:
             filters.append(
                 Record.camera_entrance_id.in_(input_camera_entrance_id)
@@ -369,7 +374,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                     .offset(params.skip)
                     .order_by(
                         order_by.asc() if params.asc else order_by.desc()
-                    )
+                    ),
+                    (
+                        {}
+                        if params.similar_plate is None
+                        else {"similar_plate": params.similar_plate}
+                    ),
                 )
             ).fetchall()
 
@@ -379,7 +389,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 query.filter(*filters)
                 .offset(params.skip)
                 .limit(params.limit)
-                .order_by(order_by.asc() if params.asc else order_by.desc())
+                .order_by(order_by.asc() if params.asc else order_by.desc()),
+                (
+                    {}
+                    if params.similar_plate is None
+                    else {"similar_plate": params.similar_plate}
+                ),
             )
         ).fetchall()
 

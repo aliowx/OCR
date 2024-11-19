@@ -1,6 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Boolean, JSON
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Boolean,
+    JSON,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base, get_now_datetime_utc
@@ -88,3 +97,12 @@ class Event(Base):
     )
 
     correct_ocr: Mapped[str] = mapped_column(String, nullable=True)
+
+    __table_args__ = (
+        Index(
+            "event_plate_trgm_idx",
+            "plate",
+            postgresql_ops={"plate": "gin_trgm_ops"},
+            postgresql_using="gin",
+        ),
+    )

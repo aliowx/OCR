@@ -118,6 +118,7 @@ class SortBy(str, Enum):
 
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
+    similar_plate: str | None = None
     input_zone_id: int | None = None
     input_entrance_start_time: datetime | None = None
     input_entrance_end_time: datetime | None = None

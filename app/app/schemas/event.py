@@ -77,6 +77,7 @@ class GetEvents(BaseModel):
 
 class ParamsEvents(BaseModel):
     input_plate: str | None = None
+    similar_plate: str | None = None
     input_camera_serial: str | None = None
     input_time_min: datetime | None = None
     input_time_max: datetime | None = None

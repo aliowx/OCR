@@ -266,7 +266,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         )
 
     async def count_by_filter(
-        self, db: Session | AsyncSession, *, filters: list
+        self, db: Session | AsyncSession, *, filters: list, params: dict = {}
     ) -> int | Awaitable[int]:
         q = select(self.model).with_only_columns(func.count()).filter(*filters)
-        return await db.scalar(q)
+        return await db.scalar(q, params)

@@ -316,7 +316,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if params.similar_plate is not None:
             # Adjust similarity threshold if necessary
-            await db.execute(text("SET pg_trgm.similarity_threshold = 0.9"))
+            await db.execute(text("SET pg_trgm.similarity_threshold = 0.5"))
             filters.append(text(f"plate % :similar_plate"))
 
         if input_camera_entrance_id is not None:
@@ -364,7 +364,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.start_time <= params.input_exit_persent_time)
 
         all_items_count = await db.scalar(
-            query.filter(*filters).with_only_columns(func.count())
+            query.filter(*filters).with_only_columns(func.count()),
+            (
+                {}
+                if params.similar_plate is None
+                else {"similar_plate": params.similar_plate}
+            ),
         )
 
         if params.limit is None:

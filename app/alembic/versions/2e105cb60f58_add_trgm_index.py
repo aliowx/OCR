@@ -1,8 +1,8 @@
 """add trgm index
 
-Revision ID: d8e3e45fe2ed
-Revises: 770de711d14a
-Create Date: 2024-11-19 11:32:44.447974
+Revision ID: 2e105cb60f58
+Revises: 6f318370f938
+Create Date: 2024-11-19 12:04:04.547221
 
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "d8e3e45fe2ed"
-down_revision = "770de711d14a"
+revision = "2e105cb60f58"
+down_revision = "6f318370f938"
 branch_labels = None
 depends_on = None
 

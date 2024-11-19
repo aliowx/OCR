@@ -159,8 +159,8 @@ class PlateInfo(BaseModel):
 
 
 class billsPaidUnpaidplate(BaseModel):
-    paid: list[BillPaidShow] = []
-    unpaid: list[BillUnpaidShow] = []
+    paid: list[BillB2B] = []
+    unpaid: list[BillB2B] = []
     user_info: PlateInfo
 
 

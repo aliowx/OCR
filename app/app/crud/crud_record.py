@@ -650,7 +650,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
     #     if record_id is not None:
     #         filters.append(Event.record_id.in_([record_id]))
-        
     #     result = await db.execute(query.filter(*filters))
 
     #     return result

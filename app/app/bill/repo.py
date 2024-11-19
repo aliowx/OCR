@@ -8,6 +8,7 @@ from .schemas.bill import (
     StatusBill,
     JalaliDate,
 )
+from app.parking.models import Zone
 from app.report.schemas import Timing
 from sqlalchemy import false
 from sqlalchemy.orm import aliased
@@ -52,7 +53,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if plate is not None:
             filters.append(Bill.plate == plate)
-            
+
         if bill_status is not None:
             filters.append(Bill.status == bill_status)
 
@@ -60,9 +61,28 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
     async def get_multi_by_filters(
         self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate
-    ) -> tuple[list[billschemas], int]:
+    ) -> list[billschemas]:
+        equipment_entance = aliased(Equipment)
+        equipment_exit = aliased(Equipment)
 
-        query = select(Bill).outerjoin(Record, Bill.record_id == Record.id)
+        query = (
+            select(
+                Bill,
+                (Bill.end_time - Bill.start_time).label("time_park"),
+                Zone.name,
+                equipment_entance.tag.label("camera_entrance"),
+                equipment_exit.tag.label("camera_exit"),
+            )
+            .outerjoin(Record, Bill.record_id == Record.id)
+            .outerjoin(Zone, Bill.zone_id == Zone.id)
+            .outerjoin(
+                equipment_entance,
+                Bill.camera_entrance_id == equipment_entance.id,
+            )
+            .outerjoin(
+                equipment_exit, Bill.camera_exit_id == equipment_exit.id
+            )
+        )
 
         filters = [Bill.is_deleted == false()]
 
@@ -120,25 +140,26 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         order_by = Bill.id.asc() if params.asc else Bill.id.desc()
 
         if params.size is None:
-            items = await self._all(
-                db.scalars(
+            items = (
+                await db.execute(
                     query.filter(*filters)
                     .order_by(order_by)
                     .offset(params.skip)
                 )
-            )
+            ).fetchall()
 
-            return (items, count)
+            return [items, count]
 
-        items = await self._all(
-            db.scalars(
+        items = (
+            await db.execute(
                 query.filter(*filters)
                 .order_by(order_by)
                 .limit(params.size)
                 .offset(params.skip)
             )
-        )
-        return (items, count)
+        ).fetchall()
+
+        return [items, count]
 
     async def get_price_income(
         self,
@@ -182,15 +203,14 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         return total_price, total_income
 
-    async def get_total_amount_bill(self, db: AsyncSession):
+    async def get_total_amount_bill(
+        self, db: AsyncSession, start_time: datetime | None = None
+    ):
 
         return await db.scalar(
             select(func.sum(Bill.price)).filter(
                 Bill.is_deleted == False,
-                Bill.created
-                >= datetime.now(UTC).replace(
-                    tzinfo=None, hour=0, minute=0, second=0, microsecond=0
-                ),
+                Bill.created >= start_time,
             )
         )
 
@@ -345,6 +365,18 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             return 0
 
         return round(total_price / count)
+    
+    async def get_and_lock(
+        self, db: AsyncSession, id: int, for_update: bool = False
+    ) -> Bill | Awaitable[Bill]:
+
+        query = select(self.model).filter(
+            self.model.id == id, self.model.is_deleted == False
+        )
+        if for_update:
+            return await self._first(db.scalars(query.with_for_update()))
+
+        return await self._first(db.scalars(query))
 
 
 bill_repo = BillRepository(Bill)

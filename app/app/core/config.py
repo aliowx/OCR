@@ -137,6 +137,8 @@ class StorageSettings(SettingsBase):
     GATEWAY_TYPE_PAY: str = None
     PROVIDER_PAY: str = None
     TERMINAL_PAY: str = None
+    USER_NAME_PAY: str = None
+    PASSWORD_USER_PAY: str = None
     CALL_BACK_PAY: str = HttpUrl
 
     # sms

@@ -6,12 +6,16 @@ import io
 import pandas as pd
 
 
-async def get_multi_notifications_by_filter(db: AsyncSession, *, params: ParamsPlate):
+async def get_multi_notifications_by_filter(
+    db: AsyncSession, *, params: ParamsPlate
+):
 
     notifications, total_count = await notifications_repo.get_multi_by_filter(
         db, params=params
     )
+    resualt = []
+    for notice in notifications:
+        notice[0].plate = notice[1]
+        resualt.append(notice[0])
 
-    return notifications, total_count
-
-
+    return resualt, total_count

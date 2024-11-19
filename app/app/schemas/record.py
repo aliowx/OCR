@@ -40,6 +40,13 @@ class RecordUpdate(RecordBase):
     latest_status: StatusRecord
 
 
+class RecordUpdatePlate(BaseModel):
+    plate: str
+    latest_status: StatusRecord | None = None
+    end_time: datetime | None = None
+
+
+
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int
@@ -147,10 +154,12 @@ class JalaliDate(BaseModel):
 
 class RecordExcelItem(BaseModel):
     plate: str | None = Field(None, serialization_alias="شماره پلاک")
-    start_time: datetime | None = Field(None, serialization_alias="زمان ورود")
-    end_time: datetime | None = Field(None, serialization_alias="زمان خروج")
+    start_date: str | None = Field(None, serialization_alias="تاریخ ورود")
+    start_time: str | None = Field(None, serialization_alias="زمان ورود")
+    end_date: str | None = Field(None, serialization_alias="تاریخ خروج")
+    end_time: str | None = Field(None, serialization_alias="زمان خروج")
     time_park: float | None = Field(
-        None, serialization_alias="مدت زمان توقف (ساعت)"
+        None, serialization_alias="مدت زمان توقف (دقیقه)"
     )
     zone_name: str | None = Field(None, serialization_alias="محل پارک")
     camera_entrance: str | None = Field(

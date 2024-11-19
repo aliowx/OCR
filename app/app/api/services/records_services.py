@@ -4,6 +4,7 @@ from typing import List, Optional
 from app.models.base import plate_alphabet_reverse
 from app.utils import generate_excel
 from datetime import datetime
+from app import crud
 
 
 async def get_multi_by_filters(
@@ -82,11 +83,9 @@ async def gen_excel_record(
                 + modified_plate[4:]
             )
         fa_alfabet = record.latest_status
-        end_time = None
         match fa_alfabet:
             case schemas.record.StatusRecord.finished:
                 fa_alfabet = "خارج شده"
-                end_time = record.end_time
             case schemas.record.StatusRecord.unfinished:
                 fa_alfabet = "در پارکینگ"
             case schemas.record.StatusRecord.unknown:
@@ -94,9 +93,11 @@ async def gen_excel_record(
         excel_record.append(
             schemas.record.RecordExcelItem(
                 plate=modified_plate,
-                start_time=record.start_time,
-                end_time=end_time,
-                time_park=record.time_park / 60,
+                start_date=str(record.start_time.date()),
+                start_time=str(record.start_time.time()),
+                end_date=str(record.end_time.date()),
+                end_time=str(record.end_time.time()),
+                time_park=record.time_park,
                 camera_entrance=record.camera_entrance,
                 camera_exit=record.camera_exit,
                 latest_status=fa_alfabet,
@@ -109,3 +110,16 @@ async def gen_excel_record(
         )
         return file
     return {"data": "not exist"}
+
+
+async def update_record_and_events(
+    db: AsyncSession,
+    *,
+    record_in: schemas.Record,
+    params_in: schemas.RecordUpdatePlate,
+):
+    events, count = await crud.record.get_events_by_record_id(
+        db, record_id=record_in.id
+    )
+    print(events)
+    return

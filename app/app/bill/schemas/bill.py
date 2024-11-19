@@ -102,6 +102,15 @@ class Bill(BillInDBBase):
     camera_exit: str | None = None
 
 
+class BillB2B(BaseModel):
+    id: int | None = None
+    plate: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    price: float | None = None
+    status: StatusBill | None = StatusBill.unpaid
+
+
 class BillPaidShow(BaseModel):
     plate: str | None = None
     start_time: datetime | None = None
@@ -153,6 +162,10 @@ class billsPaidUnpaidplate(BaseModel):
     paid: list[BillPaidShow] = []
     unpaid: list[BillUnpaidShow] = []
     user_info: PlateInfo
+
+
+class billsPaidUnpaid(BaseModel):
+    unpaid: list[BillB2B] = []
 
 
 class BillNotAdditionalDetail(BillInDBBase): ...

@@ -316,7 +316,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if params.similar_plate is not None:
             # Adjust similarity threshold if necessary
-            await db.execute(text("SET pg_trgm.similarity_threshold = 0.9"))
+            await db.execute(text("SET pg_trgm.similarity_threshold = 0.5"))
             filters.append(text(f"plate % :similar_plate"))
 
         if input_camera_entrance_id is not None:

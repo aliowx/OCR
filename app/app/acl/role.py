@@ -14,4 +14,4 @@ class UserRoles(StrEnum):
     EXIT_GATE_DOOR = auto()
     APP_IRANMALL = auto()
     ITOLL = auto()
-    
+    APPS = auto()

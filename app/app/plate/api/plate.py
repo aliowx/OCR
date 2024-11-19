@@ -283,6 +283,7 @@ async def create_Plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.APPS,
                 ]
             )
         ),
@@ -324,7 +325,7 @@ async def create_Plate(
 
     params_sending_code = {
         "phoneNumber": params.phone_number,
-        "textMessage": f"بازار بزرگ ایران (ایران مال) \n {gen_code}کد تایید شما :",
+        "textMessage": f"بازار بزرگ ایران (ایران مال) \n کد تایید شما : {gen_code}",
     }
     send_code = requests.post(
         settings.URL_SEND_SMS,
@@ -343,6 +344,7 @@ async def create_Plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.APPS,
                 ]
             )
         ),
@@ -390,14 +392,15 @@ async def create_Plate(
         ),
     )
 
-    params_sending_code = {
-        "phoneNumber": params.phone_number,
-        "textMessage": " بازار بزرگ ایران (ایران مال) \nشماره شما در سیستم با موفقیت ذخیره شد",
-    }
-    send_code = requests.post(
-        settings.URL_SEND_SMS,
-        params=params_sending_code,
-    )
+    # params_sending_code = {
+    #     "phoneNumber": params.phone_number,
+    #     "textMessage": " بازار بزرگ ایران (ایران مال) \nشماره شما در سیستم با موفقیت ذخیره شد",
+    # }
+    # send_code = requests.post(
+    #     settings.URL_SEND_SMS,
+    #     params=params_sending_code,
+    # )
+
     cheking_code.is_used = True
     update_otp = await auth_otp_repo.update(db, db_obj=cheking_code)
 

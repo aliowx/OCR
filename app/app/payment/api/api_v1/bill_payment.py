@@ -251,6 +251,7 @@ async def pay_bills_by_id_ipg(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.APPS,
                 ]
             )
         ),
@@ -306,9 +307,6 @@ async def pay_bills_by_id_ipg(
     )
 
     if response.status_code != 200:
-        logger.error(
-            f"Payment failed., {response.status_code = }, {response.json() = }, {response.text = }"
-        )
         raise exc.InternalServiceError(
             msg_code=MessageCodes.unsuccessfully_pay
         )

@@ -84,26 +84,33 @@ def calculate_price(
     return price, get_price
 
 
-async def set_detail(db: AsyncSession, bill: billSchemas.Bill):
+async def get_multi_by_filters(
+    db: AsyncSession,
+    params: billSchemas.ParamsBill,
+    jalali_date: billSchemas.JalaliDate,
+):
 
-    bill.time_park = round(
-        (bill.end_time - bill.start_time).total_seconds() / 60
+    bills = await bill_repo.get_multi_by_filters(
+        db, params=params, jalali_date=jalali_date
     )
-    if bill.zone_id:
-        zone = await zone_repo.get(db, id=bill.zone_id)
-        bill.zone_name = zone.name
 
-    if bill.img_entrance_id:
-        bill.camera_entrance = await bill_repo.get_camera_by_image_id(
-            db, img_id=bill.img_entrance_id
-        )
+    # bills
+    #       bills -> bills[0]
+    #             bill -> bill[0]
+    #             time_park -> bill[1]
+    #             zone_name -> bill[2]
+    #             camera_entrance -> bill[3]
+    #             camera_exit -> bill[4]
+    #       count -> bills[1]
+    resualt = []
+    for bill in bills[0]:
+        bill[0].time_park = round(bill[1].total_seconds() / 60)
+        bill[0].zone_name = bill[2]
+        bill[0].camera_entrance = bill[3]
+        bill[0].camera_exit = bill[3]
+        resualt.append(bill[0])
 
-    if bill.img_exit_id:
-        bill.camera_exit = await bill_repo.get_camera_by_image_id(
-            db, img_id=bill.img_exit_id
-        )
-
-    return bill
+    return resualt, bills[1]
 
 
 async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
@@ -113,14 +120,12 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
         bill_status=billSchemas.StatusBill.unpaid.value,
     )
     bills_unpaid = [
-        billSchemas.BillUnpaidShow(**unpaid.__dict__) for unpaid in bill_unpaid
+        billSchemas.BillB2B(**unpaid.__dict__) for unpaid in bill_unpaid
     ]
     bill_paid = await bill_repo.get_bills_by_plate(
         db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
     )
-    bills_paid = [
-        billSchemas.BillPaidShow(**paid.__dict__) for paid in bill_paid
-    ]
+    bills_paid = [billSchemas.BillB2B(**paid.__dict__) for paid in bill_paid]
     return bills_paid, bills_unpaid
 
 
@@ -168,7 +173,7 @@ async def update_bills(
     list_bills_not_update = []
     msg_code = 0
     for bill_id in bill_ids_in:
-        bill = await bill_repo.get(db, id=bill_id)
+        bill = await bill_repo.get(db, id=bill_id, for_update=True)
         if bill:
             if bill.rrn_number is not None:
                 msg_code = 14

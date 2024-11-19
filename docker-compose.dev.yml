@@ -1,22 +1,26 @@
 version: "3.7"
 services:
   db:
-    image: dr2.parswitch.com/devops/postgres:14
+    image: docker.arvancloud.ir/postgres:17
     restart: always
     volumes:
       - ./data:/var/lib/postgresql/data
     env_file:
       - .env
     ports:
-      - 5435:5432
+      - 5432:5432
     environment:
       - PGDATA=/var/lib/postgresql/data
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-
 
   redis:
-    image: dr2.parswitch.com/devops/redis:7
+    image: docker.arvancloud.ir/redis:7
     restart: always
     ports:
-      - 6382:6379
+      - 6379:6379
+    env_file:
+      - .env
+    command:
+      # Save if 100 keys are added in every 10 seconds
+      - "--save 10 100"
+      # Set password
+      - "--requirepass ${REDIS_PASSWORD}"

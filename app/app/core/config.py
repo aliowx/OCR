@@ -6,6 +6,7 @@ from typing import Optional
 
 from pydantic import (
     AnyHttpUrl,
+    Extra,
     PostgresDsn,
     RedisDsn,
     field_validator,
@@ -84,7 +85,7 @@ class SettingsBase(BaseSettings):
     def store_prefix(self) -> str:
         return self.PROJECT_NAME.lower().replace(" ", "-") + "-"
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")
 
 
 class StorageSettings(SettingsBase):
@@ -136,6 +137,8 @@ class StorageSettings(SettingsBase):
     GATEWAY_TYPE_PAY: str = None
     PROVIDER_PAY: str = None
     TERMINAL_PAY: str = None
+    USER_NAME_PAY: str = None
+    PASSWORD_USER_PAY: str = None
     CALL_BACK_PAY: str = HttpUrl
 
     # sms

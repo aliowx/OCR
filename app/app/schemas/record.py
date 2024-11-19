@@ -40,6 +40,13 @@ class RecordUpdate(RecordBase):
     latest_status: StatusRecord
 
 
+class RecordUpdatePlate(BaseModel):
+    plate: str
+    latest_status: StatusRecord | None = None
+    end_time: datetime | None = None
+
+
+
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int
@@ -118,6 +125,7 @@ class SortBy(str, Enum):
 
 class ParamsRecord(BaseModel):
     input_plate: str | None = None
+    similar_plate: str | None = None
     input_zone_id: int | None = None
     input_entrance_start_time: datetime | None = None
     input_entrance_end_time: datetime | None = None

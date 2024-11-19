@@ -3,6 +3,7 @@ from typing import Awaitable
 
 import rapidjson
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session
@@ -56,6 +57,11 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
             value_plate = params.input_plate.replace("?", "_")
             filters.append(Event.plate.like(value_plate))
 
+        if params.similar_plate is not None:
+            # Adjust similarity threshold if necessary
+            await db.execute(text("SET pg_trgm.similarity_threshold = 0.9"))
+            filters.append(text(f"plate % :similar_plate"))
+
         if params.input_camera_id is not None:
             filters.append(Event.camera_id == params.input_camera_id)
 
@@ -70,14 +76,26 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
 
         if params.size is None:
             return await self._all(
-                db.scalars(query.filter(*filters).offset(params.skip))
+                db.scalars(
+                    query.filter(*filters).offset(params.skip),
+                    (
+                        {}
+                        if params.similar_plate is None
+                        else {"similar_plate": params.similar_plate}
+                    ),
+                )
             )
 
         all_items_count = await self.count_by_filter(db, filters=filters)
 
         items = await self._all(
             db.scalars(
-                query.filter(*filters).offset(params.skip).limit(params.size)
+                query.filter(*filters).offset(params.skip).limit(params.size),
+                (
+                    {}
+                    if params.similar_plate is None
+                    else {"similar_plate": params.similar_plate}
+                ),
             )
         )
 

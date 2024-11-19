@@ -165,7 +165,7 @@ async def update_record(
         ),
     ],
     id_record: int,
-    params: schemas.RecordUpdate,
+    params: schemas.RecordUpdatePlate,
 ) -> APIResponseType[schemas.Record]:
     """
     update status record .
@@ -176,7 +176,9 @@ async def update_record(
         exc.ServiceFailure(
             detail="Record Not Found", msg_code=utils.MessageCodes.not_found
         )
-    record_update = await crud.record.update(db, db_obj=record, obj_in=params)
+    record_update = await records_services.update_record_and_events(
+        db, record_in=record, params_in=params
+    )
     return APIResponse(record_update)
 
 

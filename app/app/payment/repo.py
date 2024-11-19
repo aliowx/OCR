@@ -22,16 +22,21 @@ from sqlalchemy.sql.expression import false, null
 from app.core import exceptions as exc
 from app.utils import MessageCodes, make_requests
 from httpx import BasicAuth
-from app.payment.models import Transaction
+from app import models
 import httpx
+from typing import Awaitable
 
 logger = logging.getLogger(__name__)
 
 
 class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
-    async def checking_in_list_one_plate(self, db: AsyncSession, bill_ids: list[int]):
-        plate_check = select(Bill.plate).where(Bill.id.in_(bill_ids)).distinct()
+    async def checking_in_list_one_plate(
+        self, db: AsyncSession, bill_ids: list[int]
+    ):
+        plate_check = (
+            select(Bill.plate).where(Bill.id.in_(bill_ids)).distinct()
+        )
         result = await db.execute(plate_check)
         plates = result.scalars().all()
 
@@ -46,6 +51,7 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 msg_code=MessageCodes.input_error,
             )
         return True
+
     async def get_bills_by_ids(
         self, db: AsyncSession, bill_ids: list[int]
     ) -> list[Bill]:
@@ -153,9 +159,24 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
 
 class TransactionRepository(
-    CRUDBase[Transaction, TransactionCreate, TransactionUpdate]
-): ...
+    CRUDBase[models.Transaction, TransactionCreate, TransactionUpdate]
+):
+    async def get_and_lock(
+        self, db: AsyncSession, id_transaction: int, random_num: str
+    ) -> models.Transaction:
+        query = (
+            select(self.model)
+            .filter(
+                *[
+                    self.model.id == id_transaction,
+                    self.model.transaction_number == random_num,
+                    self.model.is_deleted == False,
+                ]
+            )
+            .with_for_update()
+        )
+        return await self._first(db.scalars(query))
 
 
 pay_repo = PaymentRepository(Bill)
-transaction_repo = TransactionRepository(Transaction)
+transaction_repo = TransactionRepository(models.Transaction)

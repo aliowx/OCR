@@ -16,7 +16,7 @@ from random import randint
 import requests
 from datetime import datetime, UTC, timedelta
 from app.core.config import settings
-
+from cache.redis import redis_connect_async
 
 router = APIRouter()
 namespace = "plate"
@@ -302,15 +302,15 @@ async def create_Plate(
         params.phone_number
     )
 
-    plates_exist = await plate_repo.get_plate(
-        db=db,
-        phone_number=params.phone_number,
-        type_list=schemas.plate.PlateType.phone,
-        plate=params.plate,
-    )
-    if plates_exist is not None:
-        return APIResponse(plates_exist)
+    redis_client = await redis_connect_async()
 
+    check_no_spam = await redis_client.get(params.phone_number)
+    if check_no_spam:
+        raise exc.ServiceFailure(
+            detail="after 2 min try agin",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    await redis_client.set(params.phone_number, params.plate, ex=120)
     gen_code = randint(10000, 99999)
 
     create_otp = await auth_otp_repo.create(
@@ -336,7 +336,7 @@ async def create_Plate(
 
 
 @router.post("/create-plate-with-code-otp")
-async def create_Plate(
+async def create_plate(
     _: Annotated[
         bool,
         Depends(
@@ -383,25 +383,29 @@ async def create_Plate(
             msg_code=utils.MessageCodes.not_found,
         )
 
-    create_plate = await plate_repo.create(
-        db,
-        obj_in=schemas.PlateCreateOTP(
-            plate=params.plate,
-            type=schemas.PlateType.phone,
-            phone_number=params.phone_number,
-        ),
-    )
-
-    # params_sending_code = {
-    #     "phoneNumber": params.phone_number,
-    #     "textMessage": " بازار بزرگ ایران (ایران مال) \nشماره شما در سیستم با موفقیت ذخیره شد",
-    # }
-    # send_code = requests.post(
-    #     settings.URL_SEND_SMS,
-    #     params=params_sending_code,
-    # )
-
     cheking_code.is_used = True
     update_otp = await auth_otp_repo.update(db, db_obj=cheking_code)
+
+    plates_exist = await plate_repo.get_plate(
+        db=db,
+        type_list=schemas.plate.PlateType.phone,
+        plate=params.plate,
+    )
+
+    if plates_exist is None:
+        create_plate = await plate_repo.create(
+            db,
+            obj_in=schemas.PlateCreateOTP(
+                plate=params.plate,
+                type=schemas.PlateType.phone,
+                phone_number=params.phone_number,
+            ),
+        )
+    if (
+        plates_exist is not None
+        and plates_exist.phone_number != params.phone_number
+    ):
+        plates_exist.phone_number = params.phone_number
+        create_plate = await plate_repo.update(db, db_obj=plates_exist)
 
     return APIResponse({"data": "save phone number in system"})

@@ -13,7 +13,6 @@ from app.payment.schemas.payment import (
     BillPaymentSchemaIPG,
     TransactionUpdate,
     TransactionCreate,
-    Transaction
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -24,7 +23,6 @@ from app.core import exceptions as exc
 from app.utils import MessageCodes, make_requests
 from httpx import BasicAuth
 from app import models
-# from app.payment.models import Transaction 
 import httpx
 from typing import Awaitable
 
@@ -164,16 +162,21 @@ class TransactionRepository(
     CRUDBase[models.Transaction, TransactionCreate, TransactionUpdate]
 ):
     async def get_and_lock(
-        self, db: AsyncSession, id: int
-    ) -> Transaction:
+        self, db: AsyncSession, id_transaction: int, random_num: str
+    ) -> models.Transaction:
         query = (
             select(self.model)
-            .filter(self.model.id == id, self.model.is_deleted == False)
+            .filter(
+                *[
+                    self.model.id == id_transaction,
+                    self.model.transaction_number == random_num,
+                    self.model.is_deleted == False,
+                ]
+            )
             .with_for_update()
         )
-
-        return self._first(db.scalars(query))
+        return await self._first(db.scalars(query))
 
 
 pay_repo = PaymentRepository(Bill)
-transaction_repo = TransactionRepository(Transaction)
+transaction_repo = TransactionRepository(models.Transaction)

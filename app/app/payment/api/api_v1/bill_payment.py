@@ -38,6 +38,8 @@ from app import models
 from sqlalchemy.exc import IntegrityError
 from random import randint
 from app.payment import services
+
+
 router = APIRouter()
 namespace = "pay"
 logger = logging.getLogger(__name__)
@@ -64,7 +66,7 @@ async def pay_bills_by_id_pos(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
 
-    pay = await services.pay_bill_by_pos(db,params=params)
+    pay = await services.pay_bill_by_pos(db, params=params)
 
     return APIResponse(data=pay, msg_code=16)
 
@@ -190,7 +192,10 @@ async def pay_bills_by_id_ipg(
             msg_code=MessageCodes.operation_failed,
         )
     data = CallBackUserCreate(**params.__dict__, user_id=current_user.id)
-
+    # craete random int for transaction_id
+    gen_int_random_first = randint(1000000000, 9999999999)
+    gen_int_random_seconds = randint(1000000000, 9999999999)
+    data.transaction_number = f"{gen_int_random_first}{gen_int_random_seconds}"
     try:
         transaction = await transaction_repo.create(db, obj_in=data)
     except IntegrityError as e:
@@ -225,7 +230,7 @@ async def pay_bills_by_id_ipg(
         msg_code = 14
     response = APIResponse(
         {
-            "transaction_id": transaction.id,
+            "transaction_id": f"{gen_int_random_first}{transaction.id}{gen_int_random_seconds}",
             "bill_ids_before_paid": before_paid,
         },
         msg_code=msg_code,

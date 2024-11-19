@@ -364,7 +364,12 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             filters.append(Record.start_time <= params.input_exit_persent_time)
 
         all_items_count = await db.scalar(
-            query.filter(*filters).with_only_columns(func.count())
+            query.filter(*filters).with_only_columns(func.count()),
+            (
+                {}
+                if params.similar_plate is None
+                else {"similar_plate": params.similar_plate}
+            ),
         )
 
         if params.limit is None:
@@ -645,7 +650,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         if record_id is not None:
             filters.append(Event.record_id.in_([record_id]))
-        
+
         result = await db.execute(query.filter(*filters))
 
         return result, count

@@ -86,7 +86,15 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
                 )
             )
 
-        all_items_count = await self.count_by_filter(db, filters=filters)
+        all_items_count = await self.count_by_filter(
+            db,
+            filters=filters,
+            params=(
+                {}
+                if params.similar_plate is None
+                else {"similar_plate": params.similar_plate}
+            ),
+        )
 
         items = await self._all(
             db.scalars(

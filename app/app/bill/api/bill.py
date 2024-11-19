@@ -189,7 +189,7 @@ async def get_bills_by_plate(
     )
 
 
-@router.get("/get-bills-by-plate-with-out-phone-number/")
+@router.get("/get-bills/")
 async def get_bills_by_plate(
     _: Annotated[
         bool,

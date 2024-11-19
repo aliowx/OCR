@@ -92,6 +92,7 @@ class CallBackCreate(BaseModel):
 
 class CallBackUserCreate(CallBackCreate):
     user_id: int
+    transaction_number: str | None = None
 
 
 class MakePaymentRequest(BaseModel):
@@ -135,6 +136,7 @@ class TransactionBase(BaseModel):
     callback_url: str | None = None
     user_id: int | None = None
     rrn: str | None = None
+    transaction_number: str | None = None
 
 
 class TransactionUpdate(BaseModel):

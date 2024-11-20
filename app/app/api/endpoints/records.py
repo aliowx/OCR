@@ -232,3 +232,39 @@ async def download_excel(
         input_camera_exit_id=input_camera_exit_id,
         input_excel_name=input_excel_name,
     )
+
+@router.post("/excel-police/")
+async def download_excel(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    *,
+    params: schemas.ParamsRecord = Depends(),
+    input_status_record: Optional[list[schemas.record.StatusRecord]] = Query(
+        None
+    ),
+    input_camera_entrance_id: Optional[list[int]] = Query(None),
+    input_camera_exit_id: Optional[list[int]] = Query(None),
+    input_excel_name: str = f"{datetime.now().date()}",
+) -> StreamingResponse:
+    """
+    excel plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    return await records_services.gen_excel_record_for_police(
+        db,
+        params=params,
+        input_status_record=input_status_record,
+        input_camera_entrance_id=input_camera_entrance_id,
+        input_camera_exit_id=input_camera_exit_id,
+        input_excel_name=input_excel_name,
+    )

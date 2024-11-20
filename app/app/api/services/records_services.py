@@ -113,6 +113,49 @@ async def gen_excel_record(
     return {"data": "not exist"}
 
 
+async def gen_excel_record_for_police(
+    db: AsyncSession,
+    *,
+    params: schemas.ParamsRecord,
+    input_status_record: Optional[List[schemas.record.StatusRecord]] = None,
+    input_camera_entrance_id: Optional[list[int]] = None,
+    input_camera_exit_id: Optional[list[int]] = None,
+    input_excel_name: str = f"{datetime.now().date()}",
+):
+    records = (
+        await get_multi_by_filters(
+            db,
+            params=params,
+            input_camera_exit_id=input_camera_exit_id,
+            input_camera_entrance_id=input_camera_entrance_id,
+            input_status_record=input_status_record,
+        )
+    ).items
+    excel_record = []
+    for record in records:
+        modified_plate = record.plate
+        for k, v in plate_alphabet_reverse.items():
+            modified_plate = (
+                modified_plate[:2]
+                + modified_plate[2:4].replace(v, k)
+                + modified_plate[4:]
+            )
+        excel_record.append(
+            schemas.record.RecordExcelItemForPolice(
+                seri=modified_plate[:2],
+                hrf=modified_plate[2:3],
+                serial=modified_plate[3:6],
+                iran=modified_plate[6:8],
+            )
+        )
+    if excel_record is not None:
+        file = generate_excel.get_excel_file_response(
+            data=excel_record, title=input_excel_name
+        )
+        return file
+    return {"data": "not exist"}
+
+
 async def update_record_and_events(
     db: AsyncSession,
     *,

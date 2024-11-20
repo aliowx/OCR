@@ -1,10 +1,13 @@
 import logging
 import httpx
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 # Create a global client session
-global_client = httpx.AsyncClient(timeout=httpx.Timeout(60))
+global_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(60), verify=settings.PAYMENT_REQUEST_VERIFY_SSL
+)
 
 
 async def make_request(
@@ -19,7 +22,7 @@ async def make_request(
     request = client.build_request(method, url, **kwargs)
 
     try:
-        response = await client.send(request, auth=auth,verify=kwargs.get('verify', True))
+        response = await client.send(request, auth=auth)
         return response
 
     except httpx.RequestError as e:

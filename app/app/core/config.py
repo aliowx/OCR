@@ -132,6 +132,7 @@ class StorageSettings(SettingsBase):
     PAYMENT_ADDRESS: HttpUrl
     PAYMENT_USER_NAME: str
     PAYMENT_PASSWORD: str
+    PAYMENT_REQUEST_VERIFY_SSL: bool
 
     # pay
     GATEWAY_TYPE_PAY: str = None

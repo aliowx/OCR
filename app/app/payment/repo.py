@@ -127,7 +127,7 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                     username=settings.PAYMENT_USER_NAME,
                     password=settings.PAYMENT_PASSWORD,
                 ),
-                verify=False
+                verify=False,
             )
 
             return response
@@ -149,7 +149,7 @@ class PaymentRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                     username=settings.PAYMENT_USER_NAME,
                     password=settings.PAYMENT_PASSWORD,
                 ),
-                verify=False
+                verify=False,
             )
             return response
         except Exception as e:

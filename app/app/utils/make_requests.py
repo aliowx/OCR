@@ -19,7 +19,7 @@ async def make_request(
     request = client.build_request(method, url, **kwargs)
 
     try:
-        response = await client.send(request, auth=auth)
+        response = await client.send(request, auth=auth,verify=kwargs.get('verify', True))
         return response
 
     except httpx.RequestError as e:

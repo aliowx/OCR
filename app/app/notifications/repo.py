@@ -11,6 +11,7 @@ from .schemas import (
 )
 import re
 from app.plate.models import PlateList
+from app import models
 
 
 class CRUDNotifications(
@@ -20,8 +21,24 @@ class CRUDNotifications(
         self, db: Session | AsyncSession, *, params: ParamsNotifications
     ) -> list[Notifications] | Awaitable[list[Notifications]]:
 
-        query = select(Notifications, PlateList).outerjoin(
-            PlateList, Notifications.plate_list_id == PlateList.id
+        query = (
+            select(
+                Notifications,
+                PlateList,
+                models.Event,
+                models.Zone.name,
+                models.Equipment.tag,
+                models.Record.latest_status,
+            )
+            .outerjoin(PlateList, Notifications.plate_list_id == PlateList.id)
+            .outerjoin(models.Event, Notifications.event_id == models.Event.id)
+            .outerjoin(models.Zone, models.Event.zone_id == models.Zone.id)
+            .outerjoin(
+                models.Equipment, models.Event.camera_id == models.Equipment.id
+            )
+            .outerjoin(
+                models.Record, models.Event.record_id == models.Record.id
+            )
         )
 
         filters = [Notifications.is_deleted == False]

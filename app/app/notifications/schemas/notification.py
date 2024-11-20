@@ -2,11 +2,13 @@ from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from enum import Enum
 from app.plate.schemas import PlateList
+from app.schemas.event import Event
 
 
 class NotificationsBase(BaseModel):
     plate_list_id: int | None = None
     is_read: bool | None = False
+    event_id: int | None = None
 
 
 class NotificationsCreate(NotificationsBase): ...
@@ -25,6 +27,10 @@ class NotificationsInDBBase(NotificationsBase):
 
 class Notifications(NotificationsInDBBase):
     plate: PlateList | None = None
+    event: Event | None = None
+    zone_name: str | None = None
+    camera_tag: str | None = None
+    status: str | None = None
 
 
 class ParamsNotifications(BaseModel):

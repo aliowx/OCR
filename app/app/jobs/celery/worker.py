@@ -56,7 +56,9 @@ def add_events(self, event: dict) -> str:
         if black_list:
             notification = notifications_repo.create(
                 self.session,
-                obj_in=NotificationsCreate(plate_list_id=black_list.id),
+                obj_in=NotificationsCreate(
+                    plate_list_id=black_list.id, event_id=create_event.id
+                ),
             )
             logger.info(
                 f"found black listed plate {black_list.plate} in event id {create_event.id}, {notification}"

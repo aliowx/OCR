@@ -178,6 +178,7 @@ async def read_minio(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.APPS,
                 ]
             )
         ),

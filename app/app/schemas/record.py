@@ -46,7 +46,6 @@ class RecordUpdatePlate(BaseModel):
     end_time: datetime | None = None
 
 
-
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int
@@ -167,3 +166,9 @@ class RecordExcelItem(BaseModel):
     )
     camera_exit: str | None = Field(None, serialization_alias="دوربین خروجی")
     latest_status: str | None = Field(None, serialization_alias="وضعیت")
+
+class RecordExcelItemForPolice(BaseModel):
+    seri: str | None = Field(None, serialization_alias="SERI")
+    hrf: str | None = Field(None, serialization_alias="HRF")
+    serial: str | None = Field(None, serialization_alias="SERIAL")
+    iran: str | None = Field(None, serialization_alias="IRAN")

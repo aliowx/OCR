@@ -87,7 +87,7 @@ def calculate_price(
 async def get_multi_by_filters(
     db: AsyncSession,
     params: billSchemas.ParamsBill,
-    jalali_date: billSchemas.JalaliDate,
+    jalali_date: billSchemas.JalaliDate | None = None,
 ):
 
     bills = await bill_repo.get_multi_by_filters(
@@ -127,6 +127,22 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
     )
     bills_paid = [billSchemas.BillB2B(**paid.__dict__) for paid in bill_paid]
     return bills_paid, bills_unpaid
+
+
+async def get_bills_paid_unpaid(db: AsyncSession, *, plate: str):
+    bill_unpaid = await get_multi_by_filters(
+        db,
+        params=billSchemas.ParamsBill(
+            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+        ),
+    )
+    bills_paid = await get_multi_by_filters(
+        db,
+        params=billSchemas.ParamsBill(
+            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+        ),
+    )
+    return bills_paid[0], bill_unpaid[0]
 
 
 async def update_multi_bill(

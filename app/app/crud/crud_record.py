@@ -18,6 +18,7 @@ from app.schemas import RecordUpdate, StatusRecord
 from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
 from app.report.schemas import JalaliDate as JalaliDateReport
+from app import models
 import re
 
 
@@ -32,9 +33,30 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
-        redis_client.publish(
-            "records:1", rapidjson.dumps(jsonable_encoder(db_obj))
+        data_ws = jsonable_encoder(db_obj)
+        camera_entry_name = (
+            db.query(models.Equipment.tag)
+            .filter(obj_in.camera_entrance_id == models.Equipment.id)
+            .first()
         )
+        data_ws["camera_entry_name"] = (
+            camera_entry_name[0] if camera_entry_name else None
+        )
+        camera_leveing_name = (
+            db.query(models.Equipment.tag)
+            .filter(obj_in.camera_exit_id == models.Equipment.id)
+            .first()
+        )
+        data_ws["camera_leveing_name"] = (
+            camera_leveing_name[0] if camera_leveing_name else None
+        )
+        zone_name = (
+            db.query(models.Zone.name)
+            .filter(obj_in.camera_entrance_id == models.Zone.id)
+            .first()
+        )
+        data_ws["zone_name"] = zone_name[0] if zone_name else None
+        redis_client.publish("records:1", rapidjson.dumps(data_ws))
         return self._commit_refresh(db=db, db_obj=db_obj)
 
     def get_by_event(
@@ -639,21 +661,18 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return result, count
 
-    # async def get_events_by_record_id(
-    #     self,
-    #     db: AsyncSession,
-    #     *,
-    #     record_id: int = None,
-    # ):
-    #     query = select(Event)
-    #     filters = [Event.is_deleted == False]
+    async def all_events_with_one_record_id(
+        self,
+        db: AsyncSession,
+        *,
+        record_id: int = None,
+    ):
+        query = select(Event)
+        filters = [Event.is_deleted == False]
+        if record_id is not None:
+            filters.append(Event.record_id == record_id)
 
-    #     if record_id is not None:
-    #         filters.append(Event.record_id.in_([record_id]))
-        
-    #     result = await db.execute(query.filter(*filters))
-
-    #     return result
+        return await self._all(db.scalars(query.filter(*filters)))
 
 
 record = CRUDRecord(Record)

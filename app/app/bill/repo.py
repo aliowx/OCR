@@ -59,8 +59,48 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         return await self._all(db.scalars(query.filter(*filters)))
 
+    # async def get_bills(
+    #     self,
+    #     db: AsyncSession,
+    #     *,
+    #     plate: str = None,
+    #     bill_status: StatusBill,
+    # ) -> Bill:
+
+    #     equipment_entance = aliased(Equipment)
+    #     equipment_exit = aliased(Equipment)
+
+    #     query = (
+    #         select(
+    #             Bill,
+    #             (Bill.end_time - Bill.start_time).label("time_park"),
+    #             Zone.name,
+    #             equipment_entance.tag.label("camera_entrance"),
+    #             equipment_exit.tag.label("camera_exit"),
+    #         )
+    #         .outerjoin(Record, Bill.record_id == Record.id)
+    #         .outerjoin(Zone, Bill.zone_id == Zone.id)
+    #         .outerjoin(
+    #             equipment_entance,
+    #             Bill.camera_entrance_id == equipment_entance.id,
+    #         )
+    #         .outerjoin(
+    #             equipment_exit, Bill.camera_exit_id == equipment_exit.id
+    #         )
+    #     )
+
+    #     filters = [Bill.is_deleted == false()]
+
+    #     if plate is not None:
+    #         filters.append(Bill.plate == plate)
+
+    #     if bill_status is not None:
+    #         filters.append(Bill.status == bill_status)
+
+    #     return (await db.execute(query.filter(*filters))).fetchall()
+
     async def get_multi_by_filters(
-        self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate
+        self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate | None = None
     ) -> list[billschemas]:
         equipment_entance = aliased(Equipment)
         equipment_exit = aliased(Equipment)
@@ -365,7 +405,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             return 0
 
         return round(total_price / count)
-    
+
     async def get_and_lock(
         self, db: AsyncSession, id: int, for_update: bool = False
     ) -> Bill | Awaitable[Bill]:

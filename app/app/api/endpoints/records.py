@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, WebSocket, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
@@ -171,13 +170,9 @@ async def update_record(
     update status record .
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    record = await crud.record.get(db=db, id=id_record)
-    if not record:
-        exc.ServiceFailure(
-            detail="Record Not Found", msg_code=utils.MessageCodes.not_found
-        )
+    
     record_update = await records_services.update_record_and_events(
-        db, record_in=record, params_in=params
+        db, record_id=id_record, params_in=params
     )
     return APIResponse(record_update)
 
@@ -230,6 +225,42 @@ async def download_excel(
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
     return await records_services.gen_excel_record(
+        db,
+        params=params,
+        input_status_record=input_status_record,
+        input_camera_entrance_id=input_camera_entrance_id,
+        input_camera_exit_id=input_camera_exit_id,
+        input_excel_name=input_excel_name,
+    )
+
+@router.post("/excel-police/")
+async def download_excel(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    *,
+    params: schemas.ParamsRecord = Depends(),
+    input_status_record: Optional[list[schemas.record.StatusRecord]] = Query(
+        None
+    ),
+    input_camera_entrance_id: Optional[list[int]] = Query(None),
+    input_camera_exit_id: Optional[list[int]] = Query(None),
+    input_excel_name: str = f"{datetime.now().date()}",
+) -> StreamingResponse:
+    """
+    excel plate.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    return await records_services.gen_excel_record_for_police(
         db,
         params=params,
         input_status_record=input_status_record,

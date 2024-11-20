@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+import pytz
 
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TypeEvent(str, Enum):
@@ -55,6 +56,27 @@ class EventInDBBase(EventBase):
     id: int
     created: Optional[datetime]
     modified: Optional[datetime]
+
+    @field_validator("record_time", "created", mode="before")
+    def convert_utc_to_iran_time(cls, value):
+
+        if value:
+            if isinstance(value, str):
+                value = datetime.fromisoformat(value)
+            # Define Iran Standard Time timezone
+            iran_timezone = pytz.timezone("Asia/Tehran")
+
+            # If value is naive (no timezone), localize it to UTC
+            if value.tzinfo is None:
+                # Localize the naive datetime to UTC
+                utc_time = pytz.utc.localize(value)
+            else:
+                # If it's already timezone aware, convert to UTC
+                utc_time = value.astimezone(pytz.utc)
+
+            # Convert to Iran Standard Time
+            return utc_time.astimezone(iran_timezone)
+        return value
 
     model_config = ConfigDict(from_attributes=True)
 

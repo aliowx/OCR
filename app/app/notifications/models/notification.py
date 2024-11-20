@@ -13,6 +13,14 @@ class Notifications(Base):
         nullable=True,
     )
     plate_list_rel = relationship("PlateList", foreign_keys=plate_list_id)
+
+    event_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("event.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
+    )
+    event_rel = relationship("Event", foreign_keys=event_id)
+
     is_read: Mapped[bool] = mapped_column(
         Boolean, default=False, index=True, nullable=True
     )

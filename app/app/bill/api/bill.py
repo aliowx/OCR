@@ -177,7 +177,7 @@ async def get_bills_by_plate(
             msg_code=MessageCodes.not_found,
         )
 
-    bills_paid, bills_unpaid = await servicesBill.get_paid_unpaid_bills(
+    bills_paid, bills_unpaid = await servicesBill.get_bills_paid_unpaid(
         db, plate=plate_in
     )
 

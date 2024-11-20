@@ -47,6 +47,7 @@ class MessageCodes:
     bills_has_rrns = 14
     unsuccessfully_pay = 15
     successfully_pay = 16
+    try_after = 17
 
     english_messages_names = {
         0: "Successful Operation",
@@ -66,7 +67,7 @@ class MessageCodes:
         14: "The bills has RRN number",
         15: "Unsuccessful pay",
         16: "Successful pay",
-
+        17: "try after minutes",
     }
 
     persian_message_names = {
@@ -86,5 +87,6 @@ class MessageCodes:
         13: "دسترسی ندارید",
         14: "قبض دارای شماره RRN میباشد",
         15: "پرداخت ناموفق",
-        16: "پرداخت موفق"
+        16: "پرداخت موفق",
+        17: "چند دقیقه دیگر تلاش کنید",
     }

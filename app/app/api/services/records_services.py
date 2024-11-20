@@ -131,9 +131,10 @@ async def gen_excel_record_for_police(
             input_status_record=input_status_record,
         )
     ).items
+    list_plate = {record.plate for record in records}
     excel_record = []
-    for record in records:
-        modified_plate = record.plate
+    for plate in list_plate:
+        modified_plate = plate
         for k, v in plate_alphabet_reverse.items():
             modified_plate = (
                 modified_plate[:2]

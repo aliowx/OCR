@@ -365,17 +365,27 @@ async def create_plate(
         params.phone_number
     )
 
-    redis_client = await redis_connect_async()
-    await redis_client.rpush(params.phone_number, code_in)
-    if await redis_client.ttl(params.phone_number) == -1:
-        await redis_client.expire(params.phone_number, 300)
-    get_keys_count = await redis_client.llen(params.phone_number)
-    if get_keys_count > 2:
-        time_expire = await redis_client.ttl(params.phone_number)
-        raise exc.ServiceFailure(
-            detail=time_expire,
-            msg_code=utils.MessageCodes.try_after,
-        )
+    # redis_client = await redis_connect_async()
+    # otp_count_key = f"p_count:{params.phone_number}"
+    # otp_key = f"otp:{params.phone_number}"
+
+    # # Check the request count
+    # current_count = await redis_client.get(otp_count_key)
+    # current_count = int(current_count) if current_count else 0
+
+    # if current_count >= rate_limit:
+    #     return {
+    #         "success": False,
+    #         "message": "Rate limit exceeded. Try again later.",
+    #     }
+
+    # # Increment the request count and set expiry
+    # await redis_client.incr(otp_count_key)
+    # await redis_client.expire(otp_count_key, rate_limit_window)
+
+    # # Generate and store the OTP
+    # otp = f"{random.randint(100000, 999999)}"  # 6-digit OTP
+    # await redis_client.set(otp_key, otp, ex=otp_expiry)
 
     cheking_code = await auth_otp_repo.chking_code(
         db, code_in=code_in, phone_number_in=params.phone_number

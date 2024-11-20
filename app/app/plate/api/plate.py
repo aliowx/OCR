@@ -307,8 +307,8 @@ async def create_Plate(
     check_no_spam = await redis_client.get(params.phone_number)
     if check_no_spam:
         raise exc.ServiceFailure(
-            detail="after 2 min try agin",
-            msg_code=utils.MessageCodes.not_found,
+            detail=f"after {await redis_client.ttl(params.phone_number)} seconds try agin",
+            msg_code=utils.MessageCodes.try_after,
         )
     await redis_client.set(params.phone_number, params.plate, ex=120)
     gen_code = randint(10000, 99999)
@@ -364,6 +364,19 @@ async def create_plate(
     phone_number_validate = models.base.validate_iran_phone_number(
         params.phone_number
     )
+
+    redis_client = await redis_connect_async()
+    await redis_client.rpush(params.phone_number, code_in)
+    if await redis_client.ttl(params.phone_number) == -1:
+        await redis_client.expire(params.phone_number, 300)
+    get_keys_count = await redis_client.llen(params.phone_number)
+    if get_keys_count > 2:
+        time_expire = await redis_client.ttl(params.phone_number)
+        raise exc.ServiceFailure(
+            detail=f"try after {time_expire} seconds",
+            msg_code=utils.MessageCodes.try_after,
+        )
+
     cheking_code = await auth_otp_repo.chking_code(
         db, code_in=code_in, phone_number_in=params.phone_number
     )

@@ -105,8 +105,6 @@ class Bill(BillInDBBase):
 class BillB2B(BaseModel):
     id: int | None = None
     plate: str | None = None
-    start_time: datetime | None = None
-    end_time: datetime | None = None
     price: float | None = None
     status: StatusBill | None = StatusBill.unpaid
 

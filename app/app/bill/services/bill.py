@@ -130,18 +130,20 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
 
 
 async def get_bills_paid_unpaid(db: AsyncSession, *, plate: str):
-    bill_unpaid = await bill_repo.get_bills_by_plate(
+    bill_unpaid = await bill_repo.get_multi_by_filters(
         db,
-        plate=plate,
-        bill_status=billSchemas.StatusBill.unpaid.value,
+        params=billSchemas.ParamsBill(
+            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+        ),
     )
-    bills_unpaid = [
-        billSchemas.Bill(**unpaid.__dict__) for unpaid in bill_unpaid
-    ]
-    bill_paid = await bill_repo.get_bills_by_plate(
-        db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
+    bills_unpaid = [unpaid for unpaid in bill_unpaid[0]]
+    bill_paid = await bill_repo.get_multi_by_filters(
+        db,
+        params=billSchemas.ParamsBill(
+            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+        ),
     )
-    bills_paid = [billSchemas.Bill(**paid.__dict__) for paid in bill_paid]
+    bills_paid = [paid for paid in bill_paid[0]]
     return bills_paid, bills_unpaid
 
 

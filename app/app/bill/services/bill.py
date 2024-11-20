@@ -129,6 +129,22 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
     return bills_paid, bills_unpaid
 
 
+async def get_bills_paid_unpaid(db: AsyncSession, *, plate: str):
+    bill_unpaid = await bill_repo.get_bills_by_plate(
+        db,
+        plate=plate,
+        bill_status=billSchemas.StatusBill.unpaid.value,
+    )
+    bills_unpaid = [
+        billSchemas.Bill(**unpaid.__dict__) for unpaid in bill_unpaid
+    ]
+    bill_paid = await bill_repo.get_bills_by_plate(
+        db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
+    )
+    bills_paid = [billSchemas.Bill(**paid.__dict__) for paid in bill_paid]
+    return bills_paid, bills_unpaid
+
+
 async def update_multi_bill(
     db: AsyncSession, bills_update: list[billSchemas.BillUpdate]
 ):

@@ -307,7 +307,7 @@ async def create_Plate(
     check_no_spam = await redis_client.get(params.phone_number)
     if check_no_spam:
         raise exc.ServiceFailure(
-            detail=f"after {await redis_client.ttl(params.phone_number)} seconds try agin",
+            detail=await redis_client.ttl(params.phone_number),
             msg_code=utils.MessageCodes.try_after,
         )
     await redis_client.set(params.phone_number, params.plate, ex=120)
@@ -373,7 +373,7 @@ async def create_plate(
     if get_keys_count > 2:
         time_expire = await redis_client.ttl(params.phone_number)
         raise exc.ServiceFailure(
-            detail=f"try after {time_expire} seconds",
+            detail=time_expire,
             msg_code=utils.MessageCodes.try_after,
         )
 

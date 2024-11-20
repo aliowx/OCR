@@ -65,7 +65,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: Session | AsyncSession, db_objs: list[ModelType]
     ) -> list[ModelType] | Awaitable[list[ModelType]]:
         if isinstance(db, AsyncSession):
-            return self._commit_refresh_async(db, db_obj=db_objs)
+            return self._commit_refresh_all_async(db, db_objs=db_objs)
         db.commit()
         for db_obj in db_objs:
             db.refresh(db_obj)

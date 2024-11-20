@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-
 from fastapi import APIRouter, Depends, WebSocket, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
@@ -171,13 +170,9 @@ async def update_record(
     update status record .
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    record = await crud.record.get(db=db, id=id_record)
-    if not record:
-        exc.ServiceFailure(
-            detail="Record Not Found", msg_code=utils.MessageCodes.not_found
-        )
+    
     record_update = await records_services.update_record_and_events(
-        db, record_in=record, params_in=params
+        db, record_id=id_record, params_in=params
     )
     return APIResponse(record_update)
 

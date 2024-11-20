@@ -4,7 +4,8 @@ from typing import List, Optional
 from app.models.base import plate_alphabet_reverse
 from app.utils import generate_excel
 from datetime import datetime
-from app import crud
+from app import crud, utils
+from app.core import exceptions as exc
 
 
 async def get_multi_by_filters(
@@ -115,11 +116,27 @@ async def gen_excel_record(
 async def update_record_and_events(
     db: AsyncSession,
     *,
-    record_in: schemas.Record,
+    record_id: int,
     params_in: schemas.RecordUpdatePlate,
 ):
-    events, count = await crud.record.get_events_by_record_id(
-        db, record_id=record_in.id
+    record = await crud.record.get(db=db, id=record_id)
+    if not record:
+        exc.ServiceFailure(
+            detail="Record Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    events = await crud.record.all_events_with_one_record_id(
+        db, record_id=record.id
     )
-    print(events)
-    return
+    list_events_to_update = []
+    for event in events:
+        event.plate = params_in.plate
+        list_events_to_update.append(event)
+    update_multi_events = await crud.event.update_multi(
+        db, db_objs=list_events_to_update
+    )
+
+    record.end_time = params_in.end_time
+    record.latest_status = params_in.latest_status
+    update_record = await crud.record.update(db, db_obj=record)
+
+    return update_record

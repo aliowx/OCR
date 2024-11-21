@@ -29,8 +29,9 @@ async def get_multi_notifications_by_filter(
     async def _get_camera(db, id: int):
         return (await crud.equipment_repo.get(db, id=id)).equipment_type
 
+    direction = "unknown"
     for notice in notifications:
-        if notice[2].camera_id is not None:
+        if notice[2] and notice[2].camera_id is not None:
             get_type_camera = await _get_camera(db, id=notice[2].camera_id)
 
             if notice[2].type_event in (
@@ -70,6 +71,7 @@ async def get_multi_notifications_by_filter(
                     direction = "unknown"
             else:  # sensors, etc...
                 direction = "sensor_entry"
+
         notice[0].plate = notice[1]
         notice[0].event = notice[2]
         notice[0].zone_name = notice[3]

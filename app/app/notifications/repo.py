@@ -27,17 +27,13 @@ class CRUDNotifications(
                 PlateList,
                 models.Event,
                 models.Zone.name,
-                models.Equipment.tag,
-                models.Record.latest_status,
+                models.Equipment,
             )
             .outerjoin(PlateList, Notifications.plate_list_id == PlateList.id)
             .outerjoin(models.Event, Notifications.event_id == models.Event.id)
             .outerjoin(models.Zone, models.Event.zone_id == models.Zone.id)
             .outerjoin(
                 models.Equipment, models.Event.camera_id == models.Equipment.id
-            )
-            .outerjoin(
-                models.Record, models.Event.record_id == models.Record.id
             )
         )
 

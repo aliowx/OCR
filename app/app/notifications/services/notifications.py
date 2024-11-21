@@ -22,18 +22,15 @@ async def get_multi_notifications_by_filter(
     #       notice[1] -> plate_list
     #       notice[2] -> event
     #       notice[3] -> zone_name
-    #       notice[4] -> camera_tag
-    #       notice[5] -> status
+    #       notice[4] -> camera
+
     resualt = []
+    direction = None
+    camera_tag = None
 
-    async def _get_camera(db, id: int):
-        return (await crud.equipment_repo.get(db, id=id)).equipment_type
-
-    direction = "unknown"
     for notice in notifications:
-        if notice[2] and notice[2].camera_id is not None:
-            get_type_camera = await _get_camera(db, id=notice[2].camera_id)
-
+        if notice[2] and notice[4]:
+            camera_tag = notice[4].tag
             if notice[2].type_event in (
                 TypeEvent.exitDoor.value,
                 TypeEvent.entranceDoor.value,
@@ -56,14 +53,14 @@ async def get_multi_notifications_by_filter(
                     if direction < 0:
                         direction = (
                             "exit"
-                            if get_type_camera
+                            if notice[4].equipment_type
                             == EquipmentType.CAMERA_DIRECTION_EXIT.value
                             else "entry"
                         )
                     else:
                         direction = (
                             "entry"
-                            if get_type_camera
+                            if notice[4].equipment_type
                             == EquipmentType.CAMERA_DIRECTION_EXIT.value
                             else "exit"
                         )
@@ -75,7 +72,7 @@ async def get_multi_notifications_by_filter(
         notice[0].plate = notice[1]
         notice[0].event = notice[2]
         notice[0].zone_name = notice[3]
-        notice[0].camera_tag = notice[4]
+        notice[0].camera_tag = camera_tag
         notice[0].status = direction
         resualt.append(notice[0])
     return resualt, total_count

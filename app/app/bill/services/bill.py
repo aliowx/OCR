@@ -129,17 +129,25 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
     return bills_paid, bills_unpaid
 
 
-async def get_bills_paid_unpaid(db: AsyncSession, *, plate: str):
+async def get_bills_paid_unpaid(
+    db: AsyncSession, *, plate: str, start_time: datetime, end_time: datetime
+):
     bill_unpaid = await get_multi_by_filters(
         db,
         params=billSchemas.ParamsBill(
-            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+            input_plate=plate,
+            input_status=billSchemas.StatusBill.unpaid.value,
+            input_start_time=start_time,
+            input_end_time=end_time,
         ),
     )
     bills_paid = await get_multi_by_filters(
         db,
         params=billSchemas.ParamsBill(
-            input_plate=plate, input_status=billSchemas.StatusBill.unpaid.value
+            input_plate=plate,
+            input_status=billSchemas.StatusBill.paid.value,
+            input_start_time=start_time,
+            input_end_time=end_time,
         ),
     )
     return bills_paid[0], bill_unpaid[0]

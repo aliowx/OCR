@@ -82,14 +82,15 @@ async def get_bill(
     get bill.
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    bill = await bill_repo.get(db, id=id)
+    bill, count = await servicesBill.get_multi_by_filters(
+        db, params=billSchemas.ParamsBill(input_id=id)
+    )
     if not bill:
         raise exc.ServiceFailure(
             detail="bill not found",
             msg_code=MessageCodes.not_found,
         )
-    bill = await servicesBill.set_detail(db, bill=bill)
-    return APIResponse(bill)
+    return APIResponse(bill[0])
 
 
 @router.get("/get-bills-by-plate-phone/")
@@ -158,6 +159,8 @@ async def get_bills_by_plate(
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     plate_in: str,
+    start_time: datetime | None = None,
+    end_time: datetime | None = None,
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
@@ -178,7 +181,7 @@ async def get_bills_by_plate(
         )
 
     bills_paid, bills_unpaid = await servicesBill.get_bills_paid_unpaid(
-        db, plate=plate_in
+        db, plate=plate_in, start_time=start_time, end_time=end_time
     )
 
     return APIResponse(

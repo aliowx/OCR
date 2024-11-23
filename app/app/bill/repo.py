@@ -100,7 +100,11 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
     #     return (await db.execute(query.filter(*filters))).fetchall()
 
     async def get_multi_by_filters(
-        self, db: AsyncSession, *, params: ParamsBill, jalali_date: JalaliDate | None = None
+        self,
+        db: AsyncSession,
+        *,
+        params: ParamsBill,
+        jalali_date: JalaliDate | None = None,
     ) -> list[billschemas]:
         equipment_entance = aliased(Equipment)
         equipment_exit = aliased(Equipment)
@@ -113,7 +117,6 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 equipment_entance.tag.label("camera_entrance"),
                 equipment_exit.tag.label("camera_exit"),
             )
-            .outerjoin(Record, Bill.record_id == Record.id)
             .outerjoin(Zone, Bill.zone_id == Zone.id)
             .outerjoin(
                 equipment_entance,
@@ -146,6 +149,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 Bill.camera_entrance_id == params.input_camera_entrance
             )
 
+        if params.input_id is not None:
+            filters.append(Bill.id == params.input_id)
+
         if params.input_bill_type is not None:
             filters.append(Bill.bill_type == params.input_bill_type)
 
@@ -156,10 +162,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             re.fullmatch(r"[0-9?]{9}", params.input_plate)
         ):
             value_plate = params.input_plate.replace("?", "_")
-            filters.append(Record.plate.like(value_plate))
+            filters.append(Bill.plate.like(value_plate))
 
         if params.input_zone_id is not None:
-            filters.append(Record.zone_id == params.input_zone_id)
+            filters.append(Bill.zone_id == params.input_zone_id)
 
         if params.input_start_time is not None:
             filters.append(Bill.created >= params.input_start_time)

@@ -179,6 +179,7 @@ class JalaliDate(BaseModel):
 
 
 class ParamsBill(BaseModel):
+    input_id: int | None = None
     input_plate: str | None = None
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None

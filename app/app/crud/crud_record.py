@@ -402,7 +402,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 else {"similar_plate": params.similar_plate}
             ),
         )
-        print(query.filter(*filters))
         if params.limit is None:
             result = (
                 await db.execute(
@@ -433,7 +432,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 ),
             )
         ).fetchall()
-        print(result)
         return [result, all_items_count]
 
     async def get_record(

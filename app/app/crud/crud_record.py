@@ -333,18 +333,27 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
             value_plate = params.input_plate.replace("?", "_")
             filters.append(Record.plate.like(value_plate))
 
-        if input_camera_exit_id is not None:
+        if input_camera_exit_id is not None and input_camera_exit_id != [0]:
             filters.append(Record.camera_exit_id.in_(input_camera_exit_id))
+
+        if input_camera_exit_id == [0]:
+            filters.append(Record.camera_exit_id.is_(None))
 
         if params.similar_plate is not None:
             # Adjust similarity threshold if necessary
             await db.execute(text("SET pg_trgm.similarity_threshold = 0.5"))
             filters.append(text(f"plate % :similar_plate"))
 
-        if input_camera_entrance_id is not None:
+        if (
+            input_camera_entrance_id is not None
+            and input_camera_entrance_id != [0]
+        ):
             filters.append(
                 Record.camera_entrance_id.in_(input_camera_entrance_id)
             )
+
+        if input_camera_entrance_id == [0]:
+            filters.append(Record.camera_entrance_id.is_(None))
 
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
@@ -393,7 +402,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 else {"similar_plate": params.similar_plate}
             ),
         )
-
         if params.limit is None:
             result = (
                 await db.execute(
@@ -424,7 +432,6 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 ),
             )
         ).fetchall()
-
         return [result, all_items_count]
 
     async def get_record(

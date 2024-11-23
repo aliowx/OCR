@@ -74,21 +74,21 @@ async def pay_bills_by_id_pos(
 # for payment switch
 @router.get("/call-back/{transaction_id_in}")
 async def pay_bills_by_id_ipg(
-    _: Annotated[
-        bool,
-        Depends(
-            RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
-                ]
-            )
-        ),
-    ],
+    # _: Annotated[
+    #     bool,
+    #     Depends(
+    #         RoleChecker(
+    #             allowed_roles=[
+    #                 UserRoles.ADMINISTRATOR,
+    #                 UserRoles.PARKING_MANAGER,
+    #             ]
+    #         )
+    #     ),
+    # ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     transaction_id_in: str,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    # current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[Any]:
     """
     pay bill by bill id.
@@ -141,7 +141,7 @@ async def pay_bills_by_id_ipg(
                 time_paid_in=datetime.now(UTC).replace(tzinfo=None),
                 status_in=billSchemas.StatusBill.paid,
             )
-    get_transaction.user_id = current_user.id
+    # get_transaction.user_id = current_user.id
     get_transaction.status = response_json["content"]["status"]
     get_transaction.rrn = response_json["content"]["reference_number"]
     update_transaction = await transaction_repo.update(

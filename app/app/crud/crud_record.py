@@ -52,7 +52,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         )
         zone_name = (
             db.query(models.Zone.name)
-            .filter(obj_in.camera_entrance_id == models.Zone.id)
+            .filter(obj_in.zone_id == models.Zone.id)
             .first()
         )
         data_ws["zone_name"] = zone_name[0] if zone_name else None

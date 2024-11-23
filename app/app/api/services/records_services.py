@@ -181,6 +181,7 @@ async def update_record_and_events(
 
     record.end_time = params_in.end_time
     record.latest_status = params_in.latest_status
+    record.plate = params_in.plate
     update_record = await crud.record.update(db, db_obj=record)
 
     return update_record

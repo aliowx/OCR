@@ -379,6 +379,21 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_camera_entrance_id == [0]:
             filters.append(Record.camera_entrance_id.is_(None))
 
+        if params.input_time_park_less_than_min is not None:
+
+            filters.append(
+                func.extract("epoch", Record.end_time)
+                - (func.extract("epoch", Record.start_time))
+                < params.input_time_park_less_than_min / 60
+            )
+
+        if params.input_time_park_greater_than_min is not None:
+            filters.append(
+                func.extract("epoch", Record.end_time)
+                - (func.extract("epoch", Record.start_time))
+                > params.input_time_park_greater_than_min / 60
+            )
+
         if params.input_zone_id is not None:
             filters.append(Record.zone_id == params.input_zone_id)
 

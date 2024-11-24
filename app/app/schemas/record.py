@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, field_validator, Field
+from pydantic import BaseModel, ConfigDict, field_validator, Field, PositiveInt
 import pytz
 
 
@@ -134,6 +134,8 @@ class ParamsRecord(BaseModel):
     sort_by: SortBy | None = SortBy.exit_time
     input_entrance_persent_time: datetime | None = None
     input_exit_persent_time: datetime | None = None
+    input_time_park_less_than_min: PositiveInt | None = None
+    input_time_park_greater_than_min: PositiveInt | None = None
     skip: int | None = 0
     limit: int | None = None
     asc: bool | None = True
@@ -166,6 +168,7 @@ class RecordExcelItem(BaseModel):
     )
     camera_exit: str | None = Field(None, serialization_alias="دوربین خروجی")
     latest_status: str | None = Field(None, serialization_alias="وضعیت")
+
 
 class RecordExcelItemForPolice(BaseModel):
     seri: str | None = Field(None, serialization_alias="SERI")

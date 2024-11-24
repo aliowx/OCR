@@ -172,7 +172,7 @@ async def report_zone(
         zone.total_referred = (
             await crud.record.get_today_count_referred_by_zone(
                 db,
-                zone_id=zone.id,
+                zone_id_in=zone.id,
                 start_time_in=start_time,
                 end_time_in=end_time,
             )

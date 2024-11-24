@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, UTC
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.bill.schemas import bill as billSchemas
@@ -6,9 +7,10 @@ from app.bill.repo import bill_repo
 from app.core.exceptions import ServiceFailure
 from app.utils import MessageCodes
 from app.parking.repo import zone_repo
+from cache.redis import redis_client
+import rapidjson
 import pytz
 import math
-import re
 
 
 def convert_to_timezone_iran(time: datetime):
@@ -82,6 +84,41 @@ def calculate_price(
     price = get_price.entrance_fee + (duration_time * get_price.hourly_fee)
 
     return price, get_price
+
+
+async def create(
+    db: AsyncSession,
+    *,
+    bill_in: billSchemas.BillCreate,
+):
+    if bill_in.price is None:
+        time_now = datetime.now(UTC).replace(tzinfo=None)
+        price, get_price = await calculate_price_async(
+            db,
+            start_time_in=time_now,
+            end_time_in=time_now,
+            zone_id=bill_in.zone_id,
+        )
+        bill_in.price = price
+        bill_in.entrance_fee = get_price.entrance_fee
+        bill_in.entrance_fee = get_price.hourly_fee
+    bill = await bill_repo.create(db, obj_in=bill_in.model_dump())
+    bill_ws = bill
+
+    bill_ws.start_time = convert_to_timezone_iran(bill_ws.start_time)
+    bill_ws.end_time = convert_to_timezone_iran(bill_ws.end_time)
+    bill_ws.created = convert_to_timezone_iran(bill_ws.created)
+    if bill_ws.camera_entrance_id:
+        redis_client.publish(
+            f"bills:camera_{bill_ws.camera_entrance_id}",
+            rapidjson.dumps(jsonable_encoder(bill_ws)),
+        )
+    if bill_ws.camera_exit_id:
+        redis_client.publish(
+            f"bills:camera_{bill_ws.camera_exit_id}",
+            rapidjson.dumps(jsonable_encoder(bill_ws)),
+        )
+    return bill
 
 
 async def get_multi_by_filters(
@@ -184,7 +221,7 @@ async def update_multi_bill(
     return resualt, msg_code
 
 
-async def update_bills(
+async def update_bills_by_ids(
     db: AsyncSession,
     bill_ids_in: list[int],
     rrn_number_in: str,

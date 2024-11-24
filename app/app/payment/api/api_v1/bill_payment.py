@@ -134,7 +134,7 @@ async def pay_bills_by_id_ipg(
             and response_json["content"]["amount"] == get_transaction.amount
             and response_json["content"]["reference_number"] is not None
         ):
-            result, msg_code = await servicesBill.update_bills(
+            result, msg_code = await servicesBill.update_bills_by_ids(
                 db=db,
                 bill_ids_in=get_transaction.bill_ids,
                 rrn_number_in=response_json["content"]["reference_number"],

@@ -78,46 +78,44 @@ async def get_effective_utilization_rate(
     )
 
 
-# @router.get("/parking-occupancy-by-zone")
-# async def avrage_referred(
-#     _: Annotated[
-#         bool,
-#         Depends(
-#             RoleChecker(
-#                 allowed_roles=[
-#                     UserRoles.ADMINISTRATOR,
-#                     UserRoles.PARKING_MANAGER,
-#                     UserRoles.REPORTING_ANALYSIS,
-#                 ]
-#             )
-#         ),
-#     ],
-#     db: AsyncSession = Depends(deps.get_db_async),
-#     *,
-#     start_time_in: datetime,
-#     end_time_in: datetime,
-#     timing: report_schemas.Timing = report_schemas.Timing.day,
-#     zone_id: int | None = None,
-#     current_user: models.User = Depends(deps.get_current_active_user),
-# ) -> APIResponseType[Any]:
-#     """
-#     user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
-#     """
+@router.get("/parking-count-occupancy-by-zone")
+async def avrage_referred(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
 
-#     return APIResponse(
-#         await report_services.get_parking_occupancy_by_zone(
-#             db,
-#             start_time_in=start_time_in,
-#             end_time_in=end_time_in,
-#             timing=timing,
-#             zone_id=zone_id,
-#         )
-#     )
+    return APIResponse(
+        await report_services.get_parking_occupancy_by_zone(
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+            zone_id=zone_id,
+        )
+    )
 
 
-# TODO FIX URL
-# @router.get("/referred-by-zone")
-@router.get("/parking-occupancy-by-zone")
+@router.get("/referred-by-zone")
 async def avrage_referred(
     _: Annotated[
         bool,
@@ -149,6 +147,45 @@ async def avrage_referred(
             start_time_in=start_time_in,
             end_time_in=end_time_in,
             timing=timing,
+            zone_id=zone_id,
+        )
+    )
+
+
+@router.get("/get-count-entry-leave-by-zone")
+async def entry(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                    UserRoles.REPORTING_ANALYSIS,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing = report_schemas.Timing.day,
+    zone_id: int | None = None,
+    door_type: report_schemas.DoorType,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , REPORTING_ANALYSIS ]
+    """
+
+    return APIResponse(
+        await report_services.get_count_entry_leave_by_zone(
+            db,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+            timing=timing,
+            door_type=door_type,
             zone_id=zone_id,
         )
     )
@@ -228,7 +265,7 @@ async def avg_price_per_referred(
     )
 
 
-@router.get("/count-entrance-exit-zone")
+@router.get("/count-entrance-exit-by-zone-camera")
 async def count_entrance_exit_zone(
     _: Annotated[
         bool,

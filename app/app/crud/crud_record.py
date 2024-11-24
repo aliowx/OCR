@@ -15,9 +15,8 @@ from app.models.event import Event
 from app.schemas.record import RecordCreate, RecordUpdate, StatusRecord
 from cache.redis import redis_client
 from app.schemas import RecordUpdate, StatusRecord
-from app.report.schemas import Timing
 from app.parking.models import Zone, Equipment
-from app.report.schemas import JalaliDate as JalaliDateReport
+from app.report import schemas as ReportSchemas
 from app import models
 import re
 
@@ -146,7 +145,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         *,
         input_start_create_time: datetime = None,
         input_end_create_time: datetime = None,
-        timing: Timing,
+        timing: ReportSchemas.Timing,
         zone_id: int | None = None,
     ):
         filters = [
@@ -210,21 +209,21 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self,
         db: AsyncSession,
         *,
-        input_start_create_time: datetime = None,
-        input_end_create_time: datetime = None,
+        start_time_in: datetime = None,
+        end_time_in: datetime = None,
         input_status: StatusRecord | None = None,
-        zone_id: int | None = None,
+        zone_id_in: int | None = None,
     ):
         filters = [Record.is_deleted == False]
 
-        if zone_id is not None:
-            filters.append(Record.zone_id == zone_id)
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
 
-        if input_start_create_time is not None:
-            filters.append(Record.end_time >= input_start_create_time)
+        if start_time_in is not None:
+            filters.append(Record.end_time >= start_time_in)
 
-        if input_end_create_time is not None:
-            filters.append(Record.start_time <= input_end_create_time)
+        if end_time_in is not None:
+            filters.append(Record.start_time <= end_time_in)
 
         if input_status is not None:
             filters.append(Record.latest_status == input_status)
@@ -237,7 +236,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         self,
         db: Session | AsyncSession,
         *,
-        zone_id: int = None,
+        zone_id_in: int = None,
         start_time_in: datetime,
         end_time_in: datetime,
     ):
@@ -247,8 +246,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         filters = [
             Record.is_deleted == False,
             Record.start_time.between(start_time_in, end_time_in),
+            Record.zone_id == zone_id_in,
+        ]
+
+        return await db.scalar(
+            query.with_only_columns(func.count()).filter(*filters)
+        )
+
+    async def get_today_count_entry_leaveing_by_zone(
+        self,
+        db: Session | AsyncSession,
+        *,
+        zone_id: int = None,
+        start_time_in: datetime,
+        end_time_in: datetime,
+        entry: bool | None = None,
+        leave: bool | None = None,
+    ):
+
+        query = select(Record)
+
+        filters = [
+            Record.is_deleted == False,
+            Record.start_time.between(start_time_in, end_time_in),
             Record.zone_id == zone_id,
         ]
+        if entry is not None:
+            filters.append(Record.camera_entrance_id)
 
         return await db.scalar(
             query.with_only_columns(func.count()).filter(*filters)
@@ -492,7 +516,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         start_time_in: datetime = None,
         end_time_in: datetime = None,
         zone_id_in: int | None = None,
-        jalali_date: JalaliDateReport = None,
+        jalali_date: ReportSchemas.JalaliDate = None,
     ):
 
         query = select(
@@ -560,7 +584,7 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return self._all(db.scalars(query.filter(*filters)))
 
-    async def count_entrance_exit_door(
+    async def count_entrance_exit_door_by_camera_tag(
         self,
         db: AsyncSession,
         zone_id_in: int,
@@ -617,6 +641,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         }
 
         return count_entrance, count_exit
+
+    async def count_entrance_exit_door(
+        self,
+        db: AsyncSession,
+        *,
+        zone_id_in: int,
+        start_time_in: datetime | None = None,
+        end_time_in: datetime | None = None,
+        door_type,
+    ):
+        filters = [Record.is_deleted == False]
+
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(
+                Record.start_time.between(start_time_in, end_time_in)
+            )
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
+        if door_type == "entry":
+            query = select(
+                func.count(Record.camera_entrance_id).label("count_entrance")
+            )
+        if door_type == "exit":
+            query = select(
+                func.count(Record.camera_exit_id).label("count_exit")
+            )
+        return await db.scalar(query.filter(*filters))
 
     async def get_effective_utilization_rate(
         self,

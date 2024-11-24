@@ -375,12 +375,14 @@ def create_ranges_date(
     return ranges
 
 
-async def get_parking_occupancy_by_zone(
+async def get_zone_deta(
     db: AsyncSession,
     start_time_in: datetime,
     end_time_in: datetime,
+    fetch_func,
     timing: report_schemas.Timing,
     zone_id: int | None = None,
+    door_type: report_schemas.DoorType | None = None,
 ) -> dict:
 
     range_date = create_ranges_datetime(
@@ -393,49 +395,64 @@ async def get_parking_occupancy_by_zone(
         if zone_id is None
         else [await crud.zone_repo.get(db, id=zone_id)]
     )
-    total_utilization_rate = []
+    total_count = [
+        {"start": dt["start"], "end": dt["start"], "count": 0}
+        for dt in range_date
+    ]
 
     result = {}
     for zone in get_zones:
-        zone_effective_utilization_rate = []
+        zone_data = []
 
         for date_time in range_date:
-            records = await crud.record.get_present_in_parking_count(
-                db,
-                input_start_create_time=date_time.get("start"),
-                input_end_create_time=date_time.get("end"),
-                zone_id=zone.id,
-            )
-
-            zone_effective_utilization_rate.append(
+            if fetch_func == crud.record.count_entrance_exit_door:
+                count = await fetch_func(
+                    db,
+                    start_time_in=date_time.get("start"),
+                    end_time_in=date_time.get("end"),
+                    zone_id_in=zone.id,
+                    door_type=door_type,
+                )
+            else:
+                count = await fetch_func(
+                    db,
+                    start_time_in=date_time.get("start"),
+                    end_time_in=date_time.get("end"),
+                    zone_id_in=zone.id,
+                )
+            zone_data.append(
                 {
                     "start": date_time.get("start"),
                     "end": date_time.get("end"),
-                    "count": records or 0,
+                    "count": count or 0,
                 }
             )
+            total_count[range_date.index(date_time)]["count"] += count
 
         # Append zone data
-        result[zone.name] = zone_effective_utilization_rate
+        result[zone.name] = zone_data
 
-        # Aggregate for total
-        for date, entry in zip(range_date, zone_effective_utilization_rate):
-            if len(total_utilization_rate) < len(range_date):
-                total_utilization_rate.append(
-                    {
-                        "start": date["start"],
-                        "end": date["end"],
-                        "count": entry["count"],
-                    }
-                )
-            else:
-                total_utilization_rate[range_date.index(date)][
-                    "count"
-                ] += entry["count"]
-
-    result["total"] = total_utilization_rate
+    result["total"] = total_count
 
     return result
+
+
+async def get_parking_occupancy_by_zone(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+    zone_id: int | None = None,
+) -> dict:
+
+    return await get_zone_deta(
+        db,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+        fetch_func=crud.record.get_present_in_parking_count,
+        zone_id=zone_id,
+        timing=timing,
+    )
 
 
 async def get_count_referred_by_zone(
@@ -446,59 +463,34 @@ async def get_count_referred_by_zone(
     zone_id: int | None = None,
 ) -> dict:
 
-    range_date = create_ranges_datetime(
-        start_date=start_time_in, end_date=end_time_in, timing=timing
+    return await get_zone_deta(
+        db,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+        fetch_func=crud.record.get_today_count_referred_by_zone,
+        zone_id=zone_id,
+        timing=timing,
     )
 
-    # Retrieve zones and capacities
-    get_zones = (
-        await crud.zone_repo.get_multi(db, limit=None)
-        if zone_id is None
-        else [await crud.zone_repo.get(db, id=zone_id)]
+
+async def get_count_entry_leave_by_zone(
+    db: AsyncSession,
+    start_time_in: datetime,
+    end_time_in: datetime,
+    timing: report_schemas.Timing,
+    door_type: report_schemas.DoorType,
+    zone_id: int | None = None,
+) -> dict:
+
+    return await get_zone_deta(
+        db,
+        start_time_in=start_time_in,
+        end_time_in=end_time_in,
+        fetch_func=crud.record.count_entrance_exit_door,
+        zone_id=zone_id,
+        timing=timing,
+        door_type=door_type,
     )
-    total_utilization_rate = []
-
-    result = {}
-    for zone in get_zones:
-        zone_effective_utilization_rate = []
-
-        for date_time in range_date:
-            records = await crud.record.get_today_count_referred_by_zone(
-                db,
-                zone_id=zone.id,
-                start_time_in=date_time.get("start"),
-                end_time_in=date_time.get("end"),
-            )
-
-            zone_effective_utilization_rate.append(
-                {
-                    "start": date_time.get("start"),
-                    "end": date_time.get("end"),
-                    "count": records or 0,
-                }
-            )
-
-        # Append zone data
-        result[zone.name] = zone_effective_utilization_rate
-
-        # Aggregate for total
-        for date, entry in zip(range_date, zone_effective_utilization_rate):
-            if len(total_utilization_rate) < len(range_date):
-                total_utilization_rate.append(
-                    {
-                        "start": date["start"],
-                        "end": date["end"],
-                        "count": entry["count"],
-                    }
-                )
-            else:
-                total_utilization_rate[range_date.index(date)][
-                    "count"
-                ] += entry["count"]
-
-    result["total"] = total_utilization_rate
-
-    return result
 
 
 async def cal_count_with_out_status(
@@ -672,11 +664,13 @@ async def count_entrance_exit_zone(
     obj_camera_entrance = _initialize_cameras(camera_entrance)
     obj_camera_exit = _initialize_cameras(camera_exit)
 
-    count_entrance, count_exit = await crud.record.count_entrance_exit_door(
-        db,
-        zone_id_in=zone_id_in,
-        start_time_in=start_time_in,
-        end_time_in=end_time_in,
+    count_entrance, count_exit = (
+        await crud.record.count_entrance_exit_door_by_camera_tag(
+            db,
+            zone_id_in=zone_id_in,
+            start_time_in=start_time_in,
+            end_time_in=end_time_in,
+        )
     )
     total_entrance = 0
     total_exit = 0

@@ -11,6 +11,11 @@ class Timing(str, Enum):
     year = "year"
 
 
+class DoorType(str, Enum):
+    entry = "entry"
+    exit = " exit"
+
+
 class Capacity(BaseModel):
     total: int | None = None
     empty: int | None = None
@@ -63,6 +68,7 @@ class CountEntranceExitDoor(BaseModel):
     count_exit: dict | None = {}
     total_entrance: int | None = None
     total_exit: int | None = None
+
 
 class JalaliDate(BaseModel):
     in_start_jalali_date: str | None = None

@@ -379,6 +379,9 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         if input_camera_entrance_id == [0]:
             filters.append(Record.camera_entrance_id.is_(None))
 
+        if params.input_id is not None:
+            filters.append(Record.id == params.input_id)
+
         if params.input_time_park_less_than_min is not None:
 
             filters.append(

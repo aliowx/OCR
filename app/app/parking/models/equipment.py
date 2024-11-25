@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Integer, String
+from sqlalchemy import JSON, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
@@ -7,7 +7,7 @@ from app.models.base import EquipmentStatus, EquipmentType
 
 class Equipment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    
+
     equipment_type: Mapped[EquipmentType] = mapped_column(
         Integer, nullable=True
     )
@@ -33,6 +33,10 @@ class Equipment(Base):
         nullable=True,
     )
     image_camera = relationship("Image", foreign_keys=image_id)
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
 
     zone_id: Mapped[int] = mapped_column(
         Integer,

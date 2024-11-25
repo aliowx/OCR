@@ -8,19 +8,19 @@ from app import crud, models, schemas
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
-from app.schemas import EventUpdate, RecordUpdate, TypeEvent, StatusRecord
+from app.schemas import TypeEvent, StatusRecord
 import rapidjson
-from app.models.base import EquipmentType
+from app.models.base import EquipmentType, EquipmentStatus
 from app.bill.services.bill import calculate_price, convert_to_timezone_iran
 from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
-from app.plate.repo import plate_repo
+from app.parking.repo import equipment_repo
 from app.db.init_data_fake import create_events
 from app.notifications.repo import notifications_repo
-from app.notifications.schemas import NotificationsCreate
+from app.notifications.schemas import NotificationsCreate, TypeNotice
 from app.plate.schemas import PlateType
 from app.plate.models import PlateList
-
+import requests
 
 namespace = "job worker"
 logger = logging.getLogger(__name__)
@@ -57,7 +57,10 @@ def add_events(self, event: dict) -> str:
             notification = notifications_repo.create(
                 self.session,
                 obj_in=NotificationsCreate(
-                    plate_list_id=black_list.id, event_id=create_event.id
+                    plate_list_id=black_list.id,
+                    event_id=create_event.id,
+                    type_notice=TypeNotice.black_list,
+                    text=f"{black_list.plate}",
                 ),
             )
             logger.info(
@@ -421,7 +424,12 @@ def update_record(self, event_id) -> str:
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-
+    if settings.TIME_SEND_SMS_HEALTH_CHECK_EQUIPMENT > 0:
+        sender.add_periodic_task(
+            settings.TIME_SEND_SMS_HEALTH_CHECK_EQUIPMENT,
+            health_check_equipment.s(),
+            name=f"equipment is broken or disconnect",
+        )
     sender.add_periodic_task(
         settings.CHECKING_FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR,
         set_status_record.s(),
@@ -486,6 +494,57 @@ def set_status_record(self):
     except:
         print("Not found")
         print("func set status")
+
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=1,
+    soft_time_limit=240,
+    time_limit=360,
+    name="health_check_equipment",
+)
+def health_check_equipment(self):
+
+    try:
+        get_multi_equipment = equipment_repo.get_multi_active(self.session)
+        for eq in get_multi_equipment:
+            if eq.equipment_status in (
+                EquipmentStatus.BROKEN,
+                EquipmentStatus.DISCONNECTED,
+            ):
+                status = eq.equipment_status
+                match status:
+                    case models.base.EquipmentStatus.DISCONNECTED:
+                        status = "قطع"
+                    case models.base.EquipmentStatus.BROKEN:
+                        status = "خراب"
+
+                notification = notifications_repo.create(
+                    self.session,
+                    obj_in=NotificationsCreate(
+                        text=f"دوربین {eq.tag} {status} است",
+                        type_notice=TypeNotice.equipment,
+                    ),
+                )
+                redis_client.publish(
+                    "notifications",
+                    rapidjson.dumps(f"دوربین {eq.tag} {status} است"),
+                )
+
+                for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
+
+                    params_sending = {
+                        "phoneNumber": phone,
+                        "textMessage": f"دوربین {eq.tag} {status} است",
+                    }
+                    send_code = requests.post(
+                        settings.URL_SEND_SMS,
+                        params=params_sending,
+                    )
+    except:
+        print("no broken or disconnect")
 
 
 @celery_app.task(

@@ -42,26 +42,6 @@ class EquipmentStatus(IntEnum):
     DISCONNECTED = 3
 
 
-class RuleType(IntEnum):
-    BLACK_LIST = 1
-    WHITE_LIST = 2
-
-
-class Weekday(IntEnum):
-    MON = 0
-    TUE = 1
-    WED = 2
-    THU = 3
-    FRI = 4
-    SAT = 5
-    SUN = 6
-
-    @classmethod
-    @property
-    def str(cls) -> str:
-        return str(list(cls))
-
-
 plate_alphabet = {
     # 10: "الف",
     # 10: "آ",

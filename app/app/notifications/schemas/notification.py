@@ -5,10 +5,17 @@ from app.plate.schemas import PlateList
 from app.schemas.event import Event
 
 
+class TypeNotice(str, Enum):
+    black_list = "black_list"
+    equipment = "equipment"
+
+
 class NotificationsBase(BaseModel):
     plate_list_id: int | None = None
     is_read: bool | None = False
     event_id: int | None = None
+    text: str | None = None
+    type_notice: TypeNotice | None = None
 
 
 class NotificationsCreate(NotificationsBase): ...

@@ -152,6 +152,10 @@ class StorageSettings(SettingsBase):
     MINIO_SECURE: bool
     MINIO_BUCKET_NAME: str
 
+    # health check
+    PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT: list
+    TIME_SEND_SMS_HEALTH_CHECK_EQUIPMENT: int 
+
     @property
     def async_database_url(self) -> str | None:
         return (

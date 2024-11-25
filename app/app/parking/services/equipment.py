@@ -1,18 +1,24 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
 from app.core.exceptions import ServiceFailure
 from app.parking.models import Equipment
+from app.core.config import settings
 from app.parking.repo import equipment_repo, zone_repo
-from app.parking.schemas import equipment as schemas
+from app.notifications.repo import notifications_repo
+from app.notifications.schemas import NotificationsCreate, TypeNotice
+from app.parking import schemas
 from app.utils import MessageCodes, PaginatedContent
 from typing import Optional
-from app.models.base import EquipmentType
+from app import models
+from cache.redis import redis_connect_async
+from app.jobs.celery.celeryworker_pre_start import redis_client
+import requests
+import rapidjson
 
 
 async def get_multi_quipments(
     db: AsyncSession,
     params: schemas.FilterEquipmentsParams,
-    type_eq: Optional[list[EquipmentType]] = None,
+    type_eq: Optional[list[models.base.EquipmentType]] = None,
 ) -> PaginatedContent[list[schemas.Equipment]]:
 
     equipments, total_count = await equipment_repo.get_multi_with_filters(
@@ -177,3 +183,60 @@ async def update_equipment(
     )
 
     return equipment
+
+
+async def health_check_equipment(
+    db: AsyncSession,
+    *,
+    equipment_id: int,
+    equipment_status: models.base.EquipmentStatus,
+):
+
+    get_equipment = await equipment_repo.get(db, id=equipment_id)
+
+    _get_status = get_equipment.equipment_status
+
+    if not get_equipment:
+        raise ServiceFailure(
+            detail="equipment not found",
+            msg_code=MessageCodes.not_found,
+        )
+
+    get_equipment.equipment_status = equipment_status
+    update_equipment = await equipment_repo.update(db, db_obj=get_equipment)
+
+    status = update_equipment.equipment_status
+    match status:
+        case models.base.EquipmentStatus.HEALTHY:
+            status = "سالم"
+        case models.base.EquipmentStatus.DISCONNECTED:
+            status = "قطع"
+        case models.base.EquipmentStatus.BROKEN:
+            status = "خراب"
+
+    redis_connected = await redis_connect_async()
+    notification = await notifications_repo.create(
+        db,
+        obj_in=NotificationsCreate(
+            text=f"دوربین {update_equipment.tag} {status} است",
+            type_notice=TypeNotice.equipment,
+        ),
+    )
+    redis_client.publish(
+        "notifications",
+        rapidjson.dumps(f"دوربین {update_equipment.tag} {status} است"),
+    )
+    for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
+
+        check = await redis_connected.get(phone)
+        if not check or _get_status != update_equipment.equipment_status:
+            await redis_connected.set(phone, phone, ex=3600)
+            params_sending = {
+                "phoneNumber": phone,
+                "textMessage": f"دوربین {update_equipment.tag} {status} است",
+            }
+            send_code = requests.post(
+                settings.URL_SEND_SMS,
+                params=params_sending,
+            )
+    return update_equipment

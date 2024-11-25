@@ -267,6 +267,21 @@ class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]
 ):
 
+    def get_multi_active(
+        self,
+        db: Session,
+    ) -> list[Equipment] | Awaitable[list[Equipment]]:
+        return self._all(
+            db.scalars(
+                select(self.model).filter(
+                    *[
+                        self.model.is_deleted == False,
+                        self.model.is_active == True,
+                    ]
+                )
+            )
+        )
+
     async def get_multi_with_filters(
         self,
         db: AsyncSession,

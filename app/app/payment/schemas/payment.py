@@ -83,8 +83,7 @@ class VerifyPaymentRequest(BaseModel):
 
 class CallBackCreate(BaseModel):
     bill_ids: list[int]
-    order_id_paymet_switch: int
-    order_id_b2b: int
+    order_id_b2b: int | None = None
     amount: int
     status: str
     rrn: str

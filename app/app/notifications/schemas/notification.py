@@ -14,7 +14,8 @@ class NotificationsBase(BaseModel):
 class NotificationsCreate(NotificationsBase): ...
 
 
-class NotificationsUpdate(NotificationsBase): ...
+class NotificationsUpdate(BaseModel):
+    is_read: bool | None = False
 
 
 class NotificationsInDBBase(NotificationsBase):

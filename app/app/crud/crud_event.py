@@ -109,5 +109,21 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
 
         return [items, all_items_count]
 
+    async def get_events_by_record_ids(
+        self, db: AsyncSession, *, record_ids: list[int]
+    ) -> list[Event] | Awaitable[list[Event]]:
+        return await self._all(
+            db.scalars(
+                select(Event)
+                .filter(
+                    *[
+                        Event.record_id.in_(record_ids),
+                        Event.is_deleted == False,
+                    ]
+                )
+                .with_for_update()
+            )
+        )
+
 
 event = CRUDEvent(Event)

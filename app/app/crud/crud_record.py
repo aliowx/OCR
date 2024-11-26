@@ -715,6 +715,33 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
 
         return result
 
+    async def exists_records(
+        self,
+        db: AsyncSession,
+        *,
+        record_ids: list[int],
+    ):
+        exists = await db.scalar(
+            select(
+                select(Record.id)
+                .filter(
+                    *[Record.is_deleted == False, Record.id.in_(record_ids)]
+                )
+                .exists()
+            )
+        )
+        records = await self._all(
+            db.scalars(
+                select(Record).filter(
+                    *[
+                        Record.is_deleted == False,
+                        Record.id.in_(record_ids),
+                    ]
+                )
+            )
+        )
+        return exists, records
+
     async def get_events_by_record_id(
         self,
         db: AsyncSession,

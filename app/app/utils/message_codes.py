@@ -48,6 +48,7 @@ class MessageCodes:
     unsuccessfully_pay = 15
     successfully_pay = 16
     try_after = 17
+    price_discrepancy = 18
 
     english_messages_names = {
         0: "Successful Operation",
@@ -68,6 +69,7 @@ class MessageCodes:
         15: "Unsuccessful pay",
         16: "Successful pay",
         17: "try after minutes",
+        18: "price discrepancy"
     }
 
     persian_message_names = {
@@ -89,4 +91,5 @@ class MessageCodes:
         15: "پرداخت ناموفق",
         16: "پرداخت موفق",
         17: "چند دقیقه دیگر تلاش کنید",
+        18: "مغایرت قیمت قبض با پرداخت"
     }

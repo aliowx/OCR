@@ -67,6 +67,8 @@ build-project-image-productioon:
     - touch .env
     - cd ..
     - "docker login --username $PARKING_REGISTERY_USER --password $PARKING_REGISTERY_PASSWORD $PARKING_REGISTERY_URL"
+  environment:
+    name: production
   script:
     - "echo deploy to registery"
     - "sh publishProject.sh"

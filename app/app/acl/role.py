@@ -15,3 +15,4 @@ class UserRoles(StrEnum):
     APP_IRANMALL = auto()
     ITOLL = auto()
     APPS = auto()
+    PLATE_MANAGER = auto()

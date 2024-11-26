@@ -139,6 +139,13 @@ async def capacity(
     else:
         effective_utilization_rate = 0
 
+    entry, leave = await crud.record.count_entrance_exit_door_zone(
+        db, start_time_in=start_time, end_time_in=end_time
+    )
+    if entry is None:
+        entry = 0
+    if leave is None:
+        leave = 0
     return report_schemas.Capacity(
         total=capacity_zones,
         empty=empty,
@@ -149,6 +156,8 @@ async def capacity(
         time_minute_park=time_park,
         len_zone=count_zone,
         effective_utilization_rate=effective_utilization_rate,
+        count_entry=entry,
+        count_leave=leave,
     )
 
 
@@ -168,6 +177,16 @@ async def report_zone(
     zones = await zone_repo.get_multi(db, limit=None)
     for zone in zones:
         zone_id = {zone.id}
+        entry, leave = await crud.record.count_entrance_exit_door_zone(
+            db,
+            start_time_in=start_time,
+            end_time_in=end_time,
+            zone_id_in=zone.id,
+        )
+        if entry is None:
+            entry = 0
+        if leave is None:
+            leave = 0
         zone = await zone_services.set_children_ancestors_capacity(db, zone)
         zone.total_referred = (
             await crud.record.get_today_count_referred_by_zone(
@@ -203,6 +222,9 @@ async def report_zone(
             start_time_in=start_time,
             end_time_in=end_time,
         )
+
+        zone.count_entry = entry
+        zone.count_leave = leave
 
         zone.avrage_amount_bill_today = round(total_price)
         zone.income_today_parking = round(total_income)

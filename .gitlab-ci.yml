@@ -3,7 +3,8 @@ stages:
   - build
   - deploy
   - build-production
-
+  - deploy-production
+  
 test-project-test:
   stage: test
   before_script:
@@ -77,3 +78,17 @@ build-project-image-productioon:
     - /^v\d+\.\d+\.\d+$/
 
 
+deploy-project-image-production-server:
+  stage: deploy-production
+  script:
+    - scp -i /home/gitlab-runner/.ssh/id_rsa -o StrictHostKeyChecking=no -p 20095 $ENV_IRANMALL_PROJECT_FILE_PARKING $PARkING_USER@$PARKING_IP:/home/mohamadeq/projects/iranmall-backend/.env
+    - ssh -o StrictHostKeyChecking=no -i /home/gitlab-runner/.ssh/id_rsa $PARkING_USER@$PARKING_IP -p 20095 "cd /home/mohamadeq/projects/iranmall-backend && export TAG=$TAG_VER && docker compose pull && docker compose down && docker compose up -d"
+  tags:
+    - shell_executer
+  environment:
+    name: production
+  variables:
+    TAG_VER: $CI_COMMIT_TAG
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+      when: manual

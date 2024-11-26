@@ -18,6 +18,7 @@ from app.schemas import RecordUpdate, StatusRecord
 from app.parking.models import Zone, Equipment
 from app.report import schemas as ReportSchemas
 from app import models
+from app.bill.services import convert_to_timezone_iran
 import re
 
 
@@ -32,7 +33,10 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
-        data_ws = jsonable_encoder(db_obj)
+        data_ws = db_obj
+        data_ws.start_time = convert_to_timezone_iran(data_ws.start_time)
+        data_ws.end_time = convert_to_timezone_iran(data_ws.end_time)
+        data_ws = jsonable_encoder(data_ws)
         camera_entry_name = (
             db.query(models.Equipment.tag)
             .filter(obj_in.camera_entrance_id == models.Equipment.id)
@@ -686,6 +690,36 @@ class CRUDRecord(CRUDBase[Record, RecordCreate, RecordUpdate]):
                 func.count(Record.camera_exit_id).label("count_exit")
             )
         return await db.scalar(query.filter(*filters))
+
+    async def count_entrance_exit_door_zone(
+        self,
+        db: AsyncSession,
+        *,
+        zone_id_in: int | None = None,
+        start_time_in: datetime | None = None,
+        end_time_in: datetime | None = None,
+    ):
+        filters = [Record.is_deleted == False]
+
+        if start_time_in is not None and end_time_in is not None:
+            filters.append(
+                Record.start_time.between(start_time_in, end_time_in)
+            )
+        if zone_id_in is not None:
+            filters.append(Record.zone_id == zone_id_in)
+
+        query_entrance = await db.scalar(
+            select(
+                func.count(Record.camera_entrance_id).label("count_entrance")
+            ).filter(*filters)
+        )
+        query_exit = await db.scalar(
+            select(
+                func.count(Record.camera_exit_id).label("count_exit")
+            ).filter(*filters)
+        )
+
+        return query_entrance, query_exit
 
     async def get_effective_utilization_rate(
         self,

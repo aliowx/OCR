@@ -8,7 +8,7 @@ if [ "$CI_ENVIRONMENT_NAME" == "production" ]; then
     echo "----- Publish -----"
     
     if [ -n "$CI_COMMIT_TAG" ]; then
-        
+        Tagvar="$CI_COMMIT_TAG"
     else
         echo "Invalid tag"
         exit 1

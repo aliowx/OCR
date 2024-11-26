@@ -267,6 +267,21 @@ class EquipmentRepository(
     CRUDBase[Equipment, EquipmentCreate, EquipmentUpdate]
 ):
 
+    def get_multi_active(
+        self,
+        db: Session,
+    ) -> list[Equipment] | Awaitable[list[Equipment]]:
+        return self._all(
+            db.scalars(
+                select(self.model).filter(
+                    *[
+                        self.model.is_deleted == False,
+                        self.model.is_active == True,
+                    ]
+                )
+            )
+        )
+
     async def get_multi_with_filters(
         self,
         db: AsyncSession,
@@ -281,27 +296,30 @@ class EquipmentRepository(
             Zone, Equipment.zone_id == Zone.id
         )
 
-        if params.id:
+        if params.id is not None:
             filters.append(self.model.id == params.id)
 
-        if params.zone_id:
+        if params.zone_id is not None:
             filters.append(self.model.zone_id == params.zone_id)
 
         if type_eq is not None:
             filters.append(self.model.equipment_type.in_(type_eq))
 
-        if params.equipment_status:
+        if params.equipment_status is not None:
             filters.append(
                 self.model.equipment_status == params.equipment_status
             )
 
-        if params.ip_address:
+        if params.ip_address is not None:
             filters.append(self.model.ip_address == params.ip_address)
 
-        if params.serial_number:
+        if params.is_active is not None:
+            filters.append(self.model.is_active == params.is_active)
+
+        if params.serial_number is not None:
             filters.append(self.model.serial_number == params.serial_number)
 
-        if params.tag:
+        if params.tag is not None:
             if "%" not in params.tag:
                 filters.append(self.model.tag.ilike(f"%{params.tag}%"))
 

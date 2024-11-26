@@ -15,6 +15,7 @@ class EquipmentBase(BaseModel):
     image_id: int | None = None
     tag: str | None = None
     additional_data: dict | None = None
+    is_active: bool | None = None
 
 
 class EquipmentCreate(BaseModel):
@@ -25,6 +26,7 @@ class EquipmentCreate(BaseModel):
     tag: str
     zone_id: int | None = None
     additional_data: dict | None = None
+    is_active: bool | None = None
 
 
 class EquipmentUpdate(EquipmentBase): ...
@@ -51,6 +53,7 @@ class FilterEquipmentsParams(BaseModel):
     serial_number: str | None = None
     zone_id: int | None = None
     equipment_status: Optional[EquipmentStatus] = None
+    is_active: bool | None = None
     tag: str | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None

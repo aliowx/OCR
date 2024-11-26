@@ -1,12 +1,9 @@
 import logging
-from typing import Awaitable
 
-from sqlalchemy import and_, false, func
+from sqlalchemy import false, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.parking.models import Zone
 from app.crud.base import CRUDBase
-
 from .models import Price
 from .schemas import PriceCreate, PriceUpdate, ReadPricesParams
 

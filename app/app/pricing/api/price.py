@@ -239,5 +239,14 @@ async def delete_price(
             detail="The price not exist in the system.",
             msg_code=utils.MessageCodes.not_found,
         )
-
+    price_assignee_zone = await crud.zone_repo.get_zones_by_price_id(
+        db, price_id=price.id
+    )
+    update_zone = []
+    for zone in price_assignee_zone:
+        zone.price_id = None
+        update_zone.append(zone)
+    update_price_assignee_zone = await crud.zone_repo.update_multi(
+        db, db_objs=update_zone
+    )
     return APIResponse(await crud.price_repo.remove(db, id=price.id))

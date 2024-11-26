@@ -32,18 +32,19 @@ async def read_plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
     *,
     params: schemas.ParamsPlate = Depends(),
 ) -> APIResponseType[PaginatedContent[list[schemas.PlateList]]]:
     """
     Retrieve plate.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , PLATE_MANAGER ]
     """
     plate, total_count = await ServicePlate.get_multi_plate_by_filter(
         db, params=params
@@ -67,16 +68,17 @@ async def list_action(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> APIResponseType[list[str]]:
     """
     Retrieve plate.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , PLATE_MANAGER ]
     """
     plate_types = [ptype.value for ptype in schemas.PlateType]
     return APIResponse(plate_types)
@@ -91,18 +93,19 @@ async def create_Plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
     *,
     plates_in: list[schemas.PlateCreate],
-    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[Any]:
     """
     Create new plate.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , PLATE_MANAGER ]
     """
 
     list_plate = [plate.plate for plate in plates_in]
@@ -155,15 +158,16 @@ async def create_Plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
     *,
     type_list: schemas.PlateType = Query(...),
     file: UploadFile = File(...),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[Any]:
     """
     Create new plate.
@@ -186,6 +190,7 @@ async def read_plate_by_id(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
@@ -197,7 +202,7 @@ async def read_plate_by_id(
 ) -> APIResponseType[schemas.PlateList]:
     """
     Get a specific Plate by id.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , PLATE_MANAGER ]
     """
     plate = await plate_repo.get(db, id=id)
     if not plate:
@@ -214,20 +219,18 @@ async def delete_plate(
         bool,
         Depends(
             RoleChecker(
-                allowed_roles=[
-                    UserRoles.ADMINISTRATOR,
-                ]
+                allowed_roles=[UserRoles.ADMINISTRATOR, UserRoles.PLATE_MANAGER]
             )
         ),
     ],
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    current_user: models.User = Depends(deps.get_current_active_user),
     db: AsyncSession = Depends(deps.get_db_async),
     *,
     id: int,
 ) -> APIResponseType[schemas.PlateList]:
     """
     delete plate.
-    user access to this [ ADMINISTRATOR ]
+    user access to this [ ADMINISTRATOR , PLATE_MANAGER , PLATE_MANAGER ]
     """
     plate = await plate_repo.get(db, id=id)
     if not plate:
@@ -241,7 +244,6 @@ async def delete_plate(
 
 @router.put("/{id}")
 async def update_plate(
-    *,
     _: Annotated[
         bool,
         Depends(
@@ -249,18 +251,20 @@ async def update_plate(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
                     UserRoles.PARKING_MANAGER,
+                    UserRoles.PLATE_MANAGER,
                 ]
             )
         ),
     ],
     db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    *,
     id: int,
     plate_in: schemas.PlateUpdate,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
 ) -> APIResponseType[schemas.PlateList]:
     """
     Update a plate.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER , PLATE_MANAGER ]
     """
     plate = await plate_repo.get(db, id=id)
     if not plate:

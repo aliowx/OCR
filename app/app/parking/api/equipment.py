@@ -209,6 +209,37 @@ async def update_equipment(
     return APIResponse(equipment)
 
 
+@router.post("/health-check/{equipment_id}")
+async def health_check_equipment(
+    _: Annotated[
+        bool,
+        Depends(RoleChecker(allowed_roles=[UserRoles.ADMINISTRATOR])),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    equipment_id: int,
+    equipment_status: models.base.EquipmentStatus,
+) -> APIResponseType[schemas.Equipment]:
+    """
+    Update equipment.
+
+    user access to this [ ADMINISTRATOR ]
+
+    EquipmentStatus =
+    {\n
+        HEALTHY = 1\n
+        BROKEN = 2\n
+        DISCONNECTED = 3\n
+        }
+
+    """
+    equipment = await equipment_services.health_check_equipment(
+        db, equipment_id=equipment_id, equipment_status=equipment_status
+    )
+    return APIResponse(equipment)
+
+
 @router.delete("/{equipment_id}")
 async def delete_equipment(
     *,

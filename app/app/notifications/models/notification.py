@@ -1,7 +1,6 @@
-from sqlalchemy import Integer, ForeignKey, Boolean
+from sqlalchemy import Integer, ForeignKey, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base_class import Base
-from datetime import datetime
 
 
 class Notifications(Base):
@@ -24,3 +23,7 @@ class Notifications(Base):
     is_read: Mapped[bool] = mapped_column(
         Boolean, default=False, index=True, nullable=True
     )
+
+    text: Mapped[str] = mapped_column(String, nullable=True)
+
+    type_notice: Mapped[str] = mapped_column(String, nullable=True)

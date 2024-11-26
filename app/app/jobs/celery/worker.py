@@ -293,7 +293,7 @@ def update_record(
             if (
                 payment_type.payment_type
                 == models.base.ParkingPaymentType.BEFORE_ENTER.value
-                and len(combined_record_ids) == 0
+                and combined_record_ids is None
             ):
                 price, get_price = calculate_price(
                     self.session,
@@ -376,7 +376,10 @@ def update_record(
             event = crud.event.update(db=self.session, db_obj=event)
 
             # merge multi record
-            if len(combined_record_ids) > 1:
+            if (
+                combined_record_ids is not None
+                and len(combined_record_ids) > 1
+            ):
                 record.combined_record_ids = combined_record_ids
 
             record = crud.record.update(self.session, db_obj=record)
@@ -386,7 +389,7 @@ def update_record(
                 and event.type_event != TypeEvent.admin_exitRegistration.value
                 and payment_type.payment_type
                 != models.base.ParkingPaymentType.BEFORE_ENTER.value
-                and len(combined_record_ids) == 0
+                and combined_record_ids is None
             ):
                 price, get_price = calculate_price(
                     self.session,

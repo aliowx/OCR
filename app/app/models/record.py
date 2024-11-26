@@ -8,6 +8,7 @@ from sqlalchemy import (
     Integer,
     String,
     text,
+    ARRAY,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -105,6 +106,10 @@ class Record(Base):
         nullable=True,
     )
     camera_exit_rel = relationship("Equipment", foreign_keys=camera_exit_id)
+
+    combined_record_ids: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer), default=list, server_default="{}"
+    )
 
     __table_args__ = (
         Index(

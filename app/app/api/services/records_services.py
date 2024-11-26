@@ -6,6 +6,8 @@ from app.utils import generate_excel
 from datetime import datetime
 from app import crud, utils
 from app.core import exceptions as exc
+from app import models
+from app.core.celery_app import celery_app
 
 
 async def get_multi_by_filters(
@@ -157,6 +159,50 @@ async def gen_excel_record_for_police(
     return {"data": "not exist"}
 
 
+async def merge_records(
+    db: AsyncSession, *, record_ids: list[int], plate: str
+):
+    validator_plate = models.base.validate_iran_plate(plate)
+    if len(record_ids) <= 1:
+        raise exc.ServiceFailure(
+            detail="At least two records exist",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    exist, records = await crud.record.exists_records(
+        db, record_ids=record_ids
+    )
+    if not exist:
+        raise exc.ServiceFailure(
+            detail="Records Not Found", msg_code=utils.MessageCodes.not_found
+        )
+    list_update_records = []
+    for record in records:
+        record.is_deleted = True
+        list_update_records.append(record)
+    delete_records = await crud.record.update_multi(
+        db, db_objs=list_update_records
+    )
+    get_events = await crud.event.get_events_by_record_ids(
+        db, record_ids=record_ids
+    )
+    if not get_events:
+        raise exc.ServiceFailure(
+            detail="events by this record ids Not Found",
+            msg_code=utils.MessageCodes.not_found,
+        )
+    list_update_events = []
+    for event in get_events:
+        event.plate = plate
+        event.record_id = None
+        list_update_events.append(event)
+    update_events = await crud.event.update_multi(
+        db, db_objs=list_update_events
+    )
+    for event in update_events:
+        celery_app.send_task("update_record", args=[event.id, record_ids])
+    return "send to jobs"
+
+
 async def update_record_and_events(
     db: AsyncSession,
     *,
@@ -165,7 +211,7 @@ async def update_record_and_events(
 ):
     record = await crud.record.get(db=db, id=record_id)
     if not record:
-        exc.ServiceFailure(
+        raise exc.ServiceFailure(
             detail="Record Not Found", msg_code=utils.MessageCodes.not_found
         )
     events = await crud.record.all_events_with_one_record_id(

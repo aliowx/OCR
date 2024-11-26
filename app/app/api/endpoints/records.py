@@ -10,7 +10,7 @@ from app.core import exceptions as exc
 from app.utils import APIResponse, APIResponseType
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional, List, Any
 from cache.redis import redis_connect_async
 
 
@@ -81,6 +81,35 @@ async def create_record(
     """
     record = await crud.record.create(db=db, obj_in=record_in)
     return APIResponse(record)
+
+
+@router.post("/merge-records")
+async def create_record(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.PARKING_MANAGER,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    *,
+    record_ids: list[int],
+    plate: str,
+) -> APIResponseType[Any]:
+    """
+    Create new item.
+    user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
+    """
+    record_task = await records_services.merge_records(
+        db=db, record_ids=record_ids, plate=plate
+    )
+    return APIResponse(record_task)
 
 
 @router.get("/{id}")
@@ -170,7 +199,7 @@ async def update_record(
     update status record .
     user access to this [ ADMINISTRATOR , PARKING_MANAGER ]
     """
-    
+
     record_update = await records_services.update_record_and_events(
         db, record_id=id_record, params_in=params
     )
@@ -232,6 +261,7 @@ async def download_excel(
         input_camera_exit_id=input_camera_exit_id,
         input_excel_name=input_excel_name,
     )
+
 
 @router.post("/excel-police/")
 async def download_excel(

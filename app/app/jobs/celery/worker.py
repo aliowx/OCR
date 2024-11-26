@@ -115,7 +115,10 @@ def add_events(self, event: dict) -> str:
     time_limit=360,
     name="update_record",
 )
-def update_record(self, event_id) -> str:
+def update_record(
+    self, event_id, combined_record_ids: list[int] | None = None
+) -> str:
+
     logger.info(f"update_record: {event_id}")
     if event_id == {}:
         logger.warning(f"Invalid event id found: {event_id}")
@@ -290,7 +293,7 @@ def update_record(self, event_id) -> str:
             if (
                 payment_type.payment_type
                 == models.base.ParkingPaymentType.BEFORE_ENTER.value
-                and not is_white_listed
+                and len(combined_record_ids) == 0
             ):
                 price, get_price = calculate_price(
                     self.session,
@@ -299,6 +302,12 @@ def update_record(self, event_id) -> str:
                     end_time_in=record.end_time,
                 )
                 issued_by = billSchemas.Issued.entrance.value
+                status = billSchemas.StatusBill.paid.value
+                bill_type = billSchemas.BillType.free.value
+                if is_white_listed:
+                    status = billSchemas.StatusBill.paid.value
+                    bill_type = billSchemas.BillType.free.value
+                    price = 0
                 bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
@@ -309,11 +318,11 @@ def update_record(self, event_id) -> str:
                         price=price,
                         record_id=record.id,
                         zone_id=record.zone_id,
-                        status=billSchemas.StatusBill.unpaid.value,
+                        status=status,
                         entrance_fee=get_price.entrance_fee,
                         hourly_fee=get_price.hourly_fee,
                         camera_entrance_id=record.camera_entrance_id,
-                        bill_type=billSchemas.BillType.system.value,
+                        bill_type=bill_type,
                         img_entrance_id=record.img_entrance_id,
                     ),
                 )
@@ -366,6 +375,10 @@ def update_record(self, event_id) -> str:
             event.record_id = record.id
             event = crud.event.update(db=self.session, db_obj=event)
 
+            # merge multi record
+            if len(combined_record_ids) > 1:
+                record.combined_record_ids = combined_record_ids
+
             record = crud.record.update(self.session, db_obj=record)
 
             if (
@@ -373,20 +386,26 @@ def update_record(self, event_id) -> str:
                 and event.type_event != TypeEvent.admin_exitRegistration.value
                 and payment_type.payment_type
                 != models.base.ParkingPaymentType.BEFORE_ENTER.value
-                and not is_white_listed
+                and len(combined_record_ids) == 0
             ):
-                issued_by = billSchemas.Issued.exit_camera.value
-                if (
-                    event.type_event
-                    == TypeEvent.admin_exitRegistration_and_billIssuance.value
-                ):
-                    issued_by = billSchemas.Issued.admin.value
                 price, get_price = calculate_price(
                     self.session,
                     zone_id=record.zone_id,
                     start_time_in=record.start_time,
                     end_time_in=record.end_time,
                 )
+                issued_by = billSchemas.Issued.exit_camera.value
+                status = billSchemas.StatusBill.paid.value
+                bill_type = billSchemas.BillType.free.value
+                if (
+                    event.type_event
+                    == TypeEvent.admin_exitRegistration_and_billIssuance.value
+                ):
+                    issued_by = billSchemas.Issued.admin.value
+                if is_white_listed:
+                    status = billSchemas.StatusBill.paid.value
+                    bill_type = billSchemas.BillType.free.value
+                    price = 0
                 bill = bill_repo.create(
                     self.session,
                     obj_in=billSchemas.BillCreate(
@@ -397,12 +416,12 @@ def update_record(self, event_id) -> str:
                         price=price,
                         record_id=record.id,
                         zone_id=record.zone_id,
-                        status=billSchemas.StatusBill.unpaid.value,
+                        status=status,
                         entrance_fee=get_price.entrance_fee,
                         hourly_fee=get_price.hourly_fee,
                         camera_entrance_id=record.camera_entrance_id,
                         camera_exit_id=record.camera_exit_id,
-                        bill_type=billSchemas.BillType.system.value,
+                        bill_type=bill_type,
                     ),
                 )
                 if bill is not None:

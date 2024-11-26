@@ -26,6 +26,7 @@ class RecordBase(BaseModel):
     latest_status: StatusRecord | None = None
     camera_entrance_id: int | None = None
     camera_exit_id: int | None = None
+    combined_record_ids: list[int] | None = None
 
 
 # Properties to receive on item creation

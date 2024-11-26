@@ -13,7 +13,7 @@ class Timing(str, Enum):
 
 class DoorType(str, Enum):
     entry = "entry"
-    exit = " exit"
+    exit = "exit"
 
 
 class Capacity(BaseModel):

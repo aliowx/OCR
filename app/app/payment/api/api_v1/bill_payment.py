@@ -183,7 +183,6 @@ async def pay_bills_by_id_ipg(
     )
     if (
         params.rrn is None
-        or params.rrn <= 0
         or params.order_id_b2b <= 0
         or params.order_id_b2b is None
     ):
@@ -236,6 +235,7 @@ async def pay_bills_by_id_ipg(
         msg_code=msg_code,
     )
     if total_amount != params.amount:
+        response.header.msg_code = 18
         response.content.update(
             {"amount": params.amount, "total_amount_bills": total_amount}
         )

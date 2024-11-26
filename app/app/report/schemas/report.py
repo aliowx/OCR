@@ -26,6 +26,8 @@ class Capacity(BaseModel):
     time_minute_park: int | None = None
     len_zone: int | None = None
     effective_utilization_rate: float | None = None
+    count_entrance: int | None = 0
+    count_leave: int | None = 0
 
 
 class AverageTimeDetail(BaseModel):
@@ -81,3 +83,5 @@ class ZoneReport(Zone):
     avrage_amount_bill_today: float | None = 0
     income_today_parking: float | None = 0
     effective_utilization_rate: float | None = 0
+    count_entry: int | None = 0
+    count_leave: int | None = 0

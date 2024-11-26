@@ -3,12 +3,16 @@
 # Environment handling
 Tagvar="latest-cicd"
 
-if [ "$CI_ENVIRONMENT_NAME" == "production" ]; then
+if [ "$CI_ENVIRONMENT_NAME" = "production" ]; then
     echo "Deploying to Production Environment"
     echo "----- Publish -----"
-    Tagvar="$CI_COMMIT_TAG"
+    
+    if [ -n "$CI_COMMIT_TAG" ]; then
+        Tagvar="$CI_COMMIT_TAG"
+    else
+        echo "CI_COMMIT_TAG is empty or undefined. Using default tag: latest-cicd"
+    fi
 fi
-
 
 export TAG=$Tagvar
 echo "export TAG=$Tagvar"

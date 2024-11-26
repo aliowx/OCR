@@ -235,9 +235,14 @@ async def pay_bills_by_id_ipg(
         msg_code=msg_code,
     )
     if total_amount != params.amount:
-        response.header.msg_code = 18
-        response.content.update(
-            {"amount": params.amount, "total_amount_bills": total_amount}
+        msg_code = 18
+        response = APIResponse(
+            {
+                "transaction_id": f"{gen_int_random_first}{transaction.id}{gen_int_random_seconds}",
+                "amount": params.amount,
+                "total_amount_bills": total_amount,
+            },
+            msg_code=msg_code,
         )
     return response
 

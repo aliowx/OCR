@@ -6,13 +6,7 @@ Tagvar="latest-cicd"
 if [ "$CI_ENVIRONMENT_NAME" == "production" ]; then
     echo "Deploying to Production Environment"
     echo "----- Publish -----"
-    
-    if [ -n "$CI_COMMIT_TAG" ]; then
-        Tagvar="$CI_COMMIT_TAG"
-    else
-        echo "Invalid tag"
-        exit 1
-    fi
+    Tagvar="$CI_COMMIT_TAG"
 fi
 
 

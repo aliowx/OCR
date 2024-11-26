@@ -156,7 +156,7 @@ async def capacity(
         time_minute_park=time_park,
         len_zone=count_zone,
         effective_utilization_rate=effective_utilization_rate,
-        count_entrance=entry,
+        count_entry=entry,
         count_leave=leave,
     )
 

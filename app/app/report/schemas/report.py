@@ -26,7 +26,7 @@ class Capacity(BaseModel):
     time_minute_park: int | None = None
     len_zone: int | None = None
     effective_utilization_rate: float | None = None
-    count_entrance: int | None = 0
+    count_entry: int | None = 0
     count_leave: int | None = 0
 
 

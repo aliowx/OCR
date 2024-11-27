@@ -5,9 +5,12 @@ from sqlalchemy.orm import Session
 from app.bill.schemas import bill as billSchemas
 from app.bill.repo import bill_repo
 from app.core.exceptions import ServiceFailure
-from app.utils import MessageCodes
+from app.utils import MessageCodes, generate_excel
 from app.parking.repo import zone_repo
 from cache.redis import redis_client
+from app.plate.repo import plate_repo
+from app.models.base import plate_alphabet_reverse
+from app.core.config import settings
 import rapidjson
 import pytz
 import math
@@ -257,3 +260,59 @@ async def update_bills_by_ids(
     if list_bills_not_update != []:
         resualt.update({"list_bills_not_update": list_bills_not_update})
     return resualt, msg_code
+
+
+async def gen_excel_for_police(
+    db: AsyncSession,
+    *,
+    params: billSchemas.ParamsBill,
+    input_excel_name: str = f"{datetime.now().date()}",
+):
+    bills = (
+        await get_multi_by_filters(
+            db,
+            params=params,
+        )
+    )[0]
+    # list_plate = {bill.plate for bill in bills}
+    # delete plates have phone number in system
+    get_phone_list = await plate_repo.get_phone_white_list(db)
+    # for bill in bills:
+    #     if bill.plate in get_phone_list:
+    #         bills.remove(bill.plate)
+    print(get_phone_list)
+    for bill in bills:
+        if bill.plate not in get_phone_list:
+            print(bill.plate)
+    return
+    bills = [
+        bill
+        for bill in bills
+        if not any(plate in get_phone_list for plate in bill)
+    ]
+    print(bills)
+    return
+    excel_record = []
+    for plate in bills:
+        modified_plate = plate
+        for k, v in plate_alphabet_reverse.items():
+            modified_plate = (
+                modified_plate[:2]
+                + modified_plate[2:4].replace(v, k)
+                + modified_plate[4:]
+            )
+        excel_record.append(
+            billSchemas.ExcelItemForPolice(
+                seri=modified_plate[:2],
+                hrf=modified_plate[2:3],
+                serial=modified_plate[3:6],
+                iran=modified_plate[6:8],
+                text=settings.TEXT_BILL,
+            )
+        )
+    if excel_record is not None:
+        file = generate_excel.get_excel_file_response(
+            data=excel_record, title=input_excel_name
+        )
+        return file
+    return {"data": "not exist"}

@@ -152,6 +152,9 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_id is not None:
             filters.append(Bill.id == params.input_id)
 
+        if params.input_notice_sent_by is not None:
+            filters.append(Bill.notice_sent_by == params.input_notice_sent_by)
+
         if params.input_bill_type is not None:
             filters.append(Bill.bill_type == params.input_bill_type)
 

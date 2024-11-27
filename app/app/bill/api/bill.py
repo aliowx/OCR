@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, WebSocket,Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 from datetime import datetime
@@ -14,10 +14,11 @@ from app.utils import (
 from app.bill import services, schemas
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated, Any
+from typing import Annotated, Any,Optional
 from app.plate.repo import plate_repo
 from app.plate.schemas import PlateType
 import logging
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 namespace = "bill"
@@ -277,6 +278,35 @@ async def create_bill(
     bill = await services.create(db, bill_in=bill_in)
 
     return APIResponse(bill)
+
+
+@router.post("/excel-police/")
+async def download_excel(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    *,
+    params: schemas.ParamsBill = Depends(),
+    input_excel_name: str = f"{datetime.now().date()}",
+) -> StreamingResponse:
+    """
+    excel plate.
+    user access to this [ ADMINISTRATOR ]
+    """
+    return await services.gen_excel_for_police(
+        db,
+        params=params,
+        input_excel_name=input_excel_name,
+    )
 
 
 @router.websocket("/bills")

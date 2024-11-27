@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, Field
 import pytz
 
 
@@ -197,7 +197,9 @@ class ParamsBill(BaseModel):
     input_camera_entrance: int | None = None
     input_camera_exit: int | None = None
     input_bill_type: BillType | None = None
-    size: int | None = 100
+    input_notice_sent_at: datetime | None = None
+    input_notice_sent_by: NoticeProvider | None = None
+    size: int | None = None
     page: int = 1
     asc: bool = False
 
@@ -207,3 +209,11 @@ class ParamsBill(BaseModel):
         if self.size is not None:
             skip = (self.page * self.size) - self.size
         return skip
+
+
+class ExcelItemForPolice(BaseModel):
+    seri: str | None = Field(None, serialization_alias="SERI")
+    hrf: str | None = Field(None, serialization_alias="HRF")
+    serial: str | None = Field(None, serialization_alias="SERIAL")
+    iran: str | None = Field(None, serialization_alias="IRAN")
+    text: str | None = Field(None, serialization_alias="TEXT")

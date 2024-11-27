@@ -174,14 +174,14 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
 
         return exist_plates_phone
 
-    async def get_phone_list(self, db: AsyncSession) -> list[PlateList]:
+    async def get_phone_white_list(self, db: AsyncSession) -> list[PlateList]:
 
         return await self._all(
             db.scalars(
                 select(PlateList.plate).filter(
                     *[
                         PlateList.is_deleted == False,
-                        PlateList.type == PlateType.phone,
+                        PlateList.type.in_(PlateType.phone, PlateType.white),
                     ]
                 )
             )

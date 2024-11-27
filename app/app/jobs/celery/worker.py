@@ -322,30 +322,36 @@ def update_record(
                     end_time_in=record.end_time,
                 )
                 issued_by = billSchemas.Issued.entrance.value
-                status = billSchemas.StatusBill.paid.value
+                status = billSchemas.StatusBill.unpaid.value
                 bill_type = billSchemas.BillType.free.value
-                if is_white_listed:
+                if is_white_listed is not None:
                     status = billSchemas.StatusBill.paid.value
                     bill_type = billSchemas.BillType.free.value
                     price = 0
-                bill = bill_repo.create(
-                    self.session,
-                    obj_in=billSchemas.BillCreate(
-                        plate=record.plate,
-                        start_time=record.start_time,
-                        end_time=record.end_time,
-                        issued_by=issued_by,
-                        price=price,
-                        record_id=record.id,
-                        zone_id=record.zone_id,
-                        status=status,
-                        entrance_fee=get_price.entrance_fee,
-                        hourly_fee=get_price.hourly_fee,
-                        camera_entrance_id=record.camera_entrance_id,
-                        bill_type=bill_type,
-                        img_entrance_id=record.img_entrance_id,
-                    ),
+                bill_data = billSchemas.BillCreate(
+                    plate=record.plate,
+                    start_time=record.start_time,
+                    end_time=record.end_time,
+                    issued_by=issued_by,
+                    price=price,
+                    record_id=record.id,
+                    zone_id=record.zone_id,
+                    status=status,
+                    entrance_fee=get_price.entrance_fee,
+                    hourly_fee=get_price.hourly_fee,
+                    camera_entrance_id=record.camera_entrance_id,
+                    bill_type=bill_type,
+                    img_entrance_id=record.img_entrance_id,
                 )
+
+                if is_phone_listed:
+                    bill_data.notice_sent_at = datetime.now(UTC).replace(
+                        tzinfo=None
+                    )
+                    bill_data.notice_sent_by = (
+                        billSchemas.NoticeProvider.iranmall
+                    )
+                bill = bill_repo.create(self.session, obj_in=bill_data)
                 if bill is not None:
                     bill.start_time = convert_to_timezone_iran(bill.start_time)
                     bill.end_time = convert_to_timezone_iran(bill.end_time)
@@ -357,7 +363,7 @@ def update_record(
                     if is_phone_listed:
                         send_sms(
                             is_phone_listed.phone_number,
-                            "به ایران‌مال خوش آمدید \n برای مشاهده و پرداخت قبض پارکینگ به نشانی‌ اینترنتی زیر مراجعه کنید \n https://pms.iranmall.com/bill",
+                            f"{settings.TEXT_BILL}{bill.id}",
                         )
 
         else:  # record is not None:
@@ -423,7 +429,7 @@ def update_record(
                     end_time_in=record.end_time,
                 )
                 issued_by = billSchemas.Issued.exit_camera.value
-                status = billSchemas.StatusBill.paid.value
+                status = billSchemas.StatusBill.unpaid.value
                 bill_type = billSchemas.BillType.free.value
                 if (
                     event.type_event
@@ -434,24 +440,30 @@ def update_record(
                     status = billSchemas.StatusBill.paid.value
                     bill_type = billSchemas.BillType.free.value
                     price = 0
-                bill = bill_repo.create(
-                    self.session,
-                    obj_in=billSchemas.BillCreate(
-                        plate=record.plate,
-                        start_time=record.start_time,
-                        end_time=record.end_time,
-                        issued_by=issued_by,
-                        price=price,
-                        record_id=record.id,
-                        zone_id=record.zone_id,
-                        status=status,
-                        entrance_fee=get_price.entrance_fee,
-                        hourly_fee=get_price.hourly_fee,
-                        camera_entrance_id=record.camera_entrance_id,
-                        camera_exit_id=record.camera_exit_id,
-                        bill_type=bill_type,
-                    ),
+                bill_data = billSchemas.BillCreate(
+                    plate=record.plate,
+                    start_time=record.start_time,
+                    end_time=record.end_time,
+                    issued_by=issued_by,
+                    price=price,
+                    record_id=record.id,
+                    zone_id=record.zone_id,
+                    status=status,
+                    entrance_fee=get_price.entrance_fee,
+                    hourly_fee=get_price.hourly_fee,
+                    camera_entrance_id=record.camera_entrance_id,
+                    camera_exit_id=record.camera_exit_id,
+                    bill_type=bill_type,
                 )
+                if is_phone_listed:
+                    bill_data.notice_sent_at = datetime.now(UTC).replace(
+                        tzinfo=None
+                    )
+                    bill_data.notice_sent_by = (
+                        billSchemas.NoticeProvider.iranmall
+                    )
+
+                bill = bill_repo.create(self.session, obj_in=bill_data)
                 if bill is not None:
                     bill.start_time = convert_to_timezone_iran(bill.start_time)
                     bill.end_time = convert_to_timezone_iran(bill.end_time)
@@ -463,7 +475,7 @@ def update_record(
                     if is_phone_listed:
                         send_sms(
                             is_phone_listed.phone_number,
-                            "به ایران‌مال خوش آمدید \n برای مشاهده و پرداخت قبض پارکینگ به نشانی‌ اینترنتی زیر مراجعه کنید \n https://pms.iranmall.com/bill",
+                            f"{settings.TEXT_BILL}{bill.id}",
                         )
                 logger.info(f"issue bill {record} by number {bill}")
 

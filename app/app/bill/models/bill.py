@@ -89,3 +89,11 @@ class Bill(Base):
     status: Mapped[str] = mapped_column(String, nullable=True, index=True)
 
     bill_type: Mapped[str] = mapped_column(String, index=True, nullable=True)
+
+    notice_sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), nullable=True, index=True
+    )
+
+    notice_sent_by: Mapped[str] = mapped_column(
+        String, nullable=True, index=True
+    )

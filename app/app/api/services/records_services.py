@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
 from typing import List, Optional
 from app.models.base import plate_alphabet_reverse
+from app.plate.repo import plate_repo
 from app.utils import generate_excel
 from datetime import datetime
 from app import crud, utils
@@ -134,6 +135,13 @@ async def gen_excel_record_for_police(
         )
     ).items
     list_plate = {record.plate for record in records}
+
+    # delete plates have phone number in system
+    get_phone_list = await plate_repo.get_phone_list(db)
+    for plate in list(list_plate):
+        if plate in get_phone_list:
+            list_plate.remove(plate)
+
     excel_record = []
     for plate in list_plate:
         modified_plate = plate

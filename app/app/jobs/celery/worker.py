@@ -106,6 +106,17 @@ def add_events(self, event: dict) -> str:
         raise self.retry(exc=exc, countdown=countdown)
 
 
+def send_sms(phone, text: str):
+    params_sending = {
+        "phoneNumber": phone,
+        "textMessage": text,
+    }
+    send_code = requests.post(
+        settings.URL_SEND_SMS,
+        params=params_sending,
+    )
+
+
 @celery_app.task(
     base=DatabaseTask,
     bind=True,
@@ -199,6 +210,15 @@ def update_record(
             .filter(
                 PlateList.plate == event.plate,
                 PlateList.type == PlateType.white,
+            )
+            .first()
+        )
+
+        is_phone_listed = (
+            self.session.query(PlateList)
+            .filter(
+                PlateList.plate == event.plate,
+                PlateList.type == PlateType.phone,
             )
             .first()
         )
@@ -334,6 +354,11 @@ def update_record(
                         f"bills:camera_{bill.camera_entrance_id}",
                         rapidjson.dumps(jsonable_encoder(bill)),
                     )
+                    if is_phone_listed:
+                        send_sms(
+                            is_phone_listed.phone_number,
+                            "به ایران‌مال خوش آمدید \n برای مشاهده و پرداخت قبض پارکینگ به نشانی‌ اینترنتی زیر مراجعه کنید \n https://pms.iranmall.com/bill",
+                        )
 
         else:  # record is not None:
             if event.invalid and direction != "exit":
@@ -435,6 +460,11 @@ def update_record(
                         f"bills:camera_{bill.camera_entrance_id}",
                         rapidjson.dumps(jsonable_encoder(bill)),
                     )
+                    if is_phone_listed:
+                        send_sms(
+                            is_phone_listed.phone_number,
+                            "به ایران‌مال خوش آمدید \n برای مشاهده و پرداخت قبض پارکینگ به نشانی‌ اینترنتی زیر مراجعه کنید \n https://pms.iranmall.com/bill",
+                        )
                 logger.info(f"issue bill {record} by number {bill}")
 
     except Exception as exc:
@@ -556,15 +586,7 @@ def health_check_equipment(self):
                 )
 
                 for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
-
-                    params_sending = {
-                        "phoneNumber": phone,
-                        "textMessage": f"دوربین {eq.tag} {status} است",
-                    }
-                    send_code = requests.post(
-                        settings.URL_SEND_SMS,
-                        params=params_sending,
-                    )
+                    send_sms(phone, f"دوربین {eq.tag} {status} است")
     except:
         print("no broken or disconnect")
 

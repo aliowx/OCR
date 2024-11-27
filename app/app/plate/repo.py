@@ -181,7 +181,7 @@ class CRUDPlate(CRUDBase[PlateList, PlateCreate, PlateUpdate]):
                 select(PlateList.plate).filter(
                     *[
                         PlateList.is_deleted == False,
-                        PlateList.type.in_(PlateType.phone, PlateType.white),
+                        PlateList.type.in_([PlateType.phone, PlateType.white]),
                     ]
                 )
             )

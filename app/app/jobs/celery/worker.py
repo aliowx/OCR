@@ -323,7 +323,7 @@ def update_record(
                 )
                 issued_by = billSchemas.Issued.entrance.value
                 status = billSchemas.StatusBill.unpaid.value
-                bill_type = billSchemas.BillType.default.value
+                bill_type = billSchemas.BillType.system.value
                 if is_white_listed is not None:
                     status = billSchemas.StatusBill.paid.value
                     bill_type = billSchemas.BillType.free.value
@@ -434,7 +434,7 @@ def update_record(
                 )
                 issued_by = billSchemas.Issued.exit_camera.value
                 status = billSchemas.StatusBill.unpaid.value
-                bill_type = billSchemas.BillType.default.value
+                bill_type = billSchemas.BillType.system.value
                 if (
                     event.type_event
                     == TypeEvent.admin_exitRegistration_and_billIssuance.value

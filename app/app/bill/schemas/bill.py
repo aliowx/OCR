@@ -23,6 +23,12 @@ class BillType(str, Enum):
     default = "default"
 
 
+class NoticeProvider(str, Enum):
+    iranmall = "iranmall"
+    itoll = "free"
+    police = "police"
+
+
 # Shared properties
 class BillBase(BaseModel):
     plate: str | None = None
@@ -43,6 +49,8 @@ class BillBase(BaseModel):
     camera_entrance_id: int | None = None
     camera_exit_id: int | None = None
     bill_type: BillType | None = None
+    notice_sent_at: datetime | None = None
+    notice_sent_by: NoticeProvider | None = None
 
 
 # Properties to receive on item creation

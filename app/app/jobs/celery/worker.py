@@ -361,9 +361,13 @@ def update_record(
                         rapidjson.dumps(jsonable_encoder(bill)),
                     )
                     if is_phone_listed:
+                        # send_sms(
+                        #     is_phone_listed.phone_number,
+                        #     f"{settings.TEXT_BILL}{bill.id}",
+                        # )
                         send_sms(
                             is_phone_listed.phone_number,
-                            f"{settings.TEXT_BILL}{bill.id}",
+                            f"{settings.TEXT_BILL}",
                         )
 
         else:  # record is not None:
@@ -473,9 +477,13 @@ def update_record(
                         rapidjson.dumps(jsonable_encoder(bill)),
                     )
                     if is_phone_listed:
+                        # send_sms(
+                        #     is_phone_listed.phone_number,
+                        #     f"{settings.TEXT_BILL}{bill.id}",
+                        # )
                         send_sms(
                             is_phone_listed.phone_number,
-                            f"{settings.TEXT_BILL}{bill.id}",
+                            f"{settings.TEXT_BILL}",
                         )
                 logger.info(f"issue bill {record} by number {bill}")
 

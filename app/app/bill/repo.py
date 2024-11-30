@@ -155,10 +155,10 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_notice_sent_by is not None:
             filters.append(Bill.notice_sent_by == params.input_notice_sent_by)
 
-        if params.input_notice_sent_by_bool is True:
+        if params.input_notice_sent_by_bool:
             filters.append(Bill.notice_sent_by.is_(None))
 
-        if params.input_notice_sent_by_bool is False:
+        if not params.input_notice_sent_by_bool:
             filters.append(Bill.notice_sent_by.is_not(None))
 
         if params.input_bill_type is not None:

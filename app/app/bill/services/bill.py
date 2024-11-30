@@ -281,6 +281,8 @@ async def gen_excel_for_police(
     get_phone_list = await plate_repo.get_phone_list(db)
     bills_for_notice = []
     notice_sent_at_and_by = []
+    text_bill = settings.TEXT_BILL
+
     for bill in bills:
         if bill.plate not in get_phone_list:
             bills_for_notice.append(bill)
@@ -299,7 +301,7 @@ async def gen_excel_for_police(
                 hrf=modified_plate[2:3],
                 serial=modified_plate[3:6],
                 iran=modified_plate[6:8],
-                text=f"{settings.TEXT_BILL}/{bill.id}",
+                text=f"{text_bill}/{bill.id}",
             )
         )
         if reg_notice:

@@ -11,6 +11,8 @@ from cache.redis import redis_client
 from app.plate.repo import plate_repo
 from app.models.base import plate_alphabet_reverse
 from app.core.config import settings
+from app.users.repo import user
+from app.payment.repo import transaction_repo
 import rapidjson
 import pytz
 import math
@@ -169,6 +171,48 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
     )
     bills_paid = [billSchemas.BillB2B(**paid.__dict__) for paid in bill_paid]
     return bills_paid, bills_unpaid
+
+
+async def checking_status_bill(db: AsyncSession, *, bill_id: int):
+    bill = await bill_repo.get(db, id=bill_id)
+
+    if not bill:
+        raise ServiceFailure(
+            detail="bills not found",
+            msg_code=MessageCodes.not_found,
+        )
+    get_user = await user.get_by_username(db, username=billSchemas.B2B.itoll)
+    user_id = None
+    if get_user is not None:
+        user_id = get_user.id
+    if bill.user_paid_id == user_id:
+        if bill.status == billSchemas.StatusBill.unpaid:
+            return billSchemas.BillShwoItoll(
+                plate=bill.plate,
+                price=bill.price,
+                status=bill.status,
+            )
+        if (
+            bill.status == billSchemas.StatusBill.paid
+            and bill.rrn_number is not None
+        ):
+            order_id = None
+            get_order_id = await transaction_repo.get_transaction_by_rrn(
+                db, rrn=bill.rrn_number
+            )
+            if get_order_id:
+                order_id = f"{get_order_id.transaction_number[:10]}{get_order_id.id}{get_order_id.transaction_number[10:]}"
+            return billSchemas.BillShwoItoll(
+                **bill.__dict__,
+                paid_by=get_user.username,
+                order_id=order_id,
+            )
+    return billSchemas.BillShwoItoll(
+        plate=bill.plate,
+        price=bill.price,
+        status=bill.status,
+        paid_by="other",
+    )
 
 
 async def get_bills_paid_unpaid(

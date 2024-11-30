@@ -127,7 +127,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             .outerjoin(
                 equipment_exit, Bill.camera_exit_id == equipment_exit.id
             )
-            .outerjoin(models.User, Bill.user_id == models.User.id)
+            .outerjoin(models.User, Bill.user_paid_id == models.User.id)
         )
 
         filters = [Bill.is_deleted == false()]
@@ -158,8 +158,8 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         if params.input_notice_sent_by is not None:
             filters.append(Bill.notice_sent_by == params.input_notice_sent_by)
 
-        if params.input_user_id is not None:
-            filters.append(Bill.user_id == params.input_user_id)
+        if params.input_user_paid_id is not None:
+            filters.append(Bill.user_paid_id == params.input_user_paid_id)
 
         if params.input_notice_sent_by_bool:
             filters.append(Bill.notice_sent_by.is_(None))

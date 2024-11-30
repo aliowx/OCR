@@ -28,6 +28,9 @@ class NoticeProvider(str, Enum):
     itoll = "itoll"
     police = "police"
 
+class B2B(str, Enum):
+    itoll = "itoll"
+
 
 # Shared properties
 class BillBase(BaseModel):
@@ -52,6 +55,36 @@ class BillBase(BaseModel):
     notice_sent_at: datetime | None = None
     notice_sent_by: NoticeProvider | None = None
     user_paid_id: int | None = None
+
+class BillShwoItoll(BaseModel):
+    plate: str | None = None
+    price: float | None = None
+    status: StatusBill | None = StatusBill.unpaid
+    rrn_number: str | None = None
+    time_paid: datetime | None = None
+    paid_by: str | None = None
+    order_id: str | None = None
+
+    @field_validator("time_paid", mode="before")
+    def convert_utc_to_iran_time(cls, value):
+
+        if value:
+            if isinstance(value, str):
+                value = datetime.fromisoformat(value)
+            # Define Iran Standard Time timezone
+            iran_timezone = pytz.timezone("Asia/Tehran")
+
+            # If value is naive (no timezone), localize it to UTC
+            if value.tzinfo is None:
+                # Localize the naive datetime to UTC
+                utc_time = pytz.utc.localize(value)
+            else:
+                # If it's already timezone aware, convert to UTC
+                utc_time = value.astimezone(pytz.utc)
+
+            # Convert to Iran Standard Time
+            return utc_time.astimezone(iran_timezone)
+        return value
 
 
 # Properties to receive on item creation

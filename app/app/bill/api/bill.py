@@ -200,7 +200,6 @@ async def get_bills_by_plate(
             RoleChecker(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
                     UserRoles.ITOLL,
                 ]
             )
@@ -212,7 +211,7 @@ async def get_bills_by_plate(
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
+    user access to this [ ADMINISTRATOR , ITOLL ]
     """
 
     cheking_plate = models.base.validate_iran_plate(plate_in)
@@ -222,6 +221,32 @@ async def get_bills_by_plate(
     )
 
     return APIResponse(bills_unpaid)
+
+
+@router.get("/checking-status-bill/")
+async def get_bills_by_plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.ITOLL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    bill_id: int,
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , ITOLL ]
+    """
+
+    bills_status = await services.checking_status_bill(db, bill_id=bill_id)
+
+    return APIResponse(bills_status)
 
 
 @router.put("/update_bills")
@@ -248,7 +273,7 @@ async def update_bills(
     """
 
     result, msg_code = await services.update_multi_bill(
-        db, bills_update=bills_update,current_user=current_user.id
+        db, bills_update=bills_update, current_user=current_user.id
     )
 
     return APIResponse(result, msg_code=msg_code)

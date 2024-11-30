@@ -210,11 +210,11 @@ async def checking_status_bill(db: AsyncSession, *, bill_id: int):
                 paid_by=get_user.username,
                 order_id=order_id,
             )
+    paid_by = None
+    if bill.status == billSchemas.StatusBill.paid:
+        paid_by = "other"
     return billSchemas.BillShwoItoll(
-        plate=bill.plate,
-        price=bill.price,
-        status=bill.status,
-        paid_by="other",
+        plate=bill.plate, price=bill.price, status=bill.status, paid_by=paid_by
     )
 
 

@@ -160,6 +160,8 @@ async def get_bills_by_plate(
     plate_in: str,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
+    order_by: schemas.OrderByBill = schemas.OrderByBill.issue_bill,
+    asc: bool = False,
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
@@ -180,7 +182,12 @@ async def get_bills_by_plate(
         )
 
     bills_paid, bills_unpaid = await services.get_bills_paid_unpaid(
-        db, plate=plate_in, start_time=start_time, end_time=end_time
+        db,
+        plate=plate_in,
+        start_time=start_time,
+        end_time=end_time,
+        order_by=order_by,
+        asc=asc,
     )
 
     return APIResponse(

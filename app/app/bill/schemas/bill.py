@@ -28,6 +28,14 @@ class NoticeProvider(str, Enum):
     itoll = "itoll"
     police = "police"
 
+
+class OrderByBill(str, Enum):
+    entry_time = "entry_time"
+    leave_time = "leave_time"
+    issue_bill = "issue_bill"
+    id = "id"
+
+
 class B2B(str, Enum):
     itoll = "itoll"
 
@@ -55,6 +63,7 @@ class BillBase(BaseModel):
     notice_sent_at: datetime | None = None
     notice_sent_by: NoticeProvider | None = None
     user_paid_id: int | None = None
+
 
 class BillShwoItoll(BaseModel):
     plate: str | None = None
@@ -142,7 +151,7 @@ class Bill(BillInDBBase):
     zone_name: str | None = None
     camera_entrance: str | None = None
     camera_exit: str | None = None
-    user_paid_name:str | None = None
+    user_paid_name: str | None = None
 
 
 class BillB2B(BaseModel):
@@ -236,6 +245,7 @@ class ParamsBill(BaseModel):
     input_notice_sent_at: datetime | None = None
     input_notice_sent_by: NoticeProvider | None = None
     input_notice_sent_by_bool: bool | None = None
+    input_order_by: OrderByBill = OrderByBill.id
     size: int | None = None
     page: int = 1
     asc: bool = False

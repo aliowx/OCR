@@ -8,6 +8,7 @@ from .schemas.bill import (
     Bill as billschemas,
     StatusBill,
     JalaliDate,
+    OrderByBill,
 )
 from app.parking.models import Zone
 from app.report.schemas import Timing
@@ -197,8 +198,23 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         count = await db.scalar(
             query.filter(*filters).with_only_columns(func.count())
         )
+        if params.input_order_by == OrderByBill.id:
+            order_by = Bill.id.asc() if params.asc else Bill.id.desc()
 
-        order_by = Bill.id.asc() if params.asc else Bill.id.desc()
+        if params.input_order_by == OrderByBill.entry_time:
+            order_by = (
+                Bill.start_time.asc() if params.asc else Bill.start_time.desc()
+            )
+
+        if params.input_order_by == OrderByBill.leave_time:
+            order_by = (
+                Bill.end_time.asc() if params.asc else Bill.end_time.desc()
+            )
+
+        if params.input_order_by == OrderByBill.issue_bill:
+            order_by = (
+                Bill.created.asc() if params.asc else Bill.created.desc()
+            )
 
         if params.size is None:
             items = (

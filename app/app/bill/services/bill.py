@@ -145,6 +145,7 @@ async def get_multi_by_filters(
     #             camera_exit -> bill[4]
     #             user_name -> bill[5]
     #       count -> bills[1]
+
     resualt = []
     for bill in bills[0]:
         bill[0].time_park = round(bill[1].total_seconds() / 60)
@@ -216,7 +217,13 @@ async def checking_status_bill(db: AsyncSession, *, bill_id: int):
 
 
 async def get_bills_paid_unpaid(
-    db: AsyncSession, *, plate: str, start_time: datetime, end_time: datetime
+    db: AsyncSession,
+    *,
+    plate: str,
+    start_time: datetime,
+    end_time: datetime,
+    order_by: billSchemas.OrderByBill,
+    asc: bool,
 ):
     bill_unpaid = await get_multi_by_filters(
         db,
@@ -225,6 +232,8 @@ async def get_bills_paid_unpaid(
             input_status=billSchemas.StatusBill.unpaid.value,
             input_start_time=start_time,
             input_end_time=end_time,
+            input_order_by=order_by,
+            asc=asc,
         ),
     )
     bills_paid = await get_multi_by_filters(
@@ -234,6 +243,8 @@ async def get_bills_paid_unpaid(
             input_status=billSchemas.StatusBill.paid.value,
             input_start_time=start_time,
             input_end_time=end_time,
+            input_order_by=order_by,
+            asc=asc,
         ),
     )
     return bills_paid[0], bill_unpaid[0]

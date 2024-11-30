@@ -220,6 +220,7 @@ async def pay_bills_by_id_ipg(
         and total_amount == params.amount
     ):
         for bill in update_bills:
+            bill.user_paid_id = current_user.id
             bill.rrn_number = params.rrn
             bill.status = StatusBill.paid
             bill.time_paid = datetime.now(UTC).replace(tzinfo=None)

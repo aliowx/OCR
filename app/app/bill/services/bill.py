@@ -141,13 +141,15 @@ async def get_multi_by_filters(
     #             zone_name -> bill[2]
     #             camera_entrance -> bill[3]
     #             camera_exit -> bill[4]
+    #             user_name -> bill[5]
     #       count -> bills[1]
     resualt = []
     for bill in bills[0]:
         bill[0].time_park = round(bill[1].total_seconds() / 60)
         bill[0].zone_name = bill[2]
         bill[0].camera_entrance = bill[3]
-        bill[0].camera_exit = bill[3]
+        bill[0].camera_exit = bill[4]
+        bill[0].user_name = bill[5]
         resualt.append(bill[0])
 
     return resualt, bills[1]
@@ -194,7 +196,9 @@ async def get_bills_paid_unpaid(
 
 
 async def update_multi_bill(
-    db: AsyncSession, bills_update: list[billSchemas.BillUpdate]
+    db: AsyncSession,
+    bills_update: list[billSchemas.BillUpdate],
+    current_user: int,
 ):
     resualt = {}
 
@@ -208,6 +212,7 @@ async def update_multi_bill(
                 msg_code = 14
                 list_bills_not_update.append(bill)
             if bill.rrn_number is None:
+                bill_in.user_paid_id = current_user
                 bill_update = await bill_repo.update(
                     db, db_obj=bill, obj_in=bill_in.model_dump()
                 )

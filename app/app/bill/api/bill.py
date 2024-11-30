@@ -239,6 +239,7 @@ async def update_bills(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
+    current_user: models.User = Depends(deps.get_current_active_user),
     bills_update: list[schemas.BillUpdate],
 ) -> APIResponseType[Any]:
     """
@@ -247,7 +248,7 @@ async def update_bills(
     """
 
     result, msg_code = await services.update_multi_bill(
-        db, bills_update=bills_update
+        db, bills_update=bills_update,current_user=current_user.id
     )
 
     return APIResponse(result, msg_code=msg_code)

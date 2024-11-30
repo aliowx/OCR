@@ -51,6 +51,7 @@ class BillBase(BaseModel):
     bill_type: BillType | None = None
     notice_sent_at: datetime | None = None
     notice_sent_by: NoticeProvider | None = None
+    user_paid_id: int | None = None
 
 
 # Properties to receive on item creation
@@ -108,6 +109,7 @@ class Bill(BillInDBBase):
     zone_name: str | None = None
     camera_entrance: str | None = None
     camera_exit: str | None = None
+    user_paid_name:str | None = None
 
 
 class BillB2B(BaseModel):
@@ -189,6 +191,7 @@ class JalaliDate(BaseModel):
 class ParamsBill(BaseModel):
     input_id: int | None = None
     input_plate: str | None = None
+    input_user_paid_id: int | None = None
     input_start_time: datetime | None = None
     input_end_time: datetime | None = None
     input_issued_by: Issued | None = None

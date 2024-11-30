@@ -1,4 +1,5 @@
 from .models import Bill
+from app import models
 from app.crud.base import CRUDBase
 from .schemas.bill import (
     BillCreate,
@@ -7,6 +8,7 @@ from .schemas.bill import (
     Bill as billschemas,
     StatusBill,
     JalaliDate,
+    OrderByBill,
 )
 from app.parking.models import Zone
 from app.report.schemas import Timing
@@ -116,6 +118,8 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 Zone.name,
                 equipment_entance.tag.label("camera_entrance"),
                 equipment_exit.tag.label("camera_exit"),
+                models.User.full_name,
+                Record,
             )
             .outerjoin(Zone, Bill.zone_id == Zone.id)
             .outerjoin(
@@ -125,6 +129,8 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
             .outerjoin(
                 equipment_exit, Bill.camera_exit_id == equipment_exit.id
             )
+            .outerjoin(models.User, Bill.user_paid_id == models.User.id)
+            .outerjoin(models.Record, Bill.record_id == models.Record.id)
         )
 
         filters = [Bill.is_deleted == false()]
@@ -151,6 +157,18 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
 
         if params.input_id is not None:
             filters.append(Bill.id == params.input_id)
+
+        if params.input_notice_sent_by is not None:
+            filters.append(Bill.notice_sent_by == params.input_notice_sent_by)
+
+        if params.input_user_paid_id is not None:
+            filters.append(Bill.user_paid_id == params.input_user_paid_id)
+
+        if params.input_notice_sent_by_bool:
+            filters.append(Bill.notice_sent_by.is_(None))
+
+        if params.input_notice_sent_by_bool == False:
+            filters.append(Bill.notice_sent_by.is_not(None))
 
         if params.input_bill_type is not None:
             filters.append(Bill.bill_type == params.input_bill_type)
@@ -182,8 +200,23 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
         count = await db.scalar(
             query.filter(*filters).with_only_columns(func.count())
         )
+        if params.input_order_by == OrderByBill.id:
+            order_by = Bill.id.asc() if params.asc else Bill.id.desc()
 
-        order_by = Bill.id.asc() if params.asc else Bill.id.desc()
+        if params.input_order_by == OrderByBill.entry_time:
+            order_by = (
+                Bill.start_time.asc() if params.asc else Bill.start_time.desc()
+            )
+
+        if params.input_order_by == OrderByBill.leave_time:
+            order_by = (
+                Bill.end_time.asc() if params.asc else Bill.end_time.desc()
+            )
+
+        if params.input_order_by == OrderByBill.issue_bill:
+            order_by = (
+                Bill.created.asc() if params.asc else Bill.created.desc()
+            )
 
         if params.size is None:
             items = (

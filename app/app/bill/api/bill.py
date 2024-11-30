@@ -18,6 +18,7 @@ from typing import Annotated, Any
 from app.plate.repo import plate_repo
 from app.plate.schemas import PlateType
 import logging
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 namespace = "bill"
@@ -159,6 +160,8 @@ async def get_bills_by_plate(
     plate_in: str,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
+    order_by: schemas.OrderByBill = schemas.OrderByBill.issue_bill,
+    asc: bool = False,
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
@@ -179,7 +182,12 @@ async def get_bills_by_plate(
         )
 
     bills_paid, bills_unpaid = await services.get_bills_paid_unpaid(
-        db, plate=plate_in, start_time=start_time, end_time=end_time
+        db,
+        plate=plate_in,
+        start_time=start_time,
+        end_time=end_time,
+        order_by=order_by,
+        asc=asc,
     )
 
     return APIResponse(
@@ -199,7 +207,6 @@ async def get_bills_by_plate(
             RoleChecker(
                 allowed_roles=[
                     UserRoles.ADMINISTRATOR,
-                    UserRoles.PARKING_MANAGER,
                     UserRoles.ITOLL,
                 ]
             )
@@ -211,7 +218,7 @@ async def get_bills_by_plate(
 ) -> APIResponseType[Any]:
     """
     Retrieve bills by plate and phone number.
-    user access to this [ ADMINISTRATOR , PARKING_MANAGER , ITOLL ]
+    user access to this [ ADMINISTRATOR , ITOLL ]
     """
 
     cheking_plate = models.base.validate_iran_plate(plate_in)
@@ -221,6 +228,32 @@ async def get_bills_by_plate(
     )
 
     return APIResponse(bills_unpaid)
+
+
+@router.get("/checking-status-bill/")
+async def get_bills_by_plate(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                    UserRoles.ITOLL,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    *,
+    bill_id: int,
+) -> APIResponseType[Any]:
+    """
+    user access to this [ ADMINISTRATOR , ITOLL ]
+    """
+
+    bills_status = await services.checking_status_bill(db, bill_id=bill_id)
+
+    return APIResponse(bills_status)
 
 
 @router.put("/update_bills")
@@ -238,6 +271,7 @@ async def update_bills(
     ],
     db: AsyncSession = Depends(deps.get_db_async),
     *,
+    current_user: models.User = Depends(deps.get_current_active_user),
     bills_update: list[schemas.BillUpdate],
 ) -> APIResponseType[Any]:
     """
@@ -246,7 +280,7 @@ async def update_bills(
     """
 
     result, msg_code = await services.update_multi_bill(
-        db, bills_update=bills_update
+        db, bills_update=bills_update, current_user=current_user.id
     )
 
     return APIResponse(result, msg_code=msg_code)
@@ -277,6 +311,39 @@ async def create_bill(
     bill = await services.create(db, bill_in=bill_in)
 
     return APIResponse(bill)
+
+
+@router.post("/excel-police/")
+async def download_excel(
+    _: Annotated[
+        bool,
+        Depends(
+            RoleChecker(
+                allowed_roles=[
+                    UserRoles.ADMINISTRATOR,
+                ]
+            )
+        ),
+    ],
+    db: AsyncSession = Depends(deps.get_db_async),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    *,
+    params: schemas.ParamsBill = Depends(),
+    send_by: schemas.NoticeProvider = schemas.NoticeProvider.police,
+    reg_notice: bool = False,
+    input_excel_name: str = f"{datetime.now().date()}",
+) -> StreamingResponse:
+    """
+    excel plate.
+    user access to this [ ADMINISTRATOR ]
+    """
+    return await services.gen_excel_for_police(
+        db,
+        params=params,
+        send_by=send_by,
+        reg_notice=reg_notice,
+        input_excel_name=input_excel_name,
+    )
 
 
 @router.websocket("/bills")

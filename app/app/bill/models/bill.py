@@ -97,3 +97,11 @@ class Bill(Base):
     notice_sent_by: Mapped[str] = mapped_column(
         String, nullable=True, index=True
     )
+
+    user_paid_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("user.id", ondelete="SET NULL", onupdate="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    user_rel = relationship("User", foreign_keys=user_paid_id)

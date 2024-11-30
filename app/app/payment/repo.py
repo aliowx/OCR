@@ -177,6 +177,22 @@ class TransactionRepository(
         )
         return await self._first(db.scalars(query))
 
+    async def get_transaction_by_rrn(
+        self,
+        db: AsyncSession,
+        rrn: str,
+    ) -> models.Transaction:
+        return await self._first(
+            db.scalars(
+                select(self.model).filter(
+                    *[
+                        self.model.rrn == rrn,
+                        self.model.is_deleted == False,
+                    ]
+                )
+            )
+        )
+
 
 pay_repo = PaymentRepository(Bill)
 transaction_repo = TransactionRepository(models.Transaction)

@@ -144,6 +144,7 @@ async def get_multi_by_filters(
     #             camera_entrance -> bill[3]
     #             camera_exit -> bill[4]
     #             user_name -> bill[5]
+    #             record -> bill[6]
     #       count -> bills[1]
 
     resualt = []
@@ -153,6 +154,7 @@ async def get_multi_by_filters(
         bill[0].camera_entrance = bill[3]
         bill[0].camera_exit = bill[4]
         bill[0].user_name = bill[5]
+        bill[0].record = bill[6]
         resualt.append(bill[0])
 
     return resualt, bills[1]

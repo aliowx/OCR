@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from app import schemas
 from pydantic import BaseModel, ConfigDict, field_validator, Field
 import pytz
 
@@ -152,6 +153,7 @@ class Bill(BillInDBBase):
     camera_entrance: str | None = None
     camera_exit: str | None = None
     user_paid_name: str | None = None
+    record: schemas.Record | None = None
 
 
 class BillB2B(BaseModel):

@@ -119,6 +119,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 equipment_entance.tag.label("camera_entrance"),
                 equipment_exit.tag.label("camera_exit"),
                 models.User.full_name,
+                Record,
             )
             .outerjoin(Zone, Bill.zone_id == Zone.id)
             .outerjoin(
@@ -129,6 +130,7 @@ class BillRepository(CRUDBase[Bill, BillCreate, BillUpdate]):
                 equipment_exit, Bill.camera_exit_id == equipment_exit.id
             )
             .outerjoin(models.User, Bill.user_paid_id == models.User.id)
+            .outerjoin(models.Record, Bill.record_id == models.Record.id)
         )
 
         filters = [Bill.is_deleted == false()]

@@ -266,6 +266,8 @@ async def gen_excel_for_police(
     db: AsyncSession,
     *,
     params: billSchemas.ParamsBill,
+    send_by: billSchemas.NoticeProvider,
+    reg_notice: bool,
     input_excel_name: str = f"{datetime.now().date()}",
 ):
     bills = (
@@ -276,8 +278,9 @@ async def gen_excel_for_police(
     )[0]
 
     # delete plates have phone number in system
-    get_phone_list = await plate_repo.get_phone_white_list(db)
+    get_phone_list = await plate_repo.get_phone_list(db)
     bills_for_notice = []
+    notice_sent_at_and_by = []
     for bill in bills:
         if bill.plate not in get_phone_list:
             bills_for_notice.append(bill)
@@ -299,9 +302,19 @@ async def gen_excel_for_police(
                 text=f"{settings.TEXT_BILL}/{bill.id}",
             )
         )
-    if excel_record is not None:
+        if reg_notice:
+            bill.notice_sent_at = datetime.now(UTC).replace(tzinfo=None)
+            bill.notice_sent_by = send_by
+            notice_sent_at_and_by.append(bill)
+    if excel_record != []:
+        set_notice = await bill_repo.update_multi(
+            db, db_objs=notice_sent_at_and_by
+        )
         file = generate_excel.get_excel_file_response(
             data=excel_record, title=input_excel_name
         )
         return file
-    return {"data": "not exist"}
+    raise ServiceFailure(
+        detail="bills not found",
+        msg_code=MessageCodes.not_found,
+    )

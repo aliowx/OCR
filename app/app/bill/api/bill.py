@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, WebSocket,Query
+from fastapi import APIRouter, Depends, WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache.redis import redis_connect_async
 from datetime import datetime
@@ -14,7 +14,7 @@ from app.utils import (
 from app.bill import services, schemas
 from app.acl.role_checker import RoleChecker
 from app.acl.role import UserRoles
-from typing import Annotated, Any,Optional
+from typing import Annotated, Any
 from app.plate.repo import plate_repo
 from app.plate.schemas import PlateType
 import logging
@@ -296,6 +296,8 @@ async def download_excel(
     current_user: models.User = Depends(deps.get_current_active_superuser),
     *,
     params: schemas.ParamsBill = Depends(),
+    send_by: schemas.NoticeProvider = schemas.NoticeProvider.police,
+    reg_notice: bool = False,
     input_excel_name: str = f"{datetime.now().date()}",
 ) -> StreamingResponse:
     """
@@ -305,6 +307,8 @@ async def download_excel(
     return await services.gen_excel_for_police(
         db,
         params=params,
+        send_by=send_by,
+        reg_notice=reg_notice,
         input_excel_name=input_excel_name,
     )
 

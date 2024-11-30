@@ -25,7 +25,7 @@ class BillType(str, Enum):
 
 class NoticeProvider(str, Enum):
     iranmall = "iranmall"
-    itoll = "free"
+    itoll = "itoll"
     police = "police"
 
 
@@ -199,6 +199,7 @@ class ParamsBill(BaseModel):
     input_bill_type: BillType | None = None
     input_notice_sent_at: datetime | None = None
     input_notice_sent_by: NoticeProvider | None = None
+    input_notice_sent_by_bool: bool | None = None
     size: int | None = None
     page: int = 1
     asc: bool = False

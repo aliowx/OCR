@@ -161,18 +161,46 @@ async def get_multi_by_filters(
 
 
 async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
-    bill_unpaid = await bill_repo.get_bills_by_plate(
-        db,
-        plate=plate,
-        bill_status=billSchemas.StatusBill.unpaid.value,
-    )
+    bills_unpaid = (
+        await get_multi_by_filters(
+            db,
+            params=billSchemas.ParamsBill(
+                input_plate=plate,
+                input_status=billSchemas.StatusBill.unpaid.value,
+            ),
+        )
+    )[0]
     bills_unpaid = [
-        billSchemas.BillB2B(**unpaid.__dict__) for unpaid in bill_unpaid
+        billSchemas.BillB2B(
+            id=unpaid.id,
+            plate=unpaid.plate,
+            price=unpaid.price,
+            status=unpaid.status,
+            entry_time=unpaid.record.start_time,
+            leave_time=unpaid.record.end_time,
+        )
+        for unpaid in bills_unpaid
     ]
-    bill_paid = await bill_repo.get_bills_by_plate(
-        db, plate=plate, bill_status=billSchemas.StatusBill.paid.value
-    )
-    bills_paid = [billSchemas.BillB2B(**paid.__dict__) for paid in bill_paid]
+    bills_paid = (
+        await get_multi_by_filters(
+            db,
+            params=billSchemas.ParamsBill(
+                input_plate=plate,
+                input_status=billSchemas.StatusBill.paid.value,
+            ),
+        )
+    )[0]
+    bills_paid = [
+        billSchemas.BillB2B(
+            id=paid.id,
+            plate=paid.plate,
+            price=paid.price,
+            status=paid.status,
+            entry_time=paid.record.start_time,
+            leave_time=paid.record.end_time,
+        )
+        for paid in bills_paid
+    ]
     return bills_paid, bills_unpaid
 
 

@@ -163,6 +163,8 @@ class BillB2B(BaseModel):
     plate: str | None = None
     price: float | None = None
     status: StatusBill | None = StatusBill.unpaid
+    entry_time: datetime | None = None
+    leave_time: datetime | None = None
 
 
 class BillPaidShow(BaseModel):

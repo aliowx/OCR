@@ -137,7 +137,7 @@ async def gen_excel_record_for_police(
     list_plate = {record.plate for record in records}
 
     # delete plates have phone number in system
-    get_phone_list = await plate_repo.get_phone_white_list(db)
+    get_phone_list = await plate_repo.get_phone_list(db)
     for plate in list(list_plate):
         if plate in get_phone_list:
             list_plate.remove(plate)

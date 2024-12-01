@@ -74,8 +74,10 @@ class BillShwoItoll(BaseModel):
     time_paid: datetime | None = None
     paid_by: str | None = None
     order_id: str | None = None
+    entry_time: datetime | None = None
+    leave_time: datetime | None = None
 
-    @field_validator("time_paid", mode="before")
+    @field_validator("time_paid", "entry_time", "leave_time", mode="before")
     def convert_utc_to_iran_time(cls, value):
 
         if value:

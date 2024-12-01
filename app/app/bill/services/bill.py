@@ -177,7 +177,11 @@ async def get_paid_unpaid_bills(db: AsyncSession, *, plate: str):
 
 
 async def checking_status_bill(db: AsyncSession, *, bill_id: int):
-    bill = await bill_repo.get(db, id=bill_id)
+    bill = (
+        await get_multi_by_filters(
+            db, params=billSchemas.ParamsBill(input_id=bill_id)
+        )
+    )[0][0]
 
     if not bill:
         raise ServiceFailure(
@@ -194,6 +198,8 @@ async def checking_status_bill(db: AsyncSession, *, bill_id: int):
                 plate=bill.plate,
                 price=bill.price,
                 status=bill.status,
+                entry_time=bill.record.start_time,
+                leave_time=bill.record.end_time,
             )
         if (
             bill.status == billSchemas.StatusBill.paid
@@ -206,7 +212,13 @@ async def checking_status_bill(db: AsyncSession, *, bill_id: int):
             if get_order_id:
                 order_id = f"{get_order_id.transaction_number[:10]}{get_order_id.id}{get_order_id.transaction_number[10:]}"
             return billSchemas.BillShwoItoll(
-                **bill.__dict__,
+                plate=bill.plate,
+                price=bill.price,
+                time_paid=bill.time_paid,
+                status=bill.status,
+                rrn_number=bill.rrn_number,
+                entry_time=bill.record.start_time,
+                leave_time=bill.record.end_time,
                 paid_by=get_user.username,
                 order_id=order_id,
             )
@@ -214,7 +226,12 @@ async def checking_status_bill(db: AsyncSession, *, bill_id: int):
     if bill.status == billSchemas.StatusBill.paid:
         paid_by = "other"
     return billSchemas.BillShwoItoll(
-        plate=bill.plate, price=bill.price, status=bill.status, paid_by=paid_by
+        plate=bill.plate,
+        price=bill.price,
+        status=bill.status,
+        paid_by=paid_by,
+        entry_time=bill.record.start_time,
+        leave_time=bill.record.end_time,
     )
 
 

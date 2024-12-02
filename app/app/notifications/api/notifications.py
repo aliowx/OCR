@@ -198,12 +198,12 @@ async def websocket_endpoint(websocket: WebSocket):
                             message
                         )  # Send JSON data directly to WebSocket
                     except (rapidjson.JSONDecodeError, TypeError) as e:
-                        print(f"Error decoding message: {e}")
+                        logger(f"Error decoding message: {e}")
                         await websocket.send_text(
                             "Error: Invalid message format."
                         )
         except Exception as e:
-            print(f"Exception in WebSocket connection: {e}")
+            logger(f"Exception in WebSocket connection: {e}")
             await channel.unsubscribe("notifications")
         finally:
             await websocket.close()

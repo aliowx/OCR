@@ -1,5 +1,5 @@
 from typing import Awaitable
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
@@ -14,11 +14,11 @@ from app.plate.models import PlateList
 from app import models
 
 
-class CRUDNotifications(
-    CRUDBase[Notifications, NotificationsCreate, NotificationsUpdate]
-):
+class CRUDNotifications(CRUDBase[Notifications, NotificationsCreate, NotificationsUpdate]):
+
     async def get_multi_by_filter(
         self, db: Session | AsyncSession, *, params: ParamsNotifications
+
     ) -> list[Notifications] | Awaitable[list[Notifications]]:
 
         query = (
@@ -62,6 +62,16 @@ class CRUDNotifications(
             )
         ).fetchall()
         return resualt, total_count
+    
+    async def mark_as_read(self, db: AsyncSession, notification_id: int):
+        query = (
+            update(Notifications)
+            .where(Notifications.id == notification_id)
+            .values(is_read=True)
+        )
+
+        await db.execute(query)
+        await db.commit()
 
 
 notifications_repo = CRUDNotifications(Notifications)

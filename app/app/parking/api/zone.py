@@ -24,7 +24,7 @@ namespace = "zones"
 
 
 @router.get("/")
-# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zones(
     *,
     _: Annotated[
@@ -55,7 +55,7 @@ async def read_zones(
 
 
 @router.patch("/")
-# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def update_zone(
     *,
     _: Annotated[
@@ -111,7 +111,7 @@ async def update_zone(
 
 
 @router.get("/{zone_id}")
-# @cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
+@cache(namespace=namespace, expire=ONE_DAY_IN_SECONDS)
 async def read_zone_by_id(
     *,
     _: Annotated[

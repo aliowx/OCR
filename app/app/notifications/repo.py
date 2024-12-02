@@ -12,7 +12,10 @@ from .schemas import (
 import re
 from app.plate.models import PlateList
 from app import models
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class CRUDNotifications(CRUDBase[Notifications, NotificationsCreate, NotificationsUpdate]):
 
@@ -64,14 +67,19 @@ class CRUDNotifications(CRUDBase[Notifications, NotificationsCreate, Notificatio
         return resualt, total_count
     
     async def mark_as_read(self, db: AsyncSession, notification_id: int):
-        query = (
-            update(Notifications)
-            .where(Notifications.id == notification_id)
-            .values(is_read=True)
-        )
+        try:
+            query = (
+                update(Notifications)
+                .where(Notifications.id == notification_id)
+                .values(is_read=True)
+            )
 
-        await db.execute(query)
-        await db.commit()
+            await db.execute(query)
+            await db.commit()
 
+        except Exception as e:
+            
+            await db.rollback()
+            logger(f'there is problem here {e}')
 
 notifications_repo = CRUDNotifications(Notifications)

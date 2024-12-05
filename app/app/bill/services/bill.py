@@ -16,14 +16,17 @@ from app.payment.repo import transaction_repo
 import rapidjson
 import pytz
 import math
-
+from app.core.config import settings
+from typing import List, Tuple
+import math
+from datetime import datetime
 
 def convert_to_timezone_iran(time: datetime):
     if isinstance(time, str):
         time = datetime.fromisoformat(time)
     # Define Iran Standard Time timezone
-    iran_timezone = pytz.timezone("Asia/Tehran")
-    # If value is naive (no timezone), localize it to UTC
+    iran_timezone = pytz.timezone(settings.IRAN_TIMEZONE) 
+        # If value is naive (no timezone), localize it to UTC
     if time.tzinfo is None:
         # Localize the naive datetime to UTC
         utc_time = pytz.utc.localize(time)
@@ -34,61 +37,42 @@ def convert_to_timezone_iran(time: datetime):
     return utc_time.astimezone(iran_timezone)
 
 
-def convert_time_to_hour_and_ceil(start_time, end_time):
+def convert_time_to_hour_and_ceil(start_time: datetime, end_time: datetime) -> int:
     if start_time > end_time:
         return 0
 
     time_diff = end_time - start_time
 
-    convert_time_to_hours = time_diff.total_seconds() / 3600
+    return math.ceil(time_diff.total_seconds() / 3600)
 
-    ciel_hours = math.ceil(convert_time_to_hours)
+def _calculate_price_logic(get_price, duration_time):
+    return get_price.entrance_fee + (duration_time * get_price.hourly_fee)
 
-    return ciel_hours
 
 
-async def calculate_price_async(
-    db: AsyncSession,
-    *,
-    zone_id: int,
-    start_time_in: datetime,
-    end_time_in: datetime,
-) -> float:
-
+async def calculate_price_async(db: AsyncSession, *, zone_id: int, start_time_in: datetime, end_time_in: datetime):
     get_price = await zone_repo.get_price_zone_async(db, zone_id=zone_id)
     if not get_price:
-        raise ServiceFailure(
-            detail="not set model price for this zone",
-            msg_code=MessageCodes.not_found,
-        )
-
+        raise ServiceFailure(detail="Model price not set for this zone", msg_code=MessageCodes.not_found)
     duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
-    price = get_price.entrance_fee + (duration_time * get_price.hourly_fee)
-
-    return price, get_price
+    return _calculate_price_logic(get_price, duration_time), get_price
 
 
-def calculate_price(
-    db: Session,
-    *,
-    zone_id: int,
-    start_time_in: datetime,
-    end_time_in: datetime,
-) -> float:
-
+def calculate_price(db: Session, *, zone_id: int, start_time_in: datetime, end_time_in: datetime):
+    """
+    This function calculates the total price for a parking session based on entrance fee and hourly rates.
+    :param db: Database session object
+    :param zone_id: Identifier for the parking zone
+    :param start_time_in: Start time of the session
+    :param end_time_in: End time of the session
+    :return: Total price and price model
+    """
     get_price = zone_repo.get_price_zone(db, zone_id=zone_id)
-
     if not get_price:
-        raise ServiceFailure(
-            detail="not set model price for this zone",
-            msg_code=MessageCodes.not_found,
-        )
-
+        raise ServiceFailure(detail="Model price not set for this zone", msg_code=MessageCodes.not_found)
     duration_time = convert_time_to_hour_and_ceil(start_time_in, end_time_in)
+    return _calculate_price_logic(get_price, duration_time), get_price
 
-    price = get_price.entrance_fee + (duration_time * get_price.hourly_fee)
-
-    return price, get_price
 
 
 async def create(
@@ -301,7 +285,8 @@ async def update_multi_bill(
     db: AsyncSession,
     bills_update: list[billSchemas.BillUpdate],
     current_user: int,
-):
+
+)->Tuple[dict, int]:
     resualt = {}
 
     list_bills_update = []

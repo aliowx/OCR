@@ -28,9 +28,11 @@ async def login(
     db: AsyncSession = Depends(deps.get_db_async),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> schemas.Token:
+    
     """
     OAuth2 compatible token login, get an access token for future requests
     """
+    
     user = await crud.user.authenticate(
         db, username=form_data.username, password=form_data.password
     )

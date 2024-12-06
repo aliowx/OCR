@@ -15,11 +15,10 @@ from app.users.repo import user
 from app.payment.repo import transaction_repo
 import rapidjson
 import pytz
-import math
-from app.core.config import settings
 from typing import List, Tuple
 import math
-from datetime import datetime
+
+
 
 def convert_to_timezone_iran(time: datetime):
     if isinstance(time, str):

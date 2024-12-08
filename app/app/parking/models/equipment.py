@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Integer, String, Boolean
+from sqlalchemy import JSON, ForeignKey, Integer, String, Boolean, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
@@ -7,7 +7,8 @@ from app.models.base import EquipmentStatus, EquipmentType
 
 class Equipment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-
+    ping: Mapped[float] = mapped_column(Float, nullable=False)
+    
     equipment_type: Mapped[EquipmentType] = mapped_column(
         Integer, nullable=True
     )

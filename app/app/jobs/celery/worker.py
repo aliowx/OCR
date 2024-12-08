@@ -707,3 +707,41 @@ def cleanup(self, table_name: str = "image"):
         redis_client.setex(
             lock_name, timedelta(seconds=settings.CLEANUP_PERIOD), 1
         )
+
+@celery_app.task(
+    base=DatabaseTask,
+    bind=True,
+    acks_late=True,
+    max_retries=4,
+    soft_time_limit=240,
+    time_limit=360,
+    name="add_events",
+)
+
+def health_check_equipment_ping(self):
+    try:
+        get_multi_equipment_ping: list[models.Equipment] = equipment_repo.get_multi_active(self.session)
+            
+        for equpment in get_multi_equipment_ping:
+            response = requests.get(f'https://dr-pms.iranmall.com/check/{equpment.id}')
+            requests_ping_check = response.json()['ping']
+            match equpment.ping < requests_ping_check:
+                case True:
+                    logger.warning(f'There is some problem with {equpment.serial_number}. You should check this!')
+                    
+                    # TODO: create the notification to show human in the panel
+                    notification = notifications_repo.create(
+                        self.session,
+                        obj_in=NotificationsCreate(
+                            text=f"there is problem about this devide{equpment.tag}",
+                            type_notice=TypeNotice.equipment,
+                        ),
+                    )
+                    #send sms to the admin_parking or manager...
+                    for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
+                        send_sms(phone,
+                           f'this devide {equpment.tag} shoud be check')
+                case False:
+                    logger.info(f'Equipment{equpment.serial_number} is operating normally.')
+    except Exception as e:
+        logger.error(f"Error during health check: {e}")

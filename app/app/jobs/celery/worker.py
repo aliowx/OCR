@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, UTC
 from sqlalchemy import text
 from fastapi.encoders import jsonable_encoder
 from app import crud, models, schemas
+from app.bill import repo
 from app.core.celery_app import DatabaseTask, celery_app
 from app.core.config import settings
 from app.jobs.celery.celeryworker_pre_start import redis_client
@@ -16,7 +17,7 @@ from app.bill.repo import bill_repo
 from app.bill.schemas import bill as billSchemas
 from app.parking.repo import equipment_repo
 from app.db.init_data_fake import create_events
-from app.notifications.repo import notifications_repo
+from app.notifications.repo import notifications_repo, equipment_repo
 from app.notifications.schemas import NotificationsCreate, TypeNotice
 from app.plate.schemas import PlateType
 from app.plate.models import PlateList
@@ -509,7 +510,7 @@ def setup_periodic_tasks(sender, **kwargs):
     )
     sender.add_periodic_task(
         10.0,
-        health_check_equipment_ping.s(),
+        check_health_pong_equipment.s(),
         name=f'set the helch chech statsu about the equipment '
     )
 
@@ -723,30 +724,30 @@ def cleanup(self, table_name: str = "image"):
     time_limit=360,
     name="helth check eqipment",
 )
-def health_check_equipment_ping(self):
+def check_health_pong_equipment(self):
     try:
-        get_multi_equipment_ping: list[models.Equipment] = equipment_repo.get_multi_active(self.session)
-            
-        for equpment in get_multi_equipment_ping:
-            response = requests.get(f'https://dr-pms.iranmall.com/check/{equpment.id}')
-            requests_ping_check = response.json()['ping']
-            match equpment.ping < requests_ping_check:
-                case True:
-                    logger.warning(f'There is some problem with {equpment.serial_number}. You should check this!')
-                    
-                    # TODO: create the notification to show human in the panel
-                    notification = notifications_repo.create(
-                        self.session,
-                        obj_in=NotificationsCreate(
-                            text=f"there is problem about this devide{equpment.tag}",
-                            type_notice=TypeNotice.equipment,
-                        ),
-                    )
-                    #send sms to the admin_parking or manager...
-                    for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
-                        send_sms(phone,
-                           f'this devide {equpment.tag} shoud be check')
-                case False:
-                    logger.info(f'Equipment{equpment.serial_number} is operating normally.')
+        get_multi_equipment = equipment_repo.get_multi_active(self.session)
+        for eq in get_multi_equipment:
+            response = requests.get(f"https://dr-pms.iranmall.com/check/{eq.id}")
+            ping = response.json()["ping"]
+            if eq.ping and eq.ping < ping:
+                print(f"this {ping} for {eq.tag}")
+            if eq.ping < ping:
+
+                notification = notifications_repo.create(
+                    self.session,
+                    obj_in=schemas.notification.NotificationsCreate(
+                        text=f'this equipment {eq.tag} have error',
+                        type_notice=schemas.notification.TypeNotice.equipment
+                    ) 
+                )
+        # notification = repo.notifications_repo.create(
+        # TODO create notice 
+        # TODO data send ws
+        # get list phone number into env 
+        # redis k,v phone number time set into env 
+        # get if in redis del phone number 
+        # for
+    
     except Exception as e:
-        logger.error(f"Error during health check: {e}")
+        logger.error(e)

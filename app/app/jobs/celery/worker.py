@@ -507,6 +507,12 @@ def setup_periodic_tasks(sender, **kwargs):
         set_status_record.s(),
         name=f"set status unknown for record after {settings.FREE_TIME_BETWEEN_RECORDS_ENTRANCEDOOR_EXITDOOR} hours becuse not exit",
     )
+    sender.add_periodic_task(
+        10.0,
+        health_check_equipment_ping.s(),
+        name=f'set the helch chech statsu about the equipment '
+    )
+
     if settings.DATA_FAKE_SET:
         sender.add_periodic_task(
             settings.AUTO_GEN_EVENT_FAKE,
@@ -715,9 +721,8 @@ def cleanup(self, table_name: str = "image"):
     max_retries=4,
     soft_time_limit=240,
     time_limit=360,
-    name="add_events",
+    name="helth check eqipment",
 )
-
 def health_check_equipment_ping(self):
     try:
         get_multi_equipment_ping: list[models.Equipment] = equipment_repo.get_multi_active(self.session)

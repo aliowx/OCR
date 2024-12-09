@@ -22,6 +22,8 @@ from app.notifications.schemas import NotificationsCreate, TypeNotice
 from app.plate.schemas import PlateType
 from app.plate.models import PlateList
 import requests
+import asyncio
+import websockets 
 
 namespace = "job worker"
 logger = logging.getLogger(__name__)
@@ -741,13 +743,21 @@ def check_health_pong_equipment(self):
                         type_notice=schemas.notification.TypeNotice.equipment
                     ) 
                 )
-        # notification = repo.notifications_repo.create(
-        # TODO create notice 
-        # TODO data send ws
-        # get list phone number into env 
-        # redis k,v phone number time set into env 
-        # get if in redis del phone number 
-        # for
-    
+                ws_data = {
+                    "equipment_id": eq.id,
+                    "message": f"Equipment {eq.tag} has an error.",
+                    "ping_value": ping
+                }
+                asyncio.run(self.send_ws_data(ws_data))        
     except Exception as e:
         logger.error(e)
+
+
+
+async def send_ws_data(self, data):
+    try:
+        async with websockets.connect('ws://localhost:8080/back-end/api/v1/events/events') as websocket:
+            await websocket.send(jsonable_encoder(data))
+
+    except Exception as e:
+        logger.error(f'WebSocket error {e}')

@@ -512,7 +512,7 @@ def setup_periodic_tasks(sender, **kwargs):
     )
     sender.add_periodic_task(
         10.0,
-        check_health_pong_equipment.s(),
+        check_health_ping_equipment.s(),
         name=f'set the helch chech statsu about the equipment '
     )
 
@@ -721,43 +721,70 @@ def cleanup(self, table_name: str = "image"):
     base=DatabaseTask,
     bind=True,
     acks_late=True,
-    max_retries=4,
+    max_retries=1,
     soft_time_limit=240,
     time_limit=360,
-    name="helth check eqipment",
+    name="checking health equipment",
 )
-def check_health_pong_equipment(self):
+def check_health_ping_equipment(self):
     try:
-        get_multi_equipment = equipment_repo.get_multi_active(self.session)
+        get_multi_equipment = repo.equipment_repo.get_multi_active(
+            self.session
+        )
         for eq in get_multi_equipment:
-            response = requests.get(f"https://dr-pms.iranmall.com/check/{eq.id}")
+            response = requests.get(
+                f"https://dr-pms.iranmall.com/check/{eq.id}"
+            )
             ping = response.json()["ping"]
-            if eq.ping and eq.ping < ping:
-                print(f"this {ping} for {eq.tag}")
-            if eq.ping < ping:
+            if eq.ping:
+                if eq.ping > ping:
+                    (
+                        eq.equipment_status
+                        == models.base.EquipmentStatus.HEALTHY.value
+                    )
+                    eq.equipment_status = (
+                        models.base.EquipmentStatus.HEALTHY.value
+                    )
+                    equipment = repo.equipment_repo.update(
+                        self.session,
+                        db_obj=eq,
+                    )
 
-                notification = notifications_repo.create(
-                    self.session,
-                    obj_in=schemas.notification.NotificationsCreate(
-                        text=f'this equipment {eq.tag} have error',
-                        type_notice=schemas.notification.TypeNotice.equipment
-                    ) 
-                )
-                ws_data = {
-                    "equipment_id": eq.id,
-                    "message": f"Equipment {eq.tag} has an error.",
-                    "ping_value": ping
-                }
-                asyncio.run(self.send_ws_data(ws_data))        
+                if eq.ping < ping:
+                    check_time = redis_client.get(eq.tag)
+                    if not check_time:
+                        repo.notifications_repo.create(
+                            self.session,
+                            obj_in=schemas.notification.NotificationsCreate(
+                                text=f"دوربین {eq.tag}  دچار خطا است",
+                                type_notice=schemas.notification.TypeNotice.equipment,
+                            ),
+                        )
+                    print(eq.ping)
+                    print(eq)
+
+                    redis_client.set(
+                        check_time,
+                        check_time,
+                        ex=settings.TIME_SEND_NOTICE_HEALTH_CHECK_EQUIPMENT,
+                    )
+                    redis_client.publish(
+                        "notifications",
+                        rapidjson.dumps(f"دوربین {eq.tag}  دچار خطا است"),
+                    )
+                    for (
+                        phone
+                    ) in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
+                        get_phone = redis_client.get(phone)
+                        if not get_phone:
+                            send_sms(
+                                phone=phone,
+                                text=f"دوربین {eq.tag}  دچار خطا است",
+                            )
+                            redis_client.set(
+                                phone,
+                                phone,
+                                ex=settings.TIME_SEND_NOTICE_HEALTH_CHECK_EQUIPMENT,
+                            )
     except Exception as e:
         logger.error(e)
-
-
-
-async def send_ws_data(self, data):
-    try:
-        async with websockets.connect('ws://localhost:8080/back-end/api/v1/events/events') as websocket:
-            await websocket.send(jsonable_encoder(data))
-
-    except Exception as e:
-        logger.error(f'WebSocket error {e}')

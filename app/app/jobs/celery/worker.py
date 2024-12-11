@@ -738,18 +738,15 @@ def check_health_ping_equipment(self):
             ping = response.json()["ping"]
             if eq.ping:
                 if eq.ping > ping:
-                    (
-                        eq.equipment_status
-                        == models.base.EquipmentStatus.HEALTHY.value
-                    )
+                    (eq.equipment_status == models.base.EquipmentStatus.HEALTHY.value)
+
                     eq.equipment_status = (
-                        models.base.EquipmentStatus.HEALTHY.value
-                    )
+                        models.base.EquipmentStatus.HEALTHY.value)
+                        
                     equipment = repo.equipment_repo.update(
                         self.session,
                         db_obj=eq,
                     )
-
                 if eq.ping < ping:
                     check_time = redis_client.get(eq.tag)
                     if not check_time:
@@ -760,9 +757,6 @@ def check_health_ping_equipment(self):
                                 type_notice=schemas.notification.TypeNotice.equipment,
                             ),
                         )
-                    print(eq.ping)
-                    print(eq)
-
                     redis_client.set(
                         check_time,
                         check_time,
@@ -772,9 +766,7 @@ def check_health_ping_equipment(self):
                         "notifications",
                         rapidjson.dumps(f"دوربین {eq.tag}  دچار خطا است"),
                     )
-                    for (
-                        phone
-                    ) in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
+                    for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
                         get_phone = redis_client.get(phone)
                         if not get_phone:
                             send_sms(

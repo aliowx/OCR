@@ -21,9 +21,8 @@ from app.notifications.repo import notifications_repo, equipment_repo
 from app.notifications.schemas import NotificationsCreate, TypeNotice
 from app.plate.schemas import PlateType
 from app.plate.models import PlateList
+# import requests
 import requests
-import asyncio
-import websockets 
 
 namespace = "job worker"
 logger = logging.getLogger(__name__)

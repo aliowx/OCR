@@ -10,9 +10,11 @@ from .schemas import (
     ParamsNotifications,
 )
 import re
+from app.parking.repo import equipment_repo
 from app.plate.models import PlateList
 from app import models
 import logging
+
 
 
 logger = logging.getLogger(__name__)

@@ -512,7 +512,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         10.0,
         check_health_ping_equipment.s(),
-        name=f'set the helch chech statsu about the equipment '
+        name=f"set the helch chech statsu about the equipment ",
     )
 
     if settings.DATA_FAKE_SET:
@@ -715,6 +715,7 @@ def cleanup(self, table_name: str = "image"):
         redis_client.setex(
             lock_name, timedelta(seconds=settings.CLEANUP_PERIOD), 1
         )
+
 
 @celery_app.task(
     base=DatabaseTask,

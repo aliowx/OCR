@@ -735,6 +735,9 @@ def check_health_ping_equipment(self):
             response = requests.get(
                 f"https://dr-pms.iranmall.com/check/{eq.id}"
             )
+            if response != 200:
+                raise Exception
+             
             ping = response.json()["ping"]
             if eq.ping:
                 if eq.ping > ping:
@@ -743,32 +746,38 @@ def check_health_ping_equipment(self):
                     eq.equipment_status = (
                         models.base.EquipmentStatus.HEALTHY.value)
                         
-                    equipment = repo.equipment_repo.update(
+                    repo.equipment_repo.update(
                         self.session,
                         db_obj=eq,
                     )
                 if eq.ping < ping:
-                    check_time = redis_client.get(eq.tag)
-                    if not check_time:
-                        repo.notifications_repo.create(
-                            self.session,
-                            obj_in=schemas.notification.NotificationsCreate(
-                                text=f"دوربین {eq.tag}  دچار خطا است",
-                                type_notice=schemas.notification.TypeNotice.equipment,
-                            ),
-                        )
+                    redis_client.get(eq.tag)
+                    
+                    repo.notifications_repo.create(
+                        self.session,
+                        obj_in=schemas.notification.NotificationsCreate(
+                            text=f"دوربین {eq.tag}  دچار خطا است",
+                            type_notice=schemas.notification.TypeNotice.equipment,
+                        ),
+                    )
                     redis_client.set(
-                        check_time,
-                        check_time,
+                        eq.tag,
+                        eq.tag,
                         ex=settings.TIME_SEND_NOTICE_HEALTH_CHECK_EQUIPMENT,
                     )
+                    status = eq.equipment_status
+                    match status:
+                        case models.base.EquipmentStatus.DISCONNECTED:
+                            status = "قطع"
+                        case models.base.EquipmentStatus.BROKEN:
+                            status = "خراب"
+                    
                     redis_client.publish(
                         "notifications",
-                        rapidjson.dumps(f"دوربین {eq.tag}  دچار خطا است"),
+                        rapidjson.dumps(status),
                     )
                     for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
-                        get_phone = redis_client.get(phone)
-                        if not get_phone:
+                            redis_client.get(phone)
                             send_sms(
                                 phone=phone,
                                 text=f"دوربین {eq.tag}  دچار خطا است",

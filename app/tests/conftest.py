@@ -1,5 +1,6 @@
 import asyncio
 from typing import AsyncGenerator, Generator
+from app.bill.schemas.bill import BillCreate
 from app.models.base import EquipmentType, EquipmentStatus
 from tests.utils.utils import random_lower_string
 from app.parking.schemas.zone import ZoneCreate
@@ -184,4 +185,33 @@ async def create_record(
     record_data = response.json()
     
     return record_data
+ 
+   
+@pytest_asyncio.fixture(scope='module')
+async def create_bill(
+    client: AsyncClient,
+    login: dict,
+    create_zone: dict,
+    create_record: dict
+):
+    record_id = create_record['id']
+        
+    zone_id = create_zone['id']
     
+    bill_in = BillCreate(
+        record_id=record_id,
+        zone_id=zone_id
+    )
+    
+    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
+    
+    response = await client.post(
+        f'{settings.SUB_PATH}{settings.API_V1_STR}/',
+        json=bill_in.model_dump(),
+        headers=headers
+    )
+ 
+    assert response.status_code == 200
+    bill_data = response.json()
+    
+    return bill_data

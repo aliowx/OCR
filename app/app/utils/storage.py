@@ -10,6 +10,7 @@ import urllib3
 
 logger = logging.getLogger(__name__)
 
+
 class MinIOAsync:
     def __init__(self):
         self.client = Minio(
@@ -21,13 +22,13 @@ class MinIOAsync:
         )
         self.bucket_name = settings.MINIO_BUCKET_NAME
 
-
-
     async def check_buckt_exist(self, bucket_name: str):
         """
         Checks if the bucket exists and creates it if not.
         """
-        return  await asyncio.to_thread(self._sync_check_bucket_exist, bucket_name)
+        return await asyncio.to_thread(
+            self._sync_check_bucket_exist, bucket_name
+        )
 
     def _sync_check_bucket_exist(self, bucket_name: str):
         bucket_exist = self.client.bucket_exists(bucket_name)
@@ -43,13 +44,17 @@ class MinIOAsync:
         """
         try:
 
-            return await asyncio.to_thread(self._sync_upload_file, content, name, size, metadata)
-        
+            return await asyncio.to_thread(
+                self._sync_upload_file, content, name, size, metadata
+            )
+
         except S3Error as e:
             logger.error("MinIO error in upload file:", e)
             raise e
 
-    def _sync_upload_file(self, content: BytesIO, name: str, size: int, metadata: dict):
+    def _sync_upload_file(
+        self, content: BytesIO, name: str, size: int, metadata: dict
+    ):
         """
         Synchronous upload operation, offloaded for async usage.
         """
@@ -59,18 +64,20 @@ class MinIOAsync:
             object_name=name,
             length=size,
             metadata=metadata,
-        )  
+        )
         return f"{self.bucket_name}/{name}"
-    
 
-
-    async def download_file(self, bucket_name: str, file_name: str) -> BinaryIO:
+    async def download_file(
+        self, bucket_name: str, file_name: str
+    ) -> BinaryIO:
         try:
-            return await asyncio.to_thread(self._sync_download_file, bucket_name, file_name)
+            return await asyncio.to_thread(
+                self._sync_download_file, bucket_name, file_name
+            )
         except S3Error as e:
             logger.error("MinIO error in download file:", e)
             raise e
-        
+
     def _sync_download_file(self, bucket_name: str, file_name: str):
         """
         Synchronous download operation, offloaded for async usage.
@@ -84,13 +91,19 @@ class MinIOAsync:
         file.seek(0)
         return file
 
-    async def generate_presigned_url(self, file_name: str, expiry: int = 3600) -> str:
+    async def generate_presigned_url(
+        self, file_name: str, expiry: int = 3600
+    ) -> str:
         """
         Generate a presigned URL for downloading a file asynchronously.
         """
-        return await asyncio.to_thread( self.client.presigned_get_object, self.bucket_name, file_name, expiry
+        return await asyncio.to_thread(
+            self.client.presigned_get_object,
+            self.bucket_name,
+            file_name,
+            expiry,
         )
-    
+
 
 async def get_client(name: ImageSaveAs):
     """

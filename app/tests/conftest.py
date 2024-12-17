@@ -3,6 +3,7 @@ from typing import AsyncGenerator, Generator
 from app.models.base import EquipmentType, EquipmentStatus
 from tests.utils.utils import random_lower_string
 from app.parking.schemas.zone import ZoneCreate
+from app.schemas import RecordCreate 
 import asyncpg
 import pytest
 import pytest_asyncio
@@ -138,7 +139,7 @@ async def login(db: AsyncSession):
 async def create_zone(
     client: AsyncClient,
     login: dict
-) -> None:
+):
     
     zone_in = ZoneCreate(
         name=random_lower_string(),
@@ -147,7 +148,7 @@ async def create_zone(
 
     response = await client.post(
         f"{settings.SUB_PATH}{settings.API_V1_STR}/zones/",
-        json=zone_in.dict(),
+        json=zone_in.model_dump(),
         headers=headers,
     )
 
@@ -155,3 +156,32 @@ async def create_zone(
     zone_data = response.json()
 
     return zone_data
+
+
+@pytest_asyncio.fixture(scope="module")
+async def create_record(
+    client: AsyncClient,
+    login: dict,
+    create_zone: dict
+):
+    zone_id = create_zone['id']
+    
+    record_in = RecordCreate(
+        plate = random_lower_string(),
+        zone_id = zone_id
+    )
+    
+    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
+    
+    response = await client.post(
+        f"{settings.SUB_PATH}{settings.API_V1_STR}/",
+        json=record_in.model_dump(),
+        headers=headers
+    )
+    
+    
+    assert response.status_code == 200
+    record_data = response.json()
+    
+    return record_data
+    

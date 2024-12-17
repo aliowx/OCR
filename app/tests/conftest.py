@@ -134,14 +134,24 @@ async def login(db: AsyncSession):
         "token_type": user_login.json()["token_type"],
     }
 
-
-
 @pytest_asyncio.fixture(scope="module")
 async def create_zone(
-    client,
-    login
-):
+    client: AsyncClient,
+    login: dict
+) -> None:
+    
     zone_in = ZoneCreate(
-        name = random_lower_string(),
+        name=random_lower_string(),
     )
-    response = await client
+    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
+
+    response = await client.post(
+        f"{settings.SUB_PATH}{settings.API_V1_STR}/zones/",
+        json=zone_in.dict(),
+        headers=headers,
+    )
+
+    assert response.status_code == 200, f"Zone creation failed: {response.json()}"
+    zone_data = response.json()
+
+    return zone_data

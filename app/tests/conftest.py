@@ -1,6 +1,8 @@
 import asyncio
 from typing import AsyncGenerator, Generator
-
+from app.models.base import EquipmentType, EquipmentStatus
+from tests.utils.utils import random_lower_string
+from app.parking.schemas.zone import ZoneCreate
 import asyncpg
 import pytest
 import pytest_asyncio
@@ -17,7 +19,7 @@ from app.api.deps import get_db_async
 from app.core.config import settings
 from app.db import Base
 from app.main import app
-from app.users.schemas import UserCreate
+from app.users.schemas import UserCreate,ZoneCreate, EquipmentCreate, SpotCreate
 from app import crud
 
 engine = create_async_engine(
@@ -131,3 +133,15 @@ async def login(db: AsyncSession):
         "access_token": user_login.json()["access_token"],
         "token_type": user_login.json()["token_type"],
     }
+
+
+
+@pytest_asyncio.fixture(scope="module")
+async def create_zone(
+    client,
+    login
+):
+    zone_in = ZoneCreate(
+        name = random_lower_string(),
+    )
+    response = await client

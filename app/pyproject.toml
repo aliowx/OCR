@@ -33,6 +33,7 @@ pytz = "^2024.2"
 asyncio = "^3.4.3"
 tensorflow = "^2.18.0"
 kagglehub = "^0.3.5"
+nltk = "^3.9.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.2"
@@ -41,6 +42,7 @@ aiosqlite = "^0.20.0"
 ruff = "^0.4.5"
 black = "^24.4.2"
 isort = "^5.13.2"
+ipykernel = "^6.29.5"
 
 [tool.black]
 line-length = 79

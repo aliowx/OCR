@@ -25,3 +25,5 @@ class TestBill:
 
         assert create_bill["record_id"] == create_record["id"]
         assert create_bill["zone_id"] == create_zone["id"]
+
+    

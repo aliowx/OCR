@@ -4,7 +4,7 @@ from app.bill.schemas.bill import BillCreate
 from app.models.base import EquipmentType, EquipmentStatus
 from tests.utils.utils import random_lower_string
 from app.parking.schemas.zone import ZoneCreate
-from app.schemas import RecordCreate 
+from app.schemas import RecordCreate
 import asyncpg
 import pytest
 import pytest_asyncio
@@ -21,7 +21,12 @@ from app.api.deps import get_db_async
 from app.core.config import settings
 from app.db import Base
 from app.main import app
-from app.users.schemas import UserCreate,ZoneCreate, EquipmentCreate, SpotCreate
+from app.users.schemas import (
+    UserCreate,
+    ZoneCreate,
+    EquipmentCreate,
+    SpotCreate,
+)
 from app import crud
 
 engine = create_async_engine(
@@ -136,16 +141,16 @@ async def login(db: AsyncSession):
         "token_type": user_login.json()["token_type"],
     }
 
+
 @pytest_asyncio.fixture(scope="module")
-async def create_zone(
-    client: AsyncClient,
-    login: dict
-):
-    
+async def create_zone(client: AsyncClient, login: dict):
+
     zone_in = ZoneCreate(
         name=random_lower_string(),
     )
-    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
+    headers = {
+        "Authorization": f"{login['token_type']} {login['access_token']}"
+    }
 
     response = await client.post(
         f"{settings.SUB_PATH}{settings.API_V1_STR}/zones/",
@@ -153,65 +158,57 @@ async def create_zone(
         headers=headers,
     )
 
-    assert response.status_code == 200, f"Zone creation failed: {response.json()}"
+    assert (
+        response.status_code == 200
+    ), f"Zone creation failed: {response.json()}"
     zone_data = response.json()
 
     return zone_data
 
 
 @pytest_asyncio.fixture(scope="module")
-async def create_record(
-    client: AsyncClient,
-    login: dict,
-    create_zone: dict
-):
-    zone_id = create_zone['id']
-    
-    record_in = RecordCreate(
-        plate = random_lower_string(),
-        zone_id = zone_id
-    )
-    
-    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
-    
+async def create_record(client: AsyncClient, login: dict, create_zone: dict):
+    zone_id = create_zone["id"]
+
+    record_in = RecordCreate(plate=random_lower_string(), zone_id=zone_id)
+
+    headers = {
+        "Authorization": f"{login['token_type']} {login['access_token']}"
+    }
+
     response = await client.post(
         f"{settings.SUB_PATH}{settings.API_V1_STR}/",
         json=record_in.model_dump(),
-        headers=headers
+        headers=headers,
     )
-    
-    
+
     assert response.status_code == 200
     record_data = response.json()
-    
+
     return record_data
- 
-   
-@pytest_asyncio.fixture(scope='module')
+
+
+@pytest_asyncio.fixture(scope="module")
 async def create_bill(
-    client: AsyncClient,
-    login: dict,
-    create_zone: dict,
-    create_record: dict
+    client: AsyncClient, login: dict, create_zone: dict, create_record: dict
 ):
-    record_id = create_record['id']
-        
-    zone_id = create_zone['id']
-    
-    bill_in = BillCreate(
-        record_id=record_id,
-        zone_id=zone_id
-    )
-    
-    headers = {"Authorization": f"{login['token_type']} {login['access_token']}"}
-    
+    record_id = create_record["id"]
+
+    zone_id = create_zone["id"]
+
+    bill_in = BillCreate(record_id=record_id, zone_id=zone_id)
+
+    headers = {
+        "Authorization": f"{login['token_type']} {login['access_token']}"
+    }
+
     response = await client.post(
-        f'{settings.SUB_PATH}{settings.API_V1_STR}/',
-        json=bill_in.model_dump(),
-        headers=headers
+        f"{settings.SUB_PATH}{settings.API_V1_STR}/",
+        json=bill_in.model_dump(), 
+        headers=headers,
     )
- 
+
     assert response.status_code == 200
     bill_data = response.json()
-    
+
     return bill_data

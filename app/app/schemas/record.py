@@ -47,6 +47,10 @@ class RecordUpdatePlate(BaseModel):
     end_time: datetime | None = None
 
 
+class RecordDelete(RecordCreate):
+    ...
+    
+    
 # Properties shared by models stored in DB
 class RecordInDBBase(RecordBase):
     id: int

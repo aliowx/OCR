@@ -52,4 +52,5 @@ from .record import (
     StatusRecord,
     RecordForWS,
     RecordUpdatePlate,
+    RecordDelete
 )

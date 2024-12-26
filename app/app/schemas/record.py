@@ -48,7 +48,7 @@ class RecordUpdatePlate(BaseModel):
 
 
 class RecordDelete(RecordCreate):
-    ...
+    delete_related_events: bool
     
     
 # Properties shared by models stored in DB

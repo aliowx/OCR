@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import crud, schemas
-from typing import List, Optional
+from typing import List, Optional, Any 
 from app.models.base import plate_alphabet_reverse
 from app.plate.repo import plate_repo
 from app.utils import generate_excel
@@ -9,6 +9,7 @@ from app import crud, utils
 from app.core import exceptions as exc
 from app import models
 from app.core.celery_app import celery_app
+
 
 
 async def get_multi_by_filters(
@@ -239,3 +240,26 @@ async def update_record_and_events(
     update_record = await crud.record.update(db, db_obj=record)
 
     return update_record
+
+
+
+async def del_record_and_events(
+    db: AsyncSession,
+    *,
+    record_id: int | None,
+    params_in:schemas.RecordDelete
+)-> Any:
+    record_del = await crud.record.remove(db=db, id=record_id)
+    if not record_del:
+        raise exc.ServiceFailure(
+            detail='Not Found',
+            msg_code=utils.MessageCodes.not_found
+        )
+    if params_in.delete_related_events:
+        events_deleted = await crud.event.remove_by_record_id(db=db, record_id=record_id)
+        if not events_deleted:
+            raise exc.ServiceFailure(
+                detail='NO relate events',
+                msg_code=utils.MessageCodes.not_found
+            )
+    return 'Record and associated events deleted successfully.'

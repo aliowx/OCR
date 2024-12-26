@@ -125,5 +125,22 @@ class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):
             )
         )
 
+    async def remove_by_record_id(
+        db: AsyncSession,
+        record_id: int,
+    )-> bool:
+        
+        query = select(Event).filter(Event.record_id == record_id)
+        result = await db.execute(query)
+        events = result.scalars().all()
 
+        if events:
+            for event in events:
+                db.delete(event)
+            await db.commit()
+            return True
+        return False        
+    
+    
+    
 event = CRUDEvent(Event)

@@ -19,7 +19,8 @@ class RoleChecker:
     ):
         if user.role in self.allowed_roles:
             return True
-        raise exc.ServiceFailure(
-            detail="You do not have permission to perform this operation",
-            msg_code=MessageCodes.not_permission,
-        )
+        else:
+            raise exc.ServiceFailure(
+                detail="You do not have permission to perform this operation",
+                msg_code=MessageCodes.not_permission,
+            )

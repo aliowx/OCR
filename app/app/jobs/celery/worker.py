@@ -566,8 +566,9 @@ def set_status_record(self):
                 record.latest_status = StatusRecord.unknown.value
                 crud.record.update(self.session, db_obj=record)
     except:
-        print("Not found")
-        print("func set status")
+        logger.info(
+            'that is not found!'
+        )
 
 
 @celery_app.task(

@@ -28,11 +28,6 @@ namespace = "job worker"
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task
-def test_celery(word: str) -> str:
-    return f"test task return {word}"
-
-
 @celery_app.task(
     base=DatabaseTask,
     bind=True,
@@ -255,7 +250,6 @@ def update_record(
                     < timedelta(minutes=5)
                     and finished_record.camera_exit_id == event.camera_id
                 ):
-                    print(f"extend {event} {finished_record}")
 
                     finished_record.end_time = max(
                         finished_record.end_time, event.record_time

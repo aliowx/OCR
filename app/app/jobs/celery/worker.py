@@ -611,7 +611,9 @@ def health_check_equipment(self):
                 for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
                     send_sms(phone, f"دوربین {eq.tag} {status} است")
     except:
-        print("no broken or disconnect")
+        logger.info(
+            "no broken or disconnect"
+        )
 
 
 @celery_app.task(
@@ -628,7 +630,7 @@ def set_fake_data(self):
     try:
         create_events(self.session)
     except Exception as e:
-        print(f"error set data fake {e}")
+        logger.info(f"error set data fake {e}")
 
 
 @celery_app.task(

@@ -775,10 +775,10 @@ def check_health_ping_equipment(self):
                     )
                     for phone in settings.PHONE_LIST_REPORT_HEALTH_CHECK_EQUIPMENT:
                             redis_client.get(phone)
-                            send_sms(
-                                phone=phone,
-                                text=f"دوربین {eq.tag}  دچار خطا است",
-                            )
+                            # send_sms(
+                            #     phone=phone,
+                            #     text=f"دوربین {eq.tag}  دچار خطا است",
+                            # )
                             redis_client.set(
                                 phone,
                                 phone,

@@ -730,7 +730,7 @@ def check_health_ping_equipment(self):
         )
         for eq in get_multi_equipment:
             response = requests.get(
-                f"https://dr-pms.iranmall.com/check/{eq.id}"
+                f"{settings.URL_CHECK_EQUIPMENT}{eq.id}"
             )
             if response != 200:
                 raise Exception

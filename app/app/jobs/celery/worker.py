@@ -676,7 +676,7 @@ def cleanup(self, table_name: str = "image"):
                 )
         elif table_name == "event":
             limit = datetime.now(UTC).replace(tzinfo=None) - timedelta(
-                days=settings.CLEANUP_EVENTS_AGE
+                days=settings.CLEANUP_EVENTS_AGEq
             )
             filter = models.Event.record_time
             model = models.Event

@@ -1,1 +1,1 @@
-from .worker import add_events, test_celery, update_record
+from .worker import add_events, update_record

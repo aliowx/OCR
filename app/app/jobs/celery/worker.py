@@ -27,7 +27,7 @@ import requests
 namespace = "job worker"
 logger = logging.getLogger(__name__)
 
-
+def test_celery()->None:...
 @celery_app.task(
     base=DatabaseTask,
     bind=True,
